@@ -1,0 +1,424 @@
+{
+  "design_system": {
+    "name": "Modern Learning Platform UI",
+    "description": "现代化学习平台设计语言，以柔和的紫色为主色调，卡片式布局，圆角设计",
+    "color_palette": {
+      "primary": "#8B7EDB",
+      "secondary": "#A594F0", 
+      "accent": "#FFD93D",
+      "background": "#F5F0FF",
+      "card_background": "#FFFFFF",
+      "text_primary": "#1A1A1A",
+      "text_secondary": "#6B6B6B",
+      "success": "#4CAF50",
+      "info": "#2196F3"
+    },
+    "typography": {
+      "primary_font": "Inter, -apple-system, sans-serif",
+      "font_weights": {
+        "regular": 400,
+        "medium": 500,
+        "semibold": 600,
+        "bold": 700
+      },
+      "font_sizes": {
+        "xs": "12px",
+        "sm": "14px", 
+        "base": "16px",
+        "lg": "18px",
+        "xl": "20px",
+        "2xl": "24px",
+        "3xl": "32px"
+      }
+    },
+    "spacing": {
+      "xs": "4px",
+      "sm": "8px",
+      "md": "16px",
+      "lg": "24px",
+      "xl": "32px",
+      "2xl": "48px"
+    },
+    "border_radius": {
+      "sm": "8px",
+      "md": "16px",
+      "lg": "24px",
+      "full": "50%"
+    },
+    "shadows": {
+      "sm": "0 2px 8px rgba(139, 126, 219, 0.1)",
+      "md": "0 4px 16px rgba(139, 126, 219, 0.15)",
+      "lg": "0 8px 32px rgba(139, 126, 219, 0.2)"
+    }
+  },
+  "screens": [
+    {
+      "screen_id": "home_screen",
+      "title": "学习首页",
+      "layout": "single_column",
+      "background": "#F5F0FF",
+      "components": [
+        {
+          "type": "header",
+          "content": {
+            "greeting": "Hi,Sarah",
+            "subtitle": "Basic Member",
+            "avatar": {
+              "src": "user_avatar.jpg",
+              "size": "40px",
+              "border_radius": "full"
+            }
+          },
+          "style": {
+            "padding": "16px",
+            "background": "#FFFFFF",
+            "border_radius": "24px",
+            "margin_bottom": "16px"
+          }
+        },
+        {
+          "type": "hero_section",
+          "content": {
+            "title": "Let's Learn Now!",
+            "search_bar": {
+              "placeholder": "Search Course",
+              "icon": "search",
+              "style": {
+                "background": "#F8F9FA",
+                "border_radius": "12px",
+                "padding": "12px 16px"
+              }
+            },
+            "category_tabs": [
+              {
+                "name": "UI Design",
+                "count": 23,
+                "color": "#E8F5E8",
+                "active": false
+              },
+              {
+                "name": "Webflow", 
+                "count": 23,
+                "color": "#FFE8E8",
+                "active": false
+              },
+              {
+                "name": "3D Design",
+                "count": null,
+                "color": "#E8F4FF",
+                "active": false
+              }
+            ]
+          }
+        },
+        {
+          "type": "course_card",
+          "content": {
+            "title": "Business Analytics",
+            "illustration": "analytics_chart.svg",
+            "cta_button": {
+              "text": "Start Learning",
+              "icon": "play",
+              "style": {
+                "background": "#1A1A1A",
+                "color": "#FFFFFF",
+                "border_radius": "full",
+                "padding": "12px 24px"
+              }
+            },
+            "participant_avatars": [
+              "avatar1.jpg",
+              "avatar2.jpg", 
+              "avatar3.jpg"
+            ],
+            "participant_count": "+33"
+          },
+          "style": {
+            "background": "#FFD93D",
+            "border_radius": "24px",
+            "padding": "24px",
+            "margin_bottom": "16px"
+          }
+        },
+        {
+          "type": "course_card",
+          "content": {
+            "title": "Business Analytics",
+            "illustration": "analytics_purple.svg",
+            "bottom_actions": [
+              {
+                "icon": "home",
+                "active": true
+              },
+              {
+                "icon": "refresh",
+                "active": false
+              },
+              {
+                "icon": "settings",
+                "active": false
+              },
+              {
+                "icon": "bookmark",
+                "active": false
+              }
+            ]
+          },
+          "style": {
+            "background": "linear-gradient(135deg, #8B7EDB 0%, #A594F0 100%)",
+            "border_radius": "24px",
+            "padding": "24px",
+            "color": "#FFFFFF"
+          }
+        }
+      ]
+    },
+    {
+      "screen_id": "course_detail",
+      "title": "课程详情页",
+      "layout": "single_column",
+      "background": "#FFFFFF",
+      "components": [
+        {
+          "type": "navigation",
+          "content": {
+            "back_button": {
+              "icon": "arrow_left",
+              "style": {
+                "background": "#F8F9FA",
+                "border_radius": "full",
+                "padding": "12px"
+              }
+            },
+            "menu_button": {
+              "icon": "more_horizontal",
+              "style": {
+                "background": "#F8F9FA", 
+                "border_radius": "full",
+                "padding": "12px"
+              }
+            }
+          }
+        },
+        {
+          "type": "course_hero",
+          "content": {
+            "title": "From Basics to Breakthroughs",
+            "illustration": "breakthrough_concept.svg",
+            "stats": [
+              {
+                "icon": "clock",
+                "value": "2 hours 16 mins",
+                "label": "Duration"
+              },
+              {
+                "icon": "book",
+                "value": "17 Lessons",
+                "label": "Content"
+              }
+            ]
+          },
+          "style": {
+            "background": "linear-gradient(135deg, #A594F0 0%, #8B7EDB 100%)",
+            "border_radius": "24px",
+            "padding": "32px",
+            "color": "#FFFFFF",
+            "margin_bottom": "24px"
+          }
+        },
+        {
+          "type": "section",
+          "content": {
+            "title": "Ongoing",
+            "action": {
+              "text": "See all",
+              "color": "#8B7EDB"
+            },
+            "items": [
+              {
+                "type": "progress_item",
+                "icon": "user_journey.svg",
+                "title": "Customer journey map",
+                "subtitle": "Sarah Wilson",
+                "lesson_count": "8 Lessons",
+                "progress": "35% Complete",
+                "progress_color": "#4CAF50"
+              },
+              {
+                "type": "progress_item", 
+                "icon": "user_journey_purple.svg",
+                "title": "Customer journey map",
+                "subtitle": "Sarah Wilson",
+                "lesson_count": "8 Lessons", 
+                "progress": "35% Complete",
+                "progress_color": "#4CAF50"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "screen_id": "dashboard",
+      "title": "学习仪表板",
+      "layout": "single_column",
+      "background": "#F5F0FF",
+      "components": [
+        {
+          "type": "navigation",
+          "content": {
+            "back_button": {
+              "icon": "arrow_left",
+              "style": {
+                "background": "rgba(255,255,255,0.3)",
+                "border_radius": "full",
+                "padding": "12px"
+              }
+            },
+            "menu_button": {
+              "icon": "more_horizontal",
+              "style": {
+                "background": "rgba(255,255,255,0.3)",
+                "border_radius": "full", 
+                "padding": "12px"
+              }
+            }
+          }
+        },
+        {
+          "type": "calendar_widget",
+          "content": {
+            "title": "October 2025",
+            "current_date": "28",
+            "week_days": ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+            "dates": [
+              {"date": "24", "active": false},
+              {"date": "25", "active": false},
+              {"date": "26", "active": false},
+              {"date": "27", "active": false},
+              {"date": "28", "active": true},
+              {"date": "29", "active": false},
+              {"date": "30", "active": false}
+            ]
+          },
+          "style": {
+            "background": "#FFFFFF",
+            "border_radius": "20px",
+            "padding": "20px",
+            "margin_bottom": "24px"
+          }
+        },
+        {
+          "type": "progress_section",
+          "content": {
+            "title": "Your Progress",
+            "action": {
+              "text": "See all",
+              "color": "#8B7EDB"
+            },
+            "items": [
+              {
+                "type": "progress_card",
+                "icon": "bookmark",
+                "title": "Customer journey map",
+                "progress": "52%",
+                "style": {
+                  "background": "linear-gradient(135deg, #A594F0 0%, #8B7EDB 100%)",
+                  "color": "#FFFFFF"
+                }
+              },
+              {
+                "type": "progress_card",
+                "icon": "bookmark", 
+                "title": "Customer",
+                "progress": "Progress",
+                "style": {
+                  "background": "linear-gradient(135deg, #87CEEB 0%, #4FC3F7 100%)",
+                  "color": "#FFFFFF"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "courses_section",
+          "content": {
+            "title": "Courses",
+            "action": {
+              "text": "See all",
+              "color": "#8B7EDB"
+            },
+            "featured_course": {
+              "title": "Business Analytics",
+              "illustration": "analytics_chart.svg",
+              "participant_count": "+33",
+              "style": {
+                "background": "#FFD93D",
+                "border_radius": "24px",
+                "padding": "24px"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "component_library": {
+    "buttons": {
+      "primary": {
+        "background": "#8B7EDB",
+        "color": "#FFFFFF",
+        "border_radius": "12px",
+        "padding": "12px 24px",
+        "font_weight": "600"
+      },
+      "secondary": {
+        "background": "#F8F9FA",
+        "color": "#1A1A1A", 
+        "border_radius": "12px",
+        "padding": "12px 24px",
+        "font_weight": "500"
+      },
+      "floating": {
+        "background": "#1A1A1A",
+        "color": "#FFFFFF",
+        "border_radius": "full",
+        "padding": "16px",
+        "box_shadow": "0 4px 16px rgba(0,0,0,0.1)"
+      }
+    },
+    "cards": {
+      "default": {
+        "background": "#FFFFFF",
+        "border_radius": "24px",
+        "padding": "24px",
+        "box_shadow": "0 2px 16px rgba(139, 126, 219, 0.1)"
+      },
+      "gradient": {
+        "background": "linear-gradient(135deg, #8B7EDB 0%, #A594F0 100%)",
+        "border_radius": "24px",
+        "padding": "24px",
+        "color": "#FFFFFF"
+      },
+      "accent": {
+        "background": "#FFD93D",
+        "border_radius": "24px", 
+        "padding": "24px",
+        "color": "#1A1A1A"
+      }
+    },
+    "progress_indicators": {
+      "linear": {
+        "background": "rgba(255,255,255,0.3)",
+        "fill": "#4CAF50",
+        "height": "4px",
+        "border_radius": "full"
+      },
+      "circular": {
+        "stroke": "rgba(255,255,255,0.3)",
+        "fill": "#4CAF50",
+        "width": "4px"
+      }
+    }
+  }
+}
