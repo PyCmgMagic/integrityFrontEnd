@@ -1,111 +1,66 @@
 import React, { useState } from 'react';
 import { Icon } from './Icon';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 
 interface LoginScreenProps {
   onNavigate: (screen: string) => void;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigate }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = () => {
-    // Simple validation - in real app, this would connect to backend
-    if (email && password) {
+    // Simple validation
+    if (username && password) {
       onNavigate('home');
     }
   };
 
   return (
-    <div className="screen login-screen">
-      {/* Logo/Brand Section */}
-      <div className="login-header">
-        <div className="brand-logo">
-          <div className="logo-circle">
-            <Icon name="book" size={32} color="#FFFFFF" />
+    <div className="login-screen-container">
+      <div className="login-background" />
+      <div className="login-content">
+        <div className="login-logo-container">
+          <div className="login-logo">
+            <span className="logo-text">N</span>
+            <div className="logo-waves">
+              <div className="wave" />
+              <div className="wave" />
+              <div className="wave" />
+            </div>
           </div>
         </div>
-        <h1>Welcome Back!</h1>
-        <p className="login-subtitle">Sign in to continue your learning journey</p>
-      </div>
 
-      {/* Login Form */}
-      <div className="login-form">
-        <div className="form-group">
-          <label htmlFor="email">Email Address</label>
-          <div className="input-container">
+        <div className="login-form-container">
+          <div className="login-input-wrapper">
+            <UserOutlined className="login-input-icon" />
             <input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-input"
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="login-input"
             />
           </div>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <div className="input-container">
+          <div className="login-input-wrapper">
+            <LockOutlined className="login-input-icon" />
             <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Enter your password"
+              type="password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="form-input"
+              className="login-input"
             />
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              <Icon name={showPassword ? 'eye_off' : 'eye'} size={20} color="#6B6B6B" />
-            </button>
           </div>
-        </div>
-
-        <div className="form-options">
-          <label className="checkbox-container">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            <span className="checkmark"></span>
-            Remember me
-          </label>
-          <button className="forgot-password">Forgot Password?</button>
-        </div>
-
-        <button className="login-button" onClick={handleLogin}>
-          <span>Sign In</span>
-          <Icon name="arrow_right" size={20} color="#FFFFFF" />
-        </button>
-
-        <div className="divider">
-          <span>or continue with</span>
-        </div>
-
-        <div className="social-login">
-          <button className="social-btn google">
-            <div className="social-icon google-icon">G</div>
-            Google
-          </button>
-          <button className="social-btn apple">
-            <div className="social-icon apple-icon">
-              <Icon name="apple" size={18} color="#FFFFFF" />
-            </div>
-            Apple
+          <button className="login-submit-button" onClick={handleLogin}>
+            Get Started
           </button>
         </div>
 
-        <div className="signup-prompt">
-          <span>Don't have an account? </span>
-          <button className="signup-link">Sign Up</button>
+        <div className="login-footer">
+          <button className="login-footer-link">Create Account</button>
+          <button className="login-footer-link">Need Help?</button>
         </div>
       </div>
     </div>

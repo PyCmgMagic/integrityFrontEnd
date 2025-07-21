@@ -1,69 +1,139 @@
-# React + TypeScript + Vite
+# 智打卡·校园行 🎓
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个现代化的校园打卡签到系统，采用优雅的移动端设计，支持用户打卡和管理员审核功能。
 
-Currently, two official plugins are available:
+## ✨ 特性
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🎨 **现代化设计** - 采用卡片式布局、渐变色彩和圆润边角
+- 📱 **移动端优化** - 专为移动设备设计的响应式界面
+- 👥 **双角色系统** - 支持学生用户和管理员两种角色
+- 🔐 **权限管理** - 基于角色的路由保护和权限控制
+- 📊 **数据管理** - 完整的活动、项目、栏目三级结构
+- 📷 **图片上传** - 支持多图片上传和预览功能
+- 🎯 **状态管理** - 使用 Zustand 进行全局状态管理
 
-## Expanding the ESLint configuration
+## 🛠️ 技术栈
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **前端框架**: React 19 + TypeScript
+- **UI 组件库**: Ant Design
+- **样式方案**: TailwindCSS + 自定义 CSS
+- **路由管理**: React Router v6
+- **状态管理**: Zustand
+- **构建工具**: Vite
+- **包管理器**: npm
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 快速开始
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### 环境要求
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js >= 16
+- npm >= 7
+
+### 安装依赖
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 启动开发服务器
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+项目将在 `http://localhost:5173` 启动
+
+### 构建生产版本
+
+```bash
+npm run build
+```
+
+## 📱 功能模块
+
+### 用户端功能
+- 🏠 **活动首页** - 浏览所有可参与的活动
+- 📋 **活动详情** - 查看活动简介、我的分数、排行榜
+- 📝 **项目详情** - 了解项目规则和栏目信息
+- 📄 **栏目页面** - 查看打卡记录，进行打卡操作
+- ✏️ **打卡功能** - 文字+图片打卡，支持修改
+- 👤 **个人主页** - 查看个人信息和历史记录
+
+### 管理端功能
+- 🎯 **活动管理** - 创建和管理活动、项目、栏目
+- ✅ **审核管理** - 审核用户打卡记录
+- ⭐ **收藏功能** - 收藏优秀打卡内容
+- 📊 **数据导出** - 导出打卡数据和排行榜
+- 🔧 **系统设置** - 各种管理配置功能
+
+## 🎨 设计特色
+
+- **渐变色彩**: 采用紫色、黄色、蓝色、粉色等现代渐变色
+- **浮动导航**: 底部导航采用浮动设计，圆形图标背景
+- **毛玻璃效果**: 使用 backdrop-filter 实现现代毛玻璃效果
+- **微交互**: 丰富的悬停、点击动画效果
+- **响应式**: 完美适配各种移动设备屏幕
+
+## 📂 项目结构
+
+```
+src/
+├── components/          # 公共组件
+│   ├── AdminLayout.tsx  # 管理端布局
+│   ├── UserLayout.tsx   # 用户端布局
+│   ├── ProtectedRoute.tsx # 路由保护
+│   ├── PageContainer.tsx # 页面容器
+│   └── ImageUpload.tsx  # 图片上传组件
+├── pages/              # 页面组件
+│   ├── Login/          # 登录页
+│   ├── User/           # 用户端页面
+│   │   ├── Home/       # 首页
+│   │   ├── ActivityDetail/ # 活动详情
+│   │   ├── Profile/    # 个人主页
+│   │   └── ...
+│   └── Admin/          # 管理端页面
+│       ├── Home/       # 管理首页
+│       ├── CreateActivity/ # 创建活动
+│       └── ...
+├── store/              # 状态管理
+│   ├── useAuthStore.ts # 认证状态
+│   └── useAppStore.ts  # 应用状态
+├── router/             # 路由配置
+└── index.css          # 全局样式
+```
+
+## 🔑 登录测试
+
+项目提供模拟登录功能：
+
+- **学生用户登录** - 体验用户端功能
+- **管理员登录** - 体验管理端功能
+
+## 📄 开发说明
+
+### 样式系统
+
+项目采用 TailwindCSS + 自定义 CSS 的混合方案：
+- 使用 TailwindCSS 处理布局和间距
+- 使用自定义 CSS 实现复杂的视觉效果和动画
+
+### 状态管理
+
+使用 Zustand 进行状态管理，包括：
+- 用户认证状态（useAuthStore）
+- 应用数据状态（useAppStore）
+
+### 路由系统
+
+采用 React Router v6 的新特性：
+- 嵌套路由
+- 路由保护
+- 懒加载
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📄 许可证
+
+本项目采用 MIT 许可证。

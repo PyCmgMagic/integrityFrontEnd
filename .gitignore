@@ -20,6 +20,7 @@ dist-ssr
 *.suo
 *.ntvs*
 .cursor
+docs
 *.njsproj
 *.sln
 *.sw?

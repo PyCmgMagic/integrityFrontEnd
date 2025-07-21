@@ -1,0 +1,83 @@
+.bottomNav {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 240px;
+  max-width: 90vw;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 18px 10px 18px;
+  z-index: 1000;
+  gap: 32px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+  transition: box-shadow 0.3s;
+}
+
+.navButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 56px;
+  height: 56px;
+  justify-content: center;
+  transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.18s;
+}
+
+.navButton.active {
+  transform: translateY(-6px) scale(1.08);
+}
+
+.navIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #888;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(255, 170, 80, 0.08);
+}
+
+.navButton.active .navIcon {
+  background: linear-gradient(135deg, #ffb86c 0%, #ff6b6b 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255, 170, 80, 0.18);
+}
+
+.navButton:not(.active):hover .navIcon {
+  background: rgba(255, 186, 108, 0.12);
+  color: #ff6b6b;
+}
+
+@media (max-width: 480px) {
+  .bottomNav {
+    bottom: 10px;
+    max-width: 98vw;
+    padding: 8px 4vw;
+    gap: 16px;
+  }
+  .navButton {
+    width: 44px;
+    height: 44px;
+  }
+  .navIcon {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+} 
