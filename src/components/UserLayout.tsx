@@ -9,7 +9,7 @@ const UserLayout = () => {
       path: '/user/home',
       icon: <HomeOutlined />,
       label: '首页',
-      activePattern: '/user'
+      activePattern: '/user/home'
     },
     {
       path: '/user/profile',
@@ -29,4 +29,4 @@ const UserLayout = () => {
   );
 };
 
-export default UserLayout;
+export default UserLayout; 

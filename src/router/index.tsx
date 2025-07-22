@@ -68,6 +68,14 @@ export const router = createBrowserRouter([
             <UserHome />
           </Suspense>
         ),
+      },     
+      {
+        path: 'activity/:activityId/project/:projectId/column/:columnId',
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <ColumnPage />
+          </Suspense>
+        ),
       },
       {
         path: 'activity/:activityId/project/:projectId',
@@ -86,15 +94,6 @@ export const router = createBrowserRouter([
         ),
       },
   
-      
-      {
-        path: 'column/:id',
-        element: (
-          <Suspense fallback={<LoadingComponent />}>
-            <ColumnPage />
-          </Suspense>
-        ),
-      },
       {
         path: 'punch/:id',
         element: (
