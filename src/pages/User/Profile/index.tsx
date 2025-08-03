@@ -1,14 +1,12 @@
-// src/pages/ProfilePage.tsx
-
 import React, { useState } from 'react';
 import { Card, Typography, Avatar, Tabs, List } from 'antd';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 import { EditOutlined, CalendarOutlined } from '@ant-design/icons';
 
-// 导入组件（值）
+// 导入组件
 import EditProfileModal from '../../../components/EditProfileModal';
 
-// 关键修复：使用 `import type` 明确导入类型定义
+
 import type { UserProfile, CheckInData, ActivityHistoryData } from '../../../types/types';
 
 const { Title, Text } = Typography;

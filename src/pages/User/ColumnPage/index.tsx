@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Modal, Button, List, Avatar, Progress } from 'antd';
-import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined } from '@ant-design/icons';
-
+import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { SwipeAction ,Dialog, Toast } from 'antd-mobile';
+import ChenkInData from './ChenkInData';
+import CheckIn from '../../../components/CheckIn'
 // 模拟用户信息，可以从 context 或 props 获取
 const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
 
@@ -13,6 +15,30 @@ const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
 const ColumnPage = () => {
   // const { activityId, projectId, columnId } = useParams();
   const navigate = useNavigate();
+  // 添加打卡状态管理
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+  const [gotoCheckIn, setGotoCheckIn] = useState(false);
+  
+  /**
+   * 处理打卡按钮点击事件
+   * 如果未打卡，则跳转到打卡页面
+   * 如果已打卡，则显示提示信息
+   */
+  const handleCheckIn = () => {
+    if (isCheckedIn) {
+      // 已经打卡，显示提示
+      Toast.show({
+        content: '今日已完成打卡！',
+        position: 'bottom',
+      });
+      return;
+    }
+    
+    //这里显示打卡组件
+    setGotoCheckIn(true);
+    
+  
+  }
 
 
   // --- 模拟数据 ---
@@ -30,14 +56,15 @@ const ColumnPage = () => {
     todayProgress: { completed: 3, total: 5 } // 今日打卡进度
   };
 
+
   const columns = [
     {
-      id: '1',
+      id: 1,
       title: '第8次打卡',
       gradient: 'from-blue-400 to-blue-600',
     },
     {
-      id: '2',
+      id: 2,
       title: '第7次打卡',
       gradient: 'from-blue-400 to-blue-600',
     },
@@ -65,29 +92,24 @@ const ColumnPage = () => {
 
       {/* 主内容区域 */}
       <main className="p-4 pb-20">
-        {/* 打卡列卡片 */}
-        <div className="p-4">
-          <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
-            <p className="font-bold">打卡要求</p>
-            <p>{column.checkRequirement}</p>
-          </div>
-          <div className='flex items-center justify-between mb-4'>
-            <p>今日打卡人数</p>
-            <p>我已打卡：次</p>
-          </div>
-        </div>
-        <div className="space-y-4">
-          {columns.map((column) => (
-            <div key={column.id} className={`bg-gradient-to-r ${column.gradient} p-5 rounded-xl shadow-lg flex items-center justify-between`}>
-              <div className="flex items-center">
-                <div>  
-                  <h2 className="text-xl font-bold text-white">{column.title}</h2>
-                </div>
-              </div>
-            </div> 
-          ))}
-        </div>
+        {/* 打卡信息 */}
+        {gotoCheckIn ? 
+          <CheckIn setIsCheckedIn={setIsCheckedIn} setGotoCheckIn={setGotoCheckIn} /> : 
+          <ChenkInData columns={columns} column={column} />
+        }
       </main>
+      {/* 底部固定的打卡按钮 */}
+      <div className="fixed bottom-20 left-0 right-0 flex justify-center z-10" style={{visibility: gotoCheckIn ? 'hidden' : 'visible'}}>
+        <Button 
+          size="large" 
+          shape="round"
+          icon={<CheckCircleOutlined style={{ fontSize: '28px' }} />}
+          style={{ height: 'auto', padding: '10px 24px' }}
+          onClick={handleCheckIn}
+        >
+          {isCheckedIn ? '已完成打卡' : '立即打卡'}
+        </Button>
+      </div>
     </div>
   );
 };

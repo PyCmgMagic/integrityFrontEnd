@@ -1,0 +1,11 @@
+/* 调整已上传图片卡片的大小 */
+.check-in-upload-container .ant-upload-list-picture-card .ant-upload-list-item {
+  width: 140px;
+  height: 140px;
+}
+
+/* 调整上传按钮"+"卡片的大小 */
+.check-in-upload-container .ant-upload-select-picture-card {
+  width: 140px;
+  height: 140px;
+}
