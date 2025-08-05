@@ -20,7 +20,8 @@ const UserProfile = lazy(() => import('../pages/User/Profile/index'));
 const AdminLayout = lazy(() => import('../components/AdminLayout'));
 const AdminHome = lazy(() => import('../pages/Admin/Home/index'));
 const CreateActivity = lazy(() => import('../pages/Admin/CreateActivity/index'));
-const CreateProject = lazy(() => import('../pages/Admin/CreateProject/index'));
+const CreateNewProject = lazy(() => import('../pages/Admin/CreateProject/index'));
+const CreateColumnFlow = lazy(() => import('../pages/Admin/CreateColumn/CreateColumnFlow'));
 const CreateColumn = lazy(() => import('../pages/Admin/CreateColumn/index'));
 const ReviewManage = lazy(() => import('../pages/Admin/ReviewManage/index'));
 const ActivityManage = lazy(() => import('../pages/Admin/ActivityManage/index'));
@@ -143,6 +144,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'profile',
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <UserProfile />
+          </Suspense>
+        ),
+      },
+      {
         path: 'create/activity',
         element: (
           <Suspense fallback={<LoadingComponent />}>
@@ -151,18 +160,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'create/project',
+        path: 'create/activity/:activityId/project',
         element: (
           <Suspense fallback={<LoadingComponent />}>
-            <CreateProject />
+            <CreateNewProject />
           </Suspense>
         ),
       },
       {
-        path: 'create/column',
+        path: 'create/activity/:activityId/project/:projectId/column/:columnIndex',
         element: (
           <Suspense fallback={<LoadingComponent />}>
-            <CreateColumn />
+           <CreateColumnFlow /> 
           </Suspense>
         ),
       },

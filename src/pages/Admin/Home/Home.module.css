@@ -1,0 +1,75 @@
+.welcomeSection {
+  background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
+  border-radius: 24px;
+  padding: 24px;
+  color: white;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcomeSection::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.searchContainer {
+  margin-bottom: 24px;
+}
+
+.searchContainer :global(.ant-input-search) {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.searchContainer :global(.ant-input) {
+  border-radius: 20px 0 0 20px;
+  border-right: none;
+}
+
+.searchContainer :global(.ant-input-search-button) {
+  border-radius: 0 20px 20px 0;
+  background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
+  border: none;
+}
+
+.activityCard {
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.activityCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.activityCard :global(.ant-card-cover) {
+  position: relative;
+  overflow: hidden;
+}
+
+.activityCard :global(.ant-card-cover)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.3));
+}
