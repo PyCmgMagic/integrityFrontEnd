@@ -36,11 +36,10 @@ const CreateColumnFlow: React.FC = () => {
     } else {
       // 如果是最后一个栏目，则完成创建流程
       console.log('所有栏目创建完毕！');
-      // 导航到项目详情页或一个成功页面
-      navigate(`/admin/project/${projectId}/success`);
+      // 导航到一个成功页面 
+      navigate(`/admin/create/activity/${activityId}/project/${projectId}/success`);
     }
   };
-
   // 处理“上一步”点击事件
   const handleBack = () => {
     if (currentStep > 1) {

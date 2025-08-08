@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { Spin } from 'antd';
 import ProtectedRoute from '../components/ProtectedRoute';
+import CheckInDetail from '../pages/Admin/ColumnManage/CheckInDetail';
 
 // 懒加载页面组件
 const LoginPage = lazy(() => import('../pages/Login/index'));
@@ -23,6 +24,7 @@ const CreateActivity = lazy(() => import('../pages/Admin/CreateActivity/index'))
 const CreateNewProject = lazy(() => import('../pages/Admin/CreateProject/index'));
 const CreateColumnFlow = lazy(() => import('../pages/Admin/CreateColumn/CreateColumnFlow'));
 const CreateColumn = lazy(() => import('../pages/Admin/CreateColumn/index'));
+const SuccessPage = lazy(() => import('../pages/Admin/Success/index'));
 const ReviewManage = lazy(() => import('../pages/Admin/ReviewManage/index'));
 const ActivityManage = lazy(() => import('../pages/Admin/ActivityManage/index'));
 const ProjectManage = lazy(() => import('../pages/Admin/ProjectManage/index'));
@@ -176,6 +178,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'create/activity/:activityId/project/:projectId/success',
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+           <SuccessPage /> 
+          </Suspense>
+        ),
+      },
+      {
         path: 'manage',
         element: (
           <Suspense fallback={<LoadingComponent />}>
@@ -192,7 +202,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'project/:id',
+        path: 'activity/:activityId/project/:projectId',
         element: (
           <Suspense fallback={<LoadingComponent />}>
             <ProjectManage />
@@ -200,10 +210,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'column/:id',
+        path: 'activity/:activityId/project/:projectId/column/:columnId',
         element: (
           <Suspense fallback={<LoadingComponent />}>
             <ColumnManage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'activity/:activityId/project/:projectId/column/:columnId/review/:reviewId',
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <CheckInDetail />
           </Suspense>
         ),
       },

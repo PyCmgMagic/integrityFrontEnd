@@ -27,10 +27,10 @@ const ChenkInData = ({ columns = [], column = {} }: { columns: any[], column: an
         <>
         {/* 打卡列卡片 */}
         <div className="p-4">
-          <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4" role="alert">
-            <p className="font-bold">打卡要求</p>
-            <p>{column.checkRequirement}</p>
-          </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-2">
+            <p className="font-bold">打卡要求:</p>
+          <p className="text-gray-600 text-sm leading-relaxed">{column.checkRequirement}</p>
+        </div>
           <div className='flex items-center justify-between mb-4'>
             <p>今日打卡人数</p>
             <p>我已打卡：次</p>

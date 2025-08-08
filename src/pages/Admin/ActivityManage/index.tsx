@@ -84,7 +84,7 @@ const ActivityDetailPage = () => {
 
   const handleProjectClick = (projectId: string) => {
 
-    navigate(`/user/activity/${id}/project/${projectId}`);
+    navigate(`/admin/activity/${id}/project/${projectId}`);
   };
   const handleNewProjectClick = () => {
     navigate(`/admin/create/activity/${id}/project`);
