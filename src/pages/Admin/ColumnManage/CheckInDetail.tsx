@@ -159,7 +159,7 @@ const CheckInDetail: React.FC = () => {
           )}
 
           {/* 右箭头 */}
-          {index < items.length - 1 && (
+          {index < items.length - 1 && ( 
             <button
               onClick={handleNext}
               className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
@@ -207,7 +207,6 @@ const CheckInDetail: React.FC = () => {
               </div>
             </div>
 
-            {/* 分页指示器 */}
             <div className="flex justify-center mb-6">
               <div className="w-3 h-3  rounded-full"></div>
             </div>

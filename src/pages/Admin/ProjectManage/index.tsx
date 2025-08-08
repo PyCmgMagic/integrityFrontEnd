@@ -5,6 +5,7 @@ import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined, Edi
 import EditProjectModal from './EditProjectModal';
 import moment from 'moment';
 import EditColumnModal from './EditColumnModal';
+import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 
 // 模拟用户信息，可以从 context 或 props 获取
 const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
@@ -100,7 +101,28 @@ const projectInitialData = {
     console.log('表单数据已成功提交到父组件:', values);
     setEditColumnVisible(false);
   };
-
+  // 定义滑动操作的按钮
+  const rightActions = (columnId: string) => [
+    {
+      key: 'delete',
+      text: '删除',
+      color: 'danger',
+      onClick: () => handleDelete(columnId),
+    },
+  ];
+ const handleDelete = async (columnId: string) => {
+  const result = await Dialog.confirm({
+    content:'确定删除这个栏目吗？',
+    confirmText: '确认',
+    cancelText: '取消',
+  });
+  if(result){
+    //删除项目
+    Toast.show({
+      content:'删除成功',
+    })
+  }
+ }
   return (
     // 使用更柔和的背景色
     <div className="bg-slate-50 min-h-screen font-sans">
@@ -132,6 +154,10 @@ const projectInitialData = {
             </div>
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡项目</h3>
           {columns.map((column) => (
+            <SwipeAction
+              key={column.id}
+              rightActions={rightActions(column.id)}
+            >
             <div key={column.id} className={`bg-gradient-to-r ${column.gradient} p-8 rounded-2xl shadow-lg flex items-center justify-between`}>
               <div className="flex items-center">
                 <div>
@@ -146,6 +172,7 @@ const projectInitialData = {
                 进入栏目
               </Button>
             </div>
+            </SwipeAction>
           ))}
         </div>
       </main>

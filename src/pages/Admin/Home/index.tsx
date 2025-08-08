@@ -61,7 +61,7 @@ const AdminHomePage = () => {
   // 处理活动删除的函数
   const handleDelete = async (activityId: string) => {
    const result = await Dialog.confirm({
-          content: '确定要删除这条打卡记录吗？',
+          content: '确定要删除这个活动吗？',
           confirmText: '确认',
           cancelText: '取消',
         });

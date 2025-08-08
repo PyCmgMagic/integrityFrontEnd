@@ -6,6 +6,7 @@ import moment from 'moment';
 
 // 导入外部的编辑弹窗组件
 import EditActivityModal from './EditActivityModal';
+import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 
 // 模拟用户信息，可以从 context 或 props 获取
 const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
@@ -103,7 +104,28 @@ const ActivityDetailPage = () => {
     message.success('活动信息已成功更新!');
     setEditModalVisible(false); // 在这里处理关闭弹窗的逻辑
   };
-
+  // 定义滑动操作的按钮
+  const rightActions = (projectId: string) => [
+    {
+      key: 'delete',
+      text: '删除',
+      color: 'danger',
+      onClick: () => handleDelete(projectId),
+    },
+  ];
+ const handleDelete = async (projectId: string) => {
+  const result = await Dialog.confirm({
+    content:'确定删除这个项目吗？',
+    confirmText: '确认',
+    cancelText: '取消',
+  });
+  if(result){
+    //删除项目
+    Toast.show({
+      content:'删除成功',
+    })
+  }
+ }
   return (
     <div className="bg-slate-50 min-h-screen font-sans">
       <header className="bg-gradient-to-br from-orange-400 to-red-500 text-white pt-6 px-4 pb-4shadow-lg rounded-b-3xl">
@@ -135,6 +157,11 @@ const ActivityDetailPage = () => {
             </div>
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡项目</h3>
           {projects.map((project) => (
+            <SwipeAction
+              key={project.id}
+              data-id={project.id}
+              rightActions={rightActions(project.id)} 
+            >
             <div key={project.id} className={`bg-gradient-to-r ${project.gradient} p-6 rounded-2xl shadow-lg flex items-center justify-between`}>
               <div className="flex items-center">
                 <div className="mr-4 bg-white/20 p-3 rounded-full">{project.icon}</div>
@@ -151,6 +178,7 @@ const ActivityDetailPage = () => {
                 查看
               </Button>
             </div>
+            </SwipeAction>
           ))}
         </div>
       </main>
