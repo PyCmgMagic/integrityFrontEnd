@@ -32,6 +32,7 @@ const ColumnManage = lazy(() => import('../pages/Admin/ColumnManage/index'));
 const ReviewDetail = lazy(() => import('../pages/Admin/ReviewDetail/index'));
 const Favorites = lazy(() => import('../pages/Admin/Favorites/index'));
 const ExportData = lazy(() => import('../pages/Admin/ExportData/index'));
+const AdminProfile = lazy(() => import('../pages/Admin/Profile/index'));
 
 // 加载组件
 const LoadingComponent = () => (
@@ -149,7 +150,7 @@ export const router = createBrowserRouter([
         path: 'profile',
         element: (
           <Suspense fallback={<LoadingComponent />}>
-            <UserProfile />
+            <AdminProfile />
           </Suspense>
         ),
       },
