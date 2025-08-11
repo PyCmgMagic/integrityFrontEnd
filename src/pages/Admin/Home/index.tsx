@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Input, Empty, Spin, Modal } from 'antd';
+import { Card, Input, Empty, Spin, Modal, message, Button } from 'antd';
 import { SearchOutlined, CalendarOutlined, UserOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { SwipeAction, Dialog, Toast } from 'antd-mobile';
 import { useAppStore, useAuthStore, type Activity } from '../../../store';
+import { ActivityAPI } from '../../../services/api';
+import { transformActivityFromAPI } from '../../../utils/dataTransform';
+import CreateActivityModal from '../../../components/CreateActivityModal';
 import styles from './Home.module.css';
 import 'antd-mobile/es/global'; // 引入 antd-mobile 的全局样式
 
@@ -16,6 +19,7 @@ const AdminHomePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [allActivities, setAllActivities] = useState<Activity[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
 
   useEffect(() => {
     loadActivities();
@@ -37,18 +41,17 @@ const AdminHomePage = () => {
   const loadActivities = async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await ActivityAPI.getActivityList({
+        page: 1,
+        page_size: 20
+      });
       
-      const mockActivities: Activity[] = [
-        { id: '1', name: '春季健康打卡活动', description: '每日运动打卡，健康生活从现在开始', cover: 'https://picsum.photos/300/200?random=1', startTime: '2024-03-01', endTime: '2024-05-31', projects: [], createdAt: '2024-03-01' },
-        { id: '2', name: '学习打卡挑战', description: '每日学习记录，提升自我修养', cover: 'https://picsum.photos/300/200?random=2', startTime: '2024-03-15', endTime: '2024-06-15', projects: [], createdAt: '2024-03-15' },
-        { id: '3', name: '环保行动打卡', description: '绿色生活，从小事做起', cover: 'https://picsum.photos/300/200?random=3', startTime: '2024-04-01', endTime: '2024-12-31', projects: [], createdAt: '2024-04-01' }
-      ];
-      
-      // 将模拟数据设置到 allActivities 作为数据源
-      setAllActivities(mockActivities);
+      // 转换API响应数据为前端格式
+      const transformedActivities = response.activitys.map(transformActivityFromAPI);
+      setAllActivities(transformedActivities);
     } catch (error) {
       console.error('加载活动失败:', error);
+      message.error('加载活动失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -60,15 +63,32 @@ const AdminHomePage = () => {
 
   // 处理活动删除的函数
   const handleDelete = async (activityId: string) => {
-   const result = await Dialog.confirm({
-          content: '确定要删除这个活动吗？',
-          confirmText: '确认',
-          cancelText: '取消',
-        });
-        if (result) {
-          // setCheckInData(prevData => prevData.filter(item => item.id !== id));
-          Toast.show({ content: '删除成功', position: 'bottom' });
-        }
+    const result = await Dialog.confirm({
+      content: '确定要删除这个活动吗？',
+      confirmText: '确认',
+      cancelText: '取消',
+    });
+    
+    if (result) {
+      try {
+        await ActivityAPI.deleteActivity(parseInt(activityId));
+        
+        // 从本地状态中移除已删除的活动
+        setAllActivities(prevActivities => 
+          prevActivities.filter(activity => activity.id !== activityId)
+        );
+        
+        Toast.show({ content: '删除成功', position: 'bottom' });
+      } catch (error) {
+        console.error('删除活动失败:', error);
+        Toast.show({ content: '删除失败，请稍后重试', position: 'bottom' });
+      }
+    }
+  };
+
+  // 处理创建活动成功
+  const handleCreateSuccess = () => {
+    loadActivities(); // 重新加载活动列表
   };
 
   // 定义滑动操作的按钮
@@ -91,21 +111,21 @@ const AdminHomePage = () => {
               <h1 className="text-2xl font-bold mb-1">
                 Hi, {user?.name || '同学'}! 👋
               </h1>
-              <p className="text-white/80">让我们开始今天的打卡之旅</p>
+              <p className="text-white/80">要发布新活动了吗？</p>
             </div>
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
               <UserOutlined className="text-white text-lg" />
             </div>
           </div>
-          <div className=" rounded-lg border-2 border-dashed  p-4 flex flex-col items-center justify-center text-center cursor-pointer">
+          <div onClick={() => setCreateModalVisible(true)} className=" rounded-lg border-2 border-dashed  p-4 flex flex-col items-center justify-center text-center cursor-pointer">
             <div className="w-16 h-16 border-2 border-white/50 rounded-full flex items-center justify-center mb-2 shadow border-dashed">
               <span className="text-4xl font-bold text-white">+</span>
-            </div>
+            </div>  
             <p className="text-lg font-semibold text-white">创建活动</p> 
           </div>
         </div>
       </div>
-
+ 
       {/* 搜索框 */}
       <div className={styles.searchContainer}>
         <Search
@@ -184,6 +204,13 @@ const AdminHomePage = () => {
           </div>
         )}
       </div>
+
+      {/* 创建活动模态框 */}
+      <CreateActivityModal
+        visible={createModalVisible}
+        onCancel={() => setCreateModalVisible(false)}
+        onSuccess={handleCreateSuccess}
+      />
       
       {/* 占位div，防止底部导航栏遮挡内容 */}
       <div style={{ height: 55 }} />

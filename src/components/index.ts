@@ -13,3 +13,6 @@ export { default as PageContainer } from './PageContainer';
 export { default as ImageUpload } from './ImageUpload';
 export { default as BottomNavigation } from './BottomNavigation';
 export type { NavItem } from './BottomNavigation'; 
+export { default as EditProfileModal } from './EditProfileModal';
+export { default as CreateActivityModal } from './CreateActivityModal';
+export { default as ExportDataModal } from './ExportDataModal';

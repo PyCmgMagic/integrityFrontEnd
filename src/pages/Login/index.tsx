@@ -3,47 +3,55 @@ import { useNavigate } from 'react-router-dom';
 import { message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../../store';
+import { useRequest } from '../../hooks/useRequest';
+import API from '../../services/api';
 import styles from './Login.module.css';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
-  const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginType, setLoginType] = useState<'user' | 'admin'>('user');
 
+  /**
+   * 使用网络请求 Hook 处理登录
+   */
+  const { loading, run: performLogin } = useRequest(API.Auth.login, {
+    manual: true,
+    showError: true,
+    showSuccess: true,
+    successMessage: '登录成功！',
+    onSuccess: (data) => {
+      // 更新认证状态
+      login(data);
+      // 根据角色跳转到相应页面
+      const targetPath = data.role_id === 1 ? '/admin/home' : '/user/home';
+      navigate(targetPath);
+    },
+    onError: (error) => {
+      console.error('登录失败:', error);
+    },
+  });
+  /**
+   * 处理登录表单提交
+   */
   const handleLogin = async () => {
-    if (!username || !password) {
-      message.error('请输入用户名和密码');
+    // 基础验证
+    if (!username.trim()) {
+      message.error('请输入用户名');
       return;
     }
-
-    setLoading(true);
-    try {
-      // 模拟登录过程
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const role = loginType;
-      
-      const user = {
-        id: role === 'admin' ? 'admin-001' : 'user-001',
-        name: role === 'admin' ? '管理员' : username,
-        role: role,
-        avatar: '',
-        email: role === 'admin' ? 'admin@example.com' : `${username}@example.com`
-      };
-
-      login(user);
-      message.success('登录成功！');
-      
-      // 根据角色跳转
-      navigate(role === 'admin' ? '/admin/home' : '/user/home');
-    } catch (error) {
-      message.error('登录失败，请重试');
-    } finally {
-      setLoading(false);
+    
+    if (!password.trim()) {
+      message.error('请输入密码');
+      return;
     }
+    // 执行登录请求
+    await performLogin({
+      student_id: username,
+      password
+    });
   };
 
   return (
@@ -99,7 +107,7 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               className={styles.input}
               disabled={loading}
-              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
             />
           </div>
           <button 
@@ -120,4 +128,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

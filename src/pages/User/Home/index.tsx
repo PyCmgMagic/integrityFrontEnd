@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Input, Empty, Spin } from 'antd';
-import { SearchOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
+import { Card, Input, Empty, Spin, message, Button } from 'antd';
+import { SearchOutlined, CalendarOutlined, UserOutlined, PlusOutlined } from '@ant-design/icons';
 import { useAppStore, useAuthStore, type Activity } from '../../../store';
+import { ActivityAPI } from '../../../services/api';
+import { transformActivityFromAPI } from '../../../utils/dataTransform';
 import styles from './Home.module.css';
 
 const { Search } = Input;
@@ -34,47 +36,17 @@ const UserHomePage = () => {
   const loadActivities = async () => {
     setLoading(true);
     try {
-      // 模拟加载活动数据
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await ActivityAPI.getActivityList({
+        page: 1,
+        page_size: 20
+      });
       
-      const mockActivities: Activity[] = [
-        {
-          id: '1',
-          name: '春季健康打卡活动',
-          description: '每日运动打卡，健康生活从现在开始',
-          cover: 'https://picsum.photos/300/200?random=1',
-          startTime: '2024-03-01',
-          endTime: '2024-05-31',
-          projects: [],
-          createdAt: '2024-03-01'
-        },
-        {
-          id: '2',
-          name: '学习打卡挑战',
-          description: '每日学习记录，提升自我修养',
-          cover: 'https://picsum.photos/300/200?random=2',
-          startTime: '2024-03-15',
-          endTime: '2024-06-15',
-          projects: [],
-          createdAt: '2024-03-15'
-        },
-        {
-          id: '3',
-          name: '环保行动打卡',
-          description: '绿色生活，从小事做起',
-          cover: 'https://picsum.photos/300/200?random=3',
-          startTime: '2024-04-01',
-          endTime: '2024-12-31',
-          projects: [],
-          createdAt: '2024-04-01'
-        }
-      ];
-      
-      // 这里应该调用API加载数据
-      // setActivities(mockActivities);
-      setFilteredActivities(mockActivities);
+      // 转换API响应数据为前端格式
+      const transformedActivities = response.activitys.map(transformActivityFromAPI);
+      setFilteredActivities(transformedActivities);
     } catch (error) {
       console.error('加载活动失败:', error);
+      message.error('加载活动失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -82,6 +54,18 @@ const UserHomePage = () => {
 
   const handleActivityClick = (activityId: string) => {
     navigate(`/user/activity/${activityId}`);
+  };
+
+  const handleJoinActivity = async (activityId: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击
+    try {
+      await ActivityAPI.joinActivity(activityId);
+      message.success('参加活动成功！');
+      // 可以在这里更新活动状态或重新加载活动列表
+    } catch (error) {
+      console.error('参加活动失败:', error);
+      message.error('参加活动失败，请稍后重试');
+    }
   };
 
   return (

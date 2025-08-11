@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Progress } from 'antd';
+import { Modal, Button, List, Avatar, Progress, Spin, message } from 'antd';
 import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined } from '@ant-design/icons';
+import { ActivityAPI } from '../../../services/api';
+import { useRequest } from '../../../hooks/useRequest';
+import type { ActivityDetailResponse, ProjectItem } from '../../../types/api';
 
 // 模拟用户信息，可以从 context 或 props 获取
 const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
@@ -17,13 +20,50 @@ const ActivityDetailPage = () => {
   const [isScoresVisible, setScoresVisible] = useState(false);
   const [isRankingVisible, setRankingVisible] = useState(false);
 
-  // --- 模拟数据 ---
-  const activity = {
-    name: '寒假打卡活动',
-    time: '1.3 - 1.31',
-    description: '这是一个旨在鼓励用户在寒假期间坚持学习和锻炼的打卡活动。通过完成每日任务，不仅可以获得积分，还能养成良好习惯。',
+  // 使用useRequest hook获取活动详情
+  const { data: activityData, loading, error, run: fetchActivityDetail } = useRequest(
+    (activityId: number) => ActivityAPI.getActivityDetail(activityId),
+    {
+      manual: true,
+      onError: (error) => {
+        message.error('获取活动详情失败：' + error.message);
+      }
+    }
+  );
+
+  // 当组件挂载或id变化时获取数据
+  useEffect(() => {
+    if (id) {
+      const activityId = parseInt(id, 10);
+      if (!isNaN(activityId)) {
+        fetchActivityDetail(activityId);
+      } else {
+        message.error('无效的活动ID');
+        navigate('/user/activities');
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]); // 只依赖id变化
+
+  /**
+   * 格式化日期显示
+   * @param startDate 开始日期（数字格式：20250103）
+   * @param endDate 结束日期（数字格式：20250810）
+   * @returns 格式化后的日期字符串
+   */
+  const formatDateRange = (startDate: number, endDate: number): string => {
+    const formatDate = (date: number): string => {
+      const dateStr = date.toString();
+      const year = dateStr.substring(0, 4);
+      const month = dateStr.substring(4, 6);
+      const day = dateStr.substring(6, 8);
+      return `${month}.${day}`;
+    };
+    
+    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
   };
 
+  // 模拟用户统计数据（后续可以从API获取）
   const userStats = {
     totalScore: 23,
     maxStreak: 7,
@@ -31,23 +71,34 @@ const ActivityDetailPage = () => {
     todayProgress: { completed: 3, total: 5 } // 今日打卡进度
   };
 
-  const projects = [
-    {
-      id: '1',
-      title: '“瑞蛇衔知”',
-      subtitle: '勤学善思',
-      icon: <BookOutlined className="text-4xl text-white" />,
-      // 为每个项目卡片应用不同的渐变色
-      gradient: 'from-orange-500 to-red-500',
-    },
-    {
-      id: '2',
-      title: '“灵蛇展跃”',
-      subtitle: '运动不止',
-      icon: <ExperimentOutlined className="text-4xl text-white" />,
-      gradient: 'from-amber-500 to-orange-500',
-    },
-  ];
+  /**
+   * 生成项目卡片的渐变色
+   * @param index 项目索引
+   * @returns 渐变色类名
+   */
+  const getProjectGradient = (index: number): string => {
+    const gradients = [
+      'from-orange-500 to-red-500',
+      'from-amber-500 to-orange-500',
+      'from-blue-500 to-purple-500',
+      'from-green-500 to-blue-500',
+      'from-purple-500 to-pink-500',
+    ];
+    return gradients[index % gradients.length];
+  };
+
+  /**
+   * 生成项目图标
+   * @param index 项目索引
+   * @returns 图标组件
+   */
+  const getProjectIcon = (index: number) => {
+    const icons = [
+      <BookOutlined className="text-4xl text-white" />,
+      <ExperimentOutlined className="text-4xl text-white" />,
+    ];
+    return icons[index % icons.length];
+  };
 
   const scoreRecords = [
     { task: '完成“瑞蛇衔知”项目打卡', score: 5, date: '2023-01-15' },
@@ -63,9 +114,38 @@ const ActivityDetailPage = () => {
     avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${i}` // 使用 placeholder 头像
   }));
 
-  const handleProjectClick = (projectId: string) => {
+  /**
+   * 处理项目卡片点击
+   * @param projectId 项目ID
+   */
+  const handleProjectClick = useCallback((projectId: number) => {
     navigate(`/user/activity/${id}/project/${projectId}`);
-  };
+  }, [navigate, id]);
+
+  // 如果正在加载，显示加载状态
+  if (loading) {
+    return (
+      <div className="bg-slate-50 min-h-screen flex items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  // 如果没有数据，显示错误状态
+  if (!activityData) {
+    return (
+      <div className="bg-slate-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">活动数据加载失败</p>
+          <Button type="primary" onClick={() => navigate(-1)}>
+            返回
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { activity, projects } = activityData;
 
   return (
     // 使用更柔和的背景色
@@ -81,7 +161,7 @@ const ActivityDetailPage = () => {
         {/* 活动时间显示*/}
         <div className="text-center mt-3">
             <p className="text-sm opacity-80">活动时间</p>
-            <p className="font-semibold tracking-wider">{activity.time}</p>
+            <p className="font-semibold tracking-wider">{formatDateRange(activity.start_date, activity.end_date)}</p>
         </div>
    
       </header>
@@ -123,30 +203,70 @@ const ActivityDetailPage = () => {
         {/* 打卡项目卡片 */}
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡项目</h3>
-          {projects.map((project) => (
-            <div key={project.id} className={`bg-gradient-to-r ${project.gradient} p-6 rounded-2xl shadow-lg flex items-center justify-between`}>
-              <div className="flex items-center">
-                <div className="mr-4 bg-white/20 p-3 rounded-full">{project.icon}</div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">{project.title}</h2>
-                  <p className="text-white/90">{project.subtitle}</p>
-                </div>
+          {projects.length > 0 ? (
+            projects.map((project, index) => (
+              <div key={project.id} className={`bg-gradient-to-r ${getProjectGradient(index)} p-6 rounded-2xl shadow-lg flex items-center justify-between`}>
+                <div className="flex items-center">
+                  {/* 项目封面图片或默认图标 */}
+                  <div className="mr-4 bg-white/20 p-3 rounded-full">
+                    {project.avatar ? (
+                      <img 
+                        src={project.avatar} 
+                        alt={project.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                        onError={(e) => {
+                          // 图片加载失败时显示默认图标
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={project.avatar ? 'hidden' : ''}>
+                      {getProjectIcon(index)}
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">{project.name}</h2>
+                    <p className="text-white/90">点击开始打卡</p>
+                  </div>
+                </div> 
+                <Button  
+                  shape="round" 
+                  className="bg-white text-red-500 font-bold border-none hover:bg-white/90"
+                  onClick={() => handleProjectClick(project.id)}
+                >
+                  去打卡
+                </Button>
               </div>
-              <Button  
-                shape="round" 
-                className="bg-white text-red-500 font-bold border-none hover:bg-white/90"
-                onClick={() => handleProjectClick(project.id)}
-              >
-                去打卡
-              </Button>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">暂无打卡项目</p>
             </div>
-          ))}
+          )}
         </div>
       </main>
 
       {/* --- 弹窗 --- */}
       <Modal title="活动简介" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
-        <p className="text-gray-600 leading-relaxed">{activity.description}</p>
+        <div className="space-y-4">
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-2">活动名称</h4>
+            <p className="text-gray-600">{activity.name}</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-2">活动时间</h4>
+            <p className="text-gray-600">{formatDateRange(activity.start_date, activity.end_date)}</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-2">活动描述</h4>
+            <p className="text-gray-600 leading-relaxed">{activity.description}</p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-gray-700 mb-2">创建者</h4>
+            <p className="text-gray-600">{activity.user.nick_name}</p>
+          </div>
+        </div>
       </Modal>
 
       <Modal title="我的分数" open={isScoresVisible} onCancel={() => setScoresVisible(false)} footer={null}>

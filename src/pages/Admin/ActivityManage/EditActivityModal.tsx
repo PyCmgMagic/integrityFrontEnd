@@ -4,6 +4,8 @@ import { LoadingOutlined, CalendarOutlined } from '@ant-design/icons';
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { UploadFile } from 'antd/es/upload/interface';
 import dayjs, { type Dayjs } from 'dayjs';
+import { ActivityAPI } from '../../../services/api';
+import { transformActivityToUpdateRequest } from '../../../utils/dataTransform';
 
 const { TextArea } = Input;
 
@@ -107,13 +109,16 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
 interface EditActivityModalProps {
   visible: boolean;
   onClose: () => void;
-  onFinish?: (values: any) => void;
+  onCancel?: () => void;
+  onSuccess?: () => void;
+  activityId?: number;
   initialData?: any;
 }
 
-const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose, onFinish, initialData }) => {
+const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose, onSuccess, onCancel, activityId, initialData }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   
   // 时间范围状态
@@ -124,21 +129,35 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose,
   useEffect(() => {
     if (visible) {
       if (initialData) {
-        // 将 initialData 中的日期字符串转换为 dayjs 对象
-        const initialTimeRange = initialData.timeRange 
-          ? [dayjs(initialData.timeRange[0]), dayjs(initialData.timeRange[1])]
-          : [null, null];
+        // 设置表单字段值
+        form.setFieldsValue({
+          name: initialData.name,
+          description: initialData.description,
+          cover: initialData.cover || initialData.avatar
+        });
 
-        // 设置表单所有字段的值
-        form.setFieldsValue({ ...initialData });
-
-        if (initialData.cover) {
-          setImageUrl(initialData.cover);
+        // 设置封面图片
+        const coverUrl = initialData.cover || initialData.avatar;
+        if (coverUrl) {
+          setImageUrl(coverUrl);
         }
         
-        // 设置时间状态
-        setStartTime(initialTimeRange[0]);
-        setEndTime(initialTimeRange[1]);
+        // 处理时间数据 - 支持多种格式
+        let startTimeValue = null;
+        let endTimeValue = null;
+        
+        if (initialData.startTime && initialData.endTime) {
+          // 如果是字符串格式的时间
+          startTimeValue = dayjs(initialData.startTime);
+          endTimeValue = dayjs(initialData.endTime);
+        } else if (initialData.timeRange && Array.isArray(initialData.timeRange)) {
+          // 如果是时间范围数组
+          startTimeValue = dayjs(initialData.timeRange[0]);
+          endTimeValue = dayjs(initialData.timeRange[1]);
+        }
+        
+        setStartTime(startTimeValue);
+        setEndTime(endTimeValue);
       } else {
         // 如果是新建活动，则清空所有状态
         form.resetFields();
@@ -202,7 +221,10 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose,
     </div>
   );
 
-  const handleFormSubmit = (values: any) => {
+  /**
+   * 处理表单提交
+   */
+  const handleFormSubmit = async (values: any) => {
     // 验证时间范围
     if (!startTime || !endTime) {
       message.error('请选择完整的活动时间范围');
@@ -214,12 +236,53 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose,
       return;
     }
 
-    if (onFinish) {
-      onFinish({ 
-        ...values, 
+    // 验证活动ID
+    if (!activityId) {
+      message.error('缺少活动ID，无法更新活动');
+      return;
+    }
+
+    // 验证封面图片
+    if (!imageUrl) {
+      message.error('请上传活动封面');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      // 准备更新数据
+      const updateData = transformActivityToUpdateRequest({
+        name: values.name,
+        description: values.description,
         cover: imageUrl,
-        timeRange: [startTime, endTime]
+        startTime: startTime.format('YYYY-MM-DD HH:mm:ss'),
+        endTime: endTime.format('YYYY-MM-DD HH:mm:ss'),
       });
+
+      // 调用API更新活动
+      await ActivityAPI.updateActivity(activityId, updateData);
+
+      message.success('活动更新成功');
+      
+      // 重置表单状态
+      form.resetFields();
+      setImageUrl(null);
+      setStartTime(null);
+      setEndTime(null);
+      
+      // 关闭弹窗
+      onClose();
+      
+      // 调用成功回调
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error: any) {
+      console.error('更新活动失败:', error);
+      message.error(error.message || '更新活动失败，请重试');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -266,7 +329,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose,
               <div className="w-8 h-px bg-gray-300 self-center"></div>
             </div>
             
-            <div>
+            <div> 
               <div className="text-sm text-gray-600 mb-2">请选择结束</div>
               <MobileDateTimePicker
                 value={endTime || undefined}
@@ -307,8 +370,16 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose,
         </Form.Item>
         
         <Form.Item style={{ marginTop: '20px' }}>
-          <Button type="primary" htmlType="submit" block size="small" shape="default">
-            完成
+          <Button 
+            type="primary" 
+            htmlType="submit" 
+            block 
+            size="small" 
+            shape="default"
+            loading={submitting}
+            disabled={submitting}
+          >
+            {submitting ? '更新中...' : '完成'}
           </Button>
         </Form.Item>
       </Form>

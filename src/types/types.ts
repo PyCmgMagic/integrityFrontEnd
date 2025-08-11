@@ -33,3 +33,15 @@ export interface ActivityHistoryData {
     title: string;
     date: string;
 }
+
+// 活动数据类型
+export interface ActivityData {
+  id?: number;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  type: string;
+  coverImage?: string;
+  rules?: string;
+}

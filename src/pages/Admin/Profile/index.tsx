@@ -1,13 +1,26 @@
 import React, { useState } from 'react';
-import { Card, Typography, Avatar, Tabs, List } from 'antd';
+import { Card, Typography, Avatar, Tabs, List, Button, message, Empty } from 'antd';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
-import { EditOutlined, CalendarOutlined } from '@ant-design/icons';
+import { EditOutlined, CalendarOutlined, StarOutlined, DownloadOutlined, PlusOutlined } from '@ant-design/icons';
 
 // 导入组件
-import EditProfileModal from '../../../components/EditProfileModal';
+import { 
+  EditProfileModal, 
+  CreateActivityModal, 
+  ExportDataModal
+} from '../../../components';
+import type { ActivityData } from '../../../types/types';
 
 
 import type { UserProfile, CheckInData, ActivityHistoryData } from '../../../types/types';
+
+// 收藏的打卡信息类型
+interface FavoriteData {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+}
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -21,9 +34,15 @@ const initialCheckInData: CheckInData[] = [
 ];
 
 const activityHistoryData: ActivityHistoryData[] = [
-    { id: 1, type: 'join', title: '参加了 “编程马拉松” 活动', date: '12-25' },
-    { id: 2, type: 'post', title: '在 “校园摄影展” 中发布了新照片', date: '12-20' },
-    { id: 3, type: 'join', title: '报名了 “学期总结分享会”', date: '12-15' },
+    { id: 1, type: 'join', title: '参加了 "编程马拉松" 活动', date: '12-25' },
+    { id: 2, type: 'post', title: '在 "校园摄影展" 中发布了新照片', date: '12-20' },
+    { id: 3, type: 'join', title: '报名了 "学期总结分享会"', date: '12-15' },
+];
+
+// 收藏的打卡信息初始数据
+const initialFavoriteData: FavoriteData[] = [
+  { id: 1, title: '每日单词打卡', description: '每天学习20个新单词，提高英语词汇量', date: '2023-12-20' },
+  { id: 2, title: '晨跑打卡', description: '每天早晨6点跑步3公里，保持健康生活方式', date: '2023-12-18' },
 ];
 
 const ProfilePage: React.FC = () => {
@@ -41,7 +60,11 @@ const ProfilePage: React.FC = () => {
   });
 
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
+  const [isCreateActivityModalVisible, setIsCreateActivityModalVisible] = useState<boolean>(false);
+  const [isExportDataModalVisible, setIsExportDataModalVisible] = useState<boolean>(false);
   const [checkInData, setCheckInData] = useState<CheckInData[]>(initialCheckInData);
+  const [favoriteData, setFavoriteData] = useState<FavoriteData[]>(initialFavoriteData);
+  const [isCreatingActivity, setIsCreatingActivity] = useState<boolean>(false);
 
   const showEditModal = () => setIsEditModalVisible(true);
   const handleModalCancel = () => setIsEditModalVisible(false);
@@ -50,6 +73,62 @@ const ProfilePage: React.FC = () => {
     setUser(updatedData);
     setIsEditModalVisible(false);
     Toast.show({ content: '个人信息已更新', position: 'bottom' });
+  };
+
+  // 显示创建活动模态框
+  const showCreateActivityModal = () => {
+    setIsCreateActivityModalVisible(true);
+  };
+
+  // 隐藏创建活动模态框
+  const hideCreateActivityModal = () => {
+    setIsCreateActivityModalVisible(false);
+  };
+
+  // 处理创建活动
+  const handleCreateActivity = (activityData: ActivityData) => {
+    setIsCreatingActivity(true);
+    // 模拟API调用
+    setTimeout(() => {
+      // 创建成功后，可以将新活动添加到列表中
+      const newActivity: CheckInData = {
+        id: checkInData.length + 1,
+        title: activityData.title,
+        time: '新创建',
+        date: activityData.startDate.split('-')[1] + '.' + activityData.startDate.split('-')[2]
+      };
+      setCheckInData([newActivity, ...checkInData]);
+      setIsCreatingActivity(false);
+      setIsCreateActivityModalVisible(false);
+      message.success('活动创建成功');
+    }, 1000);
+  };
+
+  // 显示导出数据模态框
+  const showExportDataModal = () => {
+    setIsExportDataModalVisible(true);
+  };
+
+  // 隐藏导出数据模态框
+  const hideExportDataModal = () => {
+    setIsExportDataModalVisible(false);
+  };
+
+  // 处理导出数据
+  const handleExportData = (exportOptions: any) => {
+    // 模拟导出过程
+    message.loading('正在导出数据...', 1.5)
+      .then(() => {
+        console.log('导出选项:', exportOptions);
+        message.success('活动数据已导出');
+        setIsExportDataModalVisible(false);
+      });
+  };
+
+  // 取消收藏的处理函数
+  const handleRemoveFavorite = (id: number) => {
+    setFavoriteData(prevData => prevData.filter(item => item.id !== id));
+    message.success('已取消收藏');
   };
 
   const rightActions = (id: number) => [
@@ -93,7 +172,15 @@ const ProfilePage: React.FC = () => {
           <Card className="rounded-2xl shadow-lg border-0 bg-white">
             <Tabs defaultActiveKey="1" centered size="large">
               <TabPane tab="我创建的活动" key="1">
-                <div className="p-0 pt-0">
+                <div className="p-4 pt-0">
+                  <Button 
+                    type="primary" 
+                    icon={<PlusOutlined />} 
+                    className="mb-4 bg-blue-500 hover:bg-blue-600" 
+                    onClick={showCreateActivityModal}
+                  >
+                    创建新活动
+                  </Button>
                   {checkInData.map((item, index) => (
                     <SwipeAction
                       key={item.id}
@@ -119,10 +206,19 @@ const ProfilePage: React.FC = () => {
                 </div>
               </TabPane>
               <TabPane tab="导出活动数据" key="2">
-                <List
-                  className="p-4 pt-0"
-                  dataSource={activityHistoryData}
-                  renderItem={(item) => (
+                <div className="p-4 pt-0">
+                  <Button 
+                    type="primary" 
+                    icon={<DownloadOutlined />} 
+                    className="mb-4 bg-green-500 hover:bg-green-600" 
+                    onClick={showExportDataModal}
+                  >
+                    导出数据
+                  </Button>
+                  <List
+                    className="mt-2"
+                    dataSource={activityHistoryData}
+                    renderItem={(item) => (
                      <List.Item key={item.id} className="border-0 px-0 py-2">
                       <div className="w-full bg-gray-50 rounded-xl p-4 transition-all hover:bg-gray-100 hover:shadow-md">
                         <div className="flex justify-between items-center">
@@ -135,11 +231,47 @@ const ProfilePage: React.FC = () => {
                       </div>
                     </List.Item>
                   )}
-                />
+                  />
+                </div>
               </TabPane>
               <TabPane tab="我的收藏" key="3">
                 <div className="p-4 pt-0">
-                  <Text>暂无收藏</Text>
+                  {favoriteData.length > 0 ? (
+                    <List
+                      dataSource={favoriteData}
+                      renderItem={(item) => (
+                        <List.Item key={item.id} className="border-0 px-0 py-2">
+                          <div className="w-full bg-yellow-50 rounded-xl p-4 transition-all hover:bg-yellow-100 hover:shadow-md">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <StarOutlined className="text-yellow-500 mr-4 text-xl" />
+                                <div>
+                                  <Text strong className="text-gray-800">{item.title}</Text>
+                                  <div className="mt-1">
+                                    <Text type="secondary">{item.description}</Text>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end">
+                                <Text type="secondary">{item.date}</Text>
+                                <Button 
+                                  type="text" 
+                                  danger 
+                                  size="small" 
+                                  className="mt-2"
+                                  onClick={() => handleRemoveFavorite(item.id)}
+                                >
+                                  取消收藏
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </List.Item>
+                      )}
+                    />
+                  ) : (
+                    <Empty description="暂无收藏" />
+                  )}
                 </div>
               </TabPane>
             </Tabs>
@@ -153,6 +285,20 @@ const ProfilePage: React.FC = () => {
         onCancel={handleModalCancel}
         onSave={handleModalSave}
         currentUser={user}
+      />
+
+      {/* 创建活动模态框 */}
+      <CreateActivityModal
+        visible={isCreateActivityModalVisible}
+        onCancel={hideCreateActivityModal}
+        onSave={handleCreateActivity}
+      />
+
+      {/* 导出数据模态框 */}
+      <ExportDataModal
+        visible={isExportDataModalVisible}
+        onCancel={hideExportDataModal}
+        onExport={handleExportData}
       />
     </>
   );

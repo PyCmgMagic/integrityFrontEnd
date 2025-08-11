@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react'; // 添加 useRef
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Progress, Space, message } from 'antd';
+import { Modal, Button, List, Avatar, Progress, Space, message, Spin } from 'antd';
 import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined, EditOutlined } from '@ant-design/icons';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 // 导入外部的编辑弹窗组件
 import EditActivityModal from './EditActivityModal';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
+import { ActivityAPI } from '../../../services/api';
+import { formatDateFromNumber } from '../../../utils/dataTransform';
+import type { ActivityDetailResponse } from '../../../types/api';
 
 // 模拟用户信息，可以从 context 或 props 获取
 const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
@@ -18,59 +21,198 @@ const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
 const ActivityDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  
+  // 添加取消请求的引用
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
+
+  // 调试信息 - 开发环境下显示
+  console.log('🔧 ActivityDetailPage 渲染:', {
+    id,
+    pathname: window.location.pathname,
+  });
 
   // --- State 管理 ---
   const [isIntroVisible, setIntroVisible] = useState(false);
   const [isScoresVisible, setScoresVisible] = useState(false);
   const [isRankingVisible, setRankingVisible] = useState(false);
-  const [isEditModalVisible, setEditModalVisible] = useState(false); // 控制编辑弹窗的 state
+  const [isEditModalVisible, setEditModalVisible] = useState(false);
+  
+  // API数据状态
+  const [loading, setLoading] = useState(true);
+  const [activityData, setActivityData] = useState<ActivityDetailResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // --- 模拟数据 ---
-  const activity = {
-    name: '寒假打卡活动',
-    time: '1.3 - 1.31',
-    description: '这是一个旨在鼓励用户在寒假期间坚持学习和锻炼的打卡活动。通过完成每日任务，不仅可以获得积分，还能养成良好习惯。',
+  // 组件卸载时的清理
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      // 取消进行中的请求
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  /**
+   * 获取活动详情数据 (优化版本 - 修复无限循环)
+   */
+  const fetchActivityDetail = useCallback(async (activityId?: string) => {
+    const currentId = activityId || id;
+    console.log('🔍 准备获取活动详情, 当前 id:', currentId);
+    
+    // 等待路由参数完全加载
+    if (!currentId) {
+      console.warn('⚠️ ID 参数未就绪');
+      return;
+    }
+
+    // 验证ID是否为有效数字
+    const numericId = Number(currentId);
+    if (isNaN(numericId) || numericId <= 0) {
+      const errorMsg = `无效的活动ID: ${currentId}`;
+      console.error('❌ 错误:', errorMsg);
+      setError(errorMsg);
+      setLoading(false);
+      return;
+    }
+
+    // 取消之前的请求
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // 创建新的请求控制器
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+       try {
+      // 重置状态，准备发起新的请求
+      setLoading(true);
+      setError(null);
+      console.log('📡 调用API获取活动详情, activityId:', numericId);
+      
+      const response = await ActivityAPI.getActivityDetail(numericId);
+      
+      // 检查组件是否仍然挂载以及请求是否被取消
+      if (!mountedRef.current || controller.signal.aborted) {
+        console.log('🚫 组件已卸载或请求被取消，忽略响应');
+        return;
+      }
+      
+      console.log('✅ 成功获取活动详情:', response);
+      setActivityData(response);
+      
+    } catch (error: any) {
+      // 统一处理请求被取消的情况
+      const isCanceled = (
+        error.name === 'AbortError' || 
+        controller.signal.aborted ||
+        (error.message && error.message.toLowerCase().includes('cancel'))
+      );
+      
+      // 如果是取消错误，则静默处理，不显示任何用户提示
+      if (isCanceled) {
+        console.log('🚫 请求被主动取消 (开发环境下的正常行为)');
+        return; // 直接退出，不执行后续错误处理
+      }
+      
+      // 检查组件是否仍然挂载（处理真实的错误）
+      if (!mountedRef.current) {
+        console.log('🚫 组件已卸载，忽略真实错误');
+        return;
+      }
+      
+      console.error('❌ 获取活动详情失败:', error);
+      
+      // 为真实错误设置并显示消息
+      let errorMessage = '获取活动详情失败';
+      if (error.code === 404) {
+        errorMessage = `活动不存在 (ID: ${numericId})`;
+      } else if (error.message) { // 移除了 !error.message.includes('canceled')
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
+      message.error(errorMessage);
+
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
+    }
+  }, []); // 移除 id 依赖，防止无限循环
+
+  // 简化的 useEffect，只在 id 变化时触发
+  useEffect(() => {
+    console.log('🚀 useEffect 触发，当前 id:', id);
+    if (!id) {
+      console.warn('⚠️ ID 参数未就绪，等待路由加载...');
+      // 给路由参数一些时间来加载
+      const timer = setTimeout(() => {
+        if (mountedRef.current) {
+          console.log('⏰ 延迟后重试获取数据，当前页面参数:', window.location.pathname);
+          // 重新检查URL参数
+          const pathParts = window.location.pathname.split('/');
+          const urlId = pathParts[pathParts.indexOf('activity') + 1];
+          if (urlId && urlId !== id) {
+            console.log('📍 从URL直接获取ID:', urlId);
+            fetchActivityDetail(urlId);
+          }
+        }
+      }, 150);
+      
+      return () => clearTimeout(timer);
+    } else {
+      // ID 存在时立即获取数据
+      fetchActivityDetail(id);
+    }
+  }, [id]); // 只依赖于 id 变化
+
+  // 处理从API获取的数据
+  const activity = activityData ? {
+    name: activityData.activity.name,
+    time: `${formatDateFromNumber(activityData.activity.start_date)} - ${formatDateFromNumber(activityData.activity.end_date)}`,
+    description: activityData.activity.description,
+  } : {
+    name: '加载中...',
+    time: '加载中...',
+    description: '加载中...',
   };
   
-  // 为编辑表单准备的详细数据，包含了 moment 对象
-  const activityInitialData = {
-    name: '寒假打卡活动',
-    description: `寒假打卡活动设有多个项目, 不同主题项目下设有一个或多个栏目, 完成栏目打卡任务则可以活动对应积分, 活动时间为1.3~1.31
-累计得分: 点击后弹窗显示此活动中获得的总分数以及每一分的打卡记录项;
-我的排名: 每日更新, 点击后显示前30名总分最高的用户名称;
-最多连续打卡: 点击后可以查看每日是否打卡情况;
-各项目: 点击后进入项目详情页`,
-    cover: 'https://i.111666.best/image/HajJhEnP8OGD1NR1Of0IqZ.jpg',
-    timeRange: [moment('2025-01-03'), moment('2025-01-31')],
-  };
+  // 为编辑表单准备的详细数据
+  const activityInitialData = activityData ? {
+    name: activityData.activity.name,
+    description: activityData.activity.description,
+    cover: activityData.activity.avatar,
+    avatar: activityData.activity.avatar,
+    startTime: formatDateFromNumber(activityData.activity.start_date),
+    endTime: formatDateFromNumber(activityData.activity.end_date),
+    timeRange: [
+      dayjs(formatDateFromNumber(activityData.activity.start_date)), 
+      dayjs(formatDateFromNumber(activityData.activity.end_date))
+    ],
+  } : null;
   
   const userStats = {
     totalScore: 23,
     maxStreak: 7,
     rank: 21,
-    todayProgress: { completed: 3, total: 5 } // 今日打卡进度
+    todayProgress: { completed: 3, total: 5 }
   };
 
-  const projects = [
-    {
-      id: '1',
-      title: '“瑞蛇衔知”',
-      subtitle: '勤学善思',
-      icon: <BookOutlined className="text-4xl text-white" />,
-      gradient: 'from-orange-500 to-red-500',
-    },
-    {
-      id: '2',
-      title: '“灵蛇展跃”',
-      subtitle: '运动不止',
-      icon: <ExperimentOutlined className="text-4xl text-white" />,
-      gradient: 'from-amber-500 to-orange-500',
-    },
-  ];
+  const projects = activityData?.projects?.map((project, index) => ({
+    id: Number(project.id),
+    title: project.name || `项目 ${index + 1}`,
+    subtitle: project.description || '暂无描述',
+    icon: index % 2 === 0 ? <BookOutlined className="text-4xl text-white" /> : <ExperimentOutlined className="text-4xl text-white" />,
+    gradient: index % 2 === 0 ? 'from-orange-500 to-red-500' : 'from-amber-500 to-orange-500',
+  })) || [];
 
   const scoreRecords = [
-    { task: '完成“瑞蛇衔知”项目打卡', score: 5, date: '2023-01-15' },
-    { task: '完成“灵蛇展跃”项目打卡', score: 3, date: '2023-01-14' },
+    { task: '完成"瑞蛇衔知"项目打卡', score: 5, date: '2023-01-15' },
+    { task: '完成"灵蛇展跃"项目打卡', score: 3, date: '2023-01-14' },
     { task: '连续打卡3天奖励', score: 10, date: '2023-01-13' },
     { task: '首次完成打卡', score: 5, date: '2023-01-11' },
   ];
@@ -82,30 +224,21 @@ const ActivityDetailPage = () => {
     avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${i}`
   }));
 
-
-  const handleProjectClick = (projectId: string) => {
-
+  const handleProjectClick = (projectId: number) => {
     navigate(`/admin/activity/${id}/project/${projectId}`);
   };
+  
   const handleNewProjectClick = () => {
     navigate(`/admin/create/activity/${id}/project`);
   }
 
-  // 从编辑弹窗接收表单数据的处理函数
-  const handleEditFinish = (values: typeof activityInitialData) => {
-    console.log('表单数据已成功提交到父组件:', {
-        ...values,
-        // 实际提交时格式化日期
-        timeRange: [
-            values.timeRange[0].format('YYYY-MM-DD'),
-            values.timeRange[1].format('YYYY-MM-DD'),
-        ],
-    });
+  const handleEditFinish = () => {
     message.success('活动信息已成功更新!');
-    setEditModalVisible(false); // 在这里处理关闭弹窗的逻辑
+    setEditModalVisible(false);
+    fetchActivityDetail(); // 重新获取活动数据
   };
-  // 定义滑动操作的按钮
-  const rightActions = (projectId: string) => [
+
+  const rightActions = (projectId: number) => [
     {
       key: 'delete',
       text: '删除',
@@ -113,19 +246,58 @@ const ActivityDetailPage = () => {
       onClick: () => handleDelete(projectId),
     },
   ];
- const handleDelete = async (projectId: string) => {
-  const result = await Dialog.confirm({
-    content:'确定删除这个项目吗？',
-    confirmText: '确认',
-    cancelText: '取消',
-  });
-  if(result){
-    //删除项目
-    Toast.show({
-      content:'删除成功',
-    })
+  
+  const handleDelete = async (projectId: number) => {
+    const result = await Dialog.confirm({
+      content:'确定删除这个项目吗？',
+      confirmText: '确认',
+      cancelText: '取消',
+    });
+    if(result){
+      Toast.show({ content:'删除成功' });
+      // 这里可以调用API删除，然后重新获取数据
+      fetchActivityDetail(); 
+    }
   }
- }
+
+  // --- 渲染逻辑 ---
+
+  // 加载状态：在数据请求期间显示（改进了判断逻辑）
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Spin size="large" />
+          <p className="mt-4 text-gray-500">
+            {!id ? '正在加载路由参数...' : '正在获取活动详情...'}
+          </p> 
+        </div> 
+      </div>
+    );
+  }
+
+  // 错误状态
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">加载失败</h2>
+          <p className="text-gray-500 mb-4">{error}</p>
+          <div className="space-y-2">
+            <Button type="primary" onClick={() =>fetchActivityDetail(id)} className="w-full">
+              重试
+            </Button> 
+            <Button onClick={() => navigate('/admin/home')} className="w-full">
+              返回首页
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // 主UI渲染
   return (
     <div className="bg-slate-50 min-h-screen font-sans">
       <header className="bg-gradient-to-br from-orange-400 to-red-500 text-white pt-6 px-4 pb-4shadow-lg rounded-b-3xl">
@@ -160,7 +332,7 @@ const ActivityDetailPage = () => {
             <SwipeAction
               key={project.id}
               data-id={project.id}
-              rightActions={rightActions(project.id)} 
+              rightActions={rightActions(Number(project.id))} 
             >
             <div key={project.id} className={`bg-gradient-to-r ${project.gradient} p-6 rounded-2xl shadow-lg flex items-center justify-between`}>
               <div className="flex items-center">
@@ -173,7 +345,8 @@ const ActivityDetailPage = () => {
               <Button  
                 shape="round" 
                 className="bg-white text-red-500 font-bold border-none hover:bg-white/90"
-                onClick={() => handleProjectClick(project.id)}
+                onClick={() => handleProjectClick(Number(project.id))}
+
               >
                 查看
               </Button>
@@ -183,6 +356,7 @@ const ActivityDetailPage = () => {
         </div>
       </main>
 
+      {/* Modals */}
       <Modal title="活动简介" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
         <p className="text-gray-600 leading-relaxed">{activity.description}</p>
       </Modal>
@@ -220,15 +394,18 @@ const ActivityDetailPage = () => {
         />
       </Modal>
 
-      {/* --- 使用提取出来的编辑组件 --- */}
-      <EditActivityModal
-        visible={isEditModalVisible}
-        onClose={() => setEditModalVisible(false)}
-        onFinish={handleEditFinish}
-        initialData={activityInitialData}
-      />
-    </div> 
+      {activityInitialData && (
+        <EditActivityModal
+          visible={isEditModalVisible}
+          onCancel={() => setEditModalVisible(false)}
+          onClose={() => setEditModalVisible(false)}
+          onSuccess={handleEditFinish}
+          activityId={Number(id)}
+          initialData={activityInitialData}
+        />
+      )}
+    </div>  
   );
 }; 
 
-export default ActivityDetailPage;
+export default ActivityDetailPage; 

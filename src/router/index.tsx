@@ -6,6 +6,7 @@ import CheckInDetail from '../pages/Admin/ColumnManage/CheckInDetail';
 
 // 懒加载页面组件
 const LoginPage = lazy(() => import('../pages/Login/index'));
+const NetworkTestPage = lazy(() => import('../pages/NetworkTest'));
 
 // 用户端页面
 const UserLayout = lazy(() => import('../components/UserLayout'));
@@ -33,6 +34,7 @@ const ReviewDetail = lazy(() => import('../pages/Admin/ReviewDetail/index'));
 const Favorites = lazy(() => import('../pages/Admin/Favorites/index'));
 const ExportData = lazy(() => import('../pages/Admin/ExportData/index'));
 const AdminProfile = lazy(() => import('../pages/Admin/Profile/index'));
+const ActivityTest = lazy(() => import('../pages/Admin/ActivityTest'));
 
 // 加载组件
 const LoadingComponent = () => (
@@ -48,6 +50,14 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<LoadingComponent />}>
         <LoginPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/network-test',
+    element: (
+      <Suspense fallback={<LoadingComponent />}>
+        <NetworkTestPage />
       </Suspense>
     ),
   },
@@ -247,6 +257,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingComponent />}>
             <ExportData />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'test/activity',
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <ActivityTest />
           </Suspense>
         ),
       },
