@@ -1,59 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Progress } from 'antd';
+import { Modal, Button, List, Avatar, Progress, Spin, Result } from 'antd';
 import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined } from '@ant-design/icons';
+import { useProjectDetail } from '../../../hooks/useProjectDetail';
+import { formatDateRange } from '../../../utils/dataTransform';
 
 // 模拟用户信息，可以从 context 或 props 获取
 const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
 
 /**
- * 美化后的活动详情页面
+ * 美化后的项目详情页面
  * @returns 
  */
 const ProjectDetailPage = () => {
-  const { activityId , projectId } = useParams();
+  const { activityId, projectId } = useParams();
   const navigate = useNavigate();
   const [isIntroVisible, setIntroVisible] = useState(false);
   const [isScoresVisible, setScoresVisible] = useState(false);
   const [isRankingVisible, setRankingVisible] = useState(false);
 
-  // --- 模拟数据 ---
-  const project = {
-    name: '“瑞蛇衔知”,勤学善思',
-    time: '1.3 - 1.31',
-    description: '这是一个旨在鼓励用户在寒假期间坚持学习和锻炼的打卡活动。通过完成每日任务，不仅可以获得积分，还能养成良好习惯。',
-  };
+  // 记忆化处理路由参数，确保参数解析的稳定性
+  const parsedProjectId = useMemo(() => {
+    if (!projectId) return undefined;
+    const id = parseInt(projectId, 10);
+    return isNaN(id) ? undefined : id;
+  }, [projectId]);
 
+  // 获取项目详情数据
+  const { projectDetail, loading, error, isRetrying, refetch } = useProjectDetail(parsedProjectId);
+
+
+  // 模拟用户统计数据（后续可接入真实API）
   const userStats = {
     totalScore: 23,
     maxStreak: 7,
     rank: 21,
     todayProgress: { completed: 3, total: 5 } // 今日打卡进度
   };
-
-  const columns = [
-    {
-      id: '1',
-      title: '自习打卡',
-      gradient: 'from-amber-500 to-orange-500',
-    },
-    {
-      id: '2',
-      title: '单词打卡',
-      gradient: 'from-amber-500 to-orange-500',
-    }, 
-    {
-      id: '3',
-      title: '阅读打卡',
-      gradient: 'from-amber-500 to-orange-500',
-    },
-    {
-      id: '4',
-      title: '实验打卡',
-      gradient: 'from-amber-500 to-orange-500',
-    },
-
-  ];
 
   const scoreRecords = [
     { task: '完成“瑞蛇衔知”项目打卡', score: 5, date: '2023-01-15' },
@@ -69,9 +52,89 @@ const ProjectDetailPage = () => {
     avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${i}` // 使用 placeholder 头像
   }));
 
-  const handleColumnClick = (columnId: string) => {
+  /**
+   * 处理栏目点击事件
+   * @param columnId 栏目ID
+   */
+  const handleColumnClick = (columnId: number) => {
     navigate(`/user/activity/${activityId}/project/${projectId}/column/${columnId}`);
   };
+
+  // 加载状态
+  if (loading) {
+    return (
+      <div className="bg-slate-50 min-h-screen">
+        <header className="bg-gradient-to-br from-orange-400 to-red-500 text-white p-6 shadow-lg rounded-b-3xl">
+          <div className="flex items-center justify-between">
+            <Button 
+              type="text" 
+              shape="circle" 
+              icon={<LeftOutlined />} 
+              className="text-white hover:bg-white/20" 
+              onClick={() => navigate(-1)} 
+            />
+            <h1 className="text-xl font-bold">项目详情</h1>
+            <div className="w-8"></div>
+          </div>
+        </header>
+        <div className="flex flex-col justify-center items-center h-64">
+          <Spin size="large" />
+          <div className="mt-4 text-gray-600">
+            {isRetrying ? '正在重试加载...' : '正在加载项目详情...'}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 错误状态处理
+  if (error || (!loading && !projectDetail)) {
+    // 区分不同的错误情况
+    let errorTitle = "加载失败";
+    let errorSubTitle = error || "项目不存在或已被删除";
+    
+    if (!parsedProjectId) {
+      errorTitle = "参数错误";
+      errorSubTitle = "项目ID无效";
+    }
+
+    return (
+      <div className="bg-slate-50 min-h-screen">
+        <header className="bg-gradient-to-br from-orange-400 to-red-500 text-white p-6 shadow-lg rounded-b-3xl">
+          <div className="flex items-center justify-between">
+            <Button 
+              type="text" 
+              shape="circle" 
+              icon={<LeftOutlined />} 
+              className="text-white hover:bg-white/20" 
+              onClick={() => navigate(-1)} 
+            />
+            <h1 className="text-xl font-bold">项目详情</h1>
+            <div className="w-8"></div>
+          </div>
+        </header>
+        <div className="p-4">
+          <Result
+            status="error"
+            title={errorTitle}
+            subTitle={errorSubTitle}
+            extra={
+              parsedProjectId && (
+                <Button type="primary" onClick={refetch}>
+                  重试
+                </Button>
+              )
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // 此时 projectDetail 已确保不为 null
+  if (!projectDetail) {
+    return null; // 这行代码永远不会执行，但能让 TypeScript 推断出下面的 projectDetail 不为 null
+  }
 
   return (
     // 使用更柔和的背景色
@@ -80,27 +143,40 @@ const ProjectDetailPage = () => {
         {/* 顶部导航栏 */}
         <div className="flex items-center justify-between">
           <Button type="text" shape="circle" icon={<LeftOutlined />} className="text-white hover:bg-white/20" onClick={() => navigate(-1)} />
-          <h1 className="text-xl font-bold">{project.name}</h1>
+          <h1 className="text-xl font-bold">{projectDetail.name}</h1>
           <Button type="text" shape="circle" icon={<InfoCircleOutlined />} className="text-white hover:bg-white/20" onClick={() => setIntroVisible(true)} />
         </div>
-        {/* 活动时间显示*/}
+        {/* 项目时间显示*/}
         <div className="text-center mt-3">
-            <p className="text-sm opacity-80">活动时间</p>
-            <p className="font-semibold tracking-wider">{project.time}</p>
+            <p className="text-sm opacity-80">项目时间</p>
+            <p className="font-semibold tracking-wider">
+              {formatDateRange(projectDetail.start_date, projectDetail.end_date)}
+            </p>
         </div>
    
       </header>
 
       {/* 主内容区域 */}
       <main className="p-4 pb-20">
-        {/* 打卡项目卡片 */}
+        {/* 打卡栏目卡片 */}
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-gray-700 px-2">打卡项目</h3>
-          {columns.map((column) => (
-            <div key={column.id} className={`bg-gradient-to-r ${column.gradient} p-8 rounded-2xl shadow-lg flex items-center justify-between`}>
+          <h3 className="text-lg font-bold text-gray-700 px-2">打卡栏目</h3>
+          {projectDetail.columns.map((column) => ( 
+            <div key={column.id} className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 rounded-2xl shadow-lg flex items-center justify-between">
               <div className="flex items-center">
+                <div className="mr-4">
+                  <img 
+                    src={column.avatar} 
+                    alt={column.name}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-white"
+                    onError={(e) => {
+                      // 图片加载失败时使用默认图标
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">{column.title}</h2>
+                  <h2 className="text-2xl font-bold text-white">{column.name}</h2>
                 </div>
               </div>
               <Button  
@@ -116,8 +192,26 @@ const ProjectDetailPage = () => {
       </main>
 
       {/* --- 弹窗 --- */}
-      <Modal title="活动简介" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
-        <p className="text-gray-600 leading-relaxed">{project.description}</p>
+      <Modal title="项目简介" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-3">
+            <img 
+              src={projectDetail.avatar} 
+              alt={projectDetail.name}
+              className="w-16 h-16 rounded-lg object-cover"
+              onError={(e) => {
+                e.currentTarget.src = '/public/assets/默认头像.png';
+              }}
+            />
+            <div>
+              <h3 className="text-lg font-bold text-gray-800">{projectDetail.name}</h3>
+              <p className="text-sm text-gray-500">
+                {formatDateRange(projectDetail.start_date, projectDetail.end_date)}
+              </p>
+            </div>
+          </div>
+          <p className="text-gray-600 leading-relaxed">{projectDetail.description}</p>
+        </div>
       </Modal>
 
       <Modal title="我的分数" open={isScoresVisible} onCancel={() => setScoresVisible(false)} footer={null}>

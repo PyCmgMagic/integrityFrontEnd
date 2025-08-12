@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 // 导入外部的编辑弹窗组件
 import EditActivityModal from './EditActivityModal';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
-import { ActivityAPI } from '../../../services/api';
+import { ActivityAPI, ProjectAPI } from '../../../services/api';
 import { formatDateFromNumber } from '../../../utils/dataTransform';
 import type { ActivityDetailResponse } from '../../../types/api';
 
@@ -247,16 +247,40 @@ const ActivityDetailPage = () => {
     },
   ];
   
+  /**
+   * 删除项目处理函数
+   * @param projectId 项目ID
+   */
   const handleDelete = async (projectId: number) => {
     const result = await Dialog.confirm({
-      content:'确定删除这个项目吗？',
-      confirmText: '确认',
+      content:'确定删除这个项目吗？删除后无法恢复。',
+      confirmText: '确认删除',
       cancelText: '取消',
     });
-    if(result){
-      Toast.show({ content:'删除成功' });
-      // 这里可以调用API删除，然后重新获取数据
-      fetchActivityDetail(); 
+    
+    if (result) {
+      try {
+        // 调用删除项目API
+        await ProjectAPI.deleteProject(projectId);
+        
+        // 显示成功提示
+        Toast.show({ 
+          content: '项目删除成功',
+          duration: 2000
+        });
+        
+        // 重新获取活动数据以更新项目列表
+        fetchActivityDetail(); 
+        
+      } catch (error: any) {
+        console.error('删除项目失败:', error);
+        
+        // 显示错误提示
+        Toast.show({ 
+          content: error.message || '删除项目失败，请重试',
+          duration: 3000
+        });
+      }
     }
   }
 
@@ -408,4 +432,4 @@ const ActivityDetailPage = () => {
   );
 }; 
 
-export default ActivityDetailPage; 
+export default ActivityDetailPage;

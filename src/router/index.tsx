@@ -6,7 +6,6 @@ import CheckInDetail from '../pages/Admin/ColumnManage/CheckInDetail';
 
 // 懒加载页面组件
 const LoginPage = lazy(() => import('../pages/Login/index'));
-const NetworkTestPage = lazy(() => import('../pages/NetworkTest'));
 
 // 用户端页面
 const UserLayout = lazy(() => import('../components/UserLayout'));
@@ -50,14 +49,6 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<LoadingComponent />}>
         <LoginPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/network-test',
-    element: (
-      <Suspense fallback={<LoadingComponent />}>
-        <NetworkTestPage />
       </Suspense>
     ),
   },

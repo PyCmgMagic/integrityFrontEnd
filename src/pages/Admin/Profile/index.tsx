@@ -58,13 +58,11 @@ const ProfilePage: React.FC = () => {
     dob: '2006-01-01',
     gender: '男',
   });
-
+ 
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
-  const [isCreateActivityModalVisible, setIsCreateActivityModalVisible] = useState<boolean>(false);
   const [isExportDataModalVisible, setIsExportDataModalVisible] = useState<boolean>(false);
   const [checkInData, setCheckInData] = useState<CheckInData[]>(initialCheckInData);
   const [favoriteData, setFavoriteData] = useState<FavoriteData[]>(initialFavoriteData);
-  const [isCreatingActivity, setIsCreatingActivity] = useState<boolean>(false);
 
   const showEditModal = () => setIsEditModalVisible(true);
   const handleModalCancel = () => setIsEditModalVisible(false);
@@ -75,34 +73,6 @@ const ProfilePage: React.FC = () => {
     Toast.show({ content: '个人信息已更新', position: 'bottom' });
   };
 
-  // 显示创建活动模态框
-  const showCreateActivityModal = () => {
-    setIsCreateActivityModalVisible(true);
-  };
-
-  // 隐藏创建活动模态框
-  const hideCreateActivityModal = () => {
-    setIsCreateActivityModalVisible(false);
-  };
-
-  // 处理创建活动
-  const handleCreateActivity = (activityData: ActivityData) => {
-    setIsCreatingActivity(true);
-    // 模拟API调用
-    setTimeout(() => {
-      // 创建成功后，可以将新活动添加到列表中
-      const newActivity: CheckInData = {
-        id: checkInData.length + 1,
-        title: activityData.title,
-        time: '新创建',
-        date: activityData.startDate.split('-')[1] + '.' + activityData.startDate.split('-')[2]
-      };
-      setCheckInData([newActivity, ...checkInData]);
-      setIsCreatingActivity(false);
-      setIsCreateActivityModalVisible(false);
-      message.success('活动创建成功');
-    }, 1000);
-  };
 
   // 显示导出数据模态框
   const showExportDataModal = () => {
@@ -173,14 +143,6 @@ const ProfilePage: React.FC = () => {
             <Tabs defaultActiveKey="1" centered size="large">
               <TabPane tab="我创建的活动" key="1">
                 <div className="p-4 pt-0">
-                  <Button 
-                    type="primary" 
-                    icon={<PlusOutlined />} 
-                    className="mb-4 bg-blue-500 hover:bg-blue-600" 
-                    onClick={showCreateActivityModal}
-                  >
-                    创建新活动
-                  </Button>
                   {checkInData.map((item, index) => (
                     <SwipeAction
                       key={item.id}
@@ -287,12 +249,7 @@ const ProfilePage: React.FC = () => {
         currentUser={user}
       />
 
-      {/* 创建活动模态框 */}
-      <CreateActivityModal
-        visible={isCreateActivityModalVisible}
-        onCancel={hideCreateActivityModal}
-        onSave={handleCreateActivity}
-      />
+
 
       {/* 导出数据模态框 */}
       <ExportDataModal

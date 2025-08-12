@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, Select, message, Upload, Drawer, Space } from 'antd';
-import { UploadOutlined, CalendarOutlined } from '@ant-design/icons';
-import type { UploadFile, RcFile } from 'antd/es/upload';
+import { Modal, Form, Input, Button, Select, message, Drawer, Space } from 'antd';
+import { CalendarOutlined } from '@ant-design/icons';
 import dayjs, { type Dayjs } from 'dayjs';
 import { ActivityAPI } from '../services/api';
 import { transformActivityToCreateRequest } from '../utils/dataTransform';
+import SingleImageUpload from './SingleImageUpload';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -128,7 +128,9 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
   const [startTime, setStartTime] = useState<Dayjs | null>(null);
   const [endTime, setEndTime] = useState<Dayjs | null>(null);
 
-  // 重置表单
+  /**
+   * 重置表单和所有状态
+   */
   const resetForm = () => {
     form.resetFields();
     setCoverImageUrl(undefined);
@@ -186,36 +188,13 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
     }
   };
 
-  // 模拟上传请求
-  const dummyRequest = ({ onSuccess }: any) => {
-    setTimeout(() => {
-      onSuccess?.('ok');
-    }, 0);
-  };
-
-  // 上传前验证
-  const beforeUpload = (file: RcFile) => {
-    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
-    if (!isJpgOrPng) {
-      message.error('你只能上传 JPG/PNG 格式的图片!');
-    }
-    const isLt2M = file.size / 1024 / 1024 < 2;
-    if (!isLt2M) {
-      message.error('图片大小必须小于 2MB!');
-    }
-    return isJpgOrPng && isLt2M;
-  };
-
-  // 处理上传变化
-  const handleUploadChange = (info: any) => {
-    if (info.file.status === 'done') {
-      const reader = new FileReader();
-      reader.addEventListener('load', () => setCoverImageUrl(reader.result as string));
-      reader.readAsDataURL(info.file.originFileObj as RcFile);
-      message.success('封面上传成功');
-    } else if (info.file.status === 'error') {
-      message.error('封面上传失败');
-    }
+  /**
+   * 处理封面图片变化
+   * @param url 图片URL
+   */
+  const handleCoverImageChange = (url: string) => {
+    setCoverImageUrl(url);
+    form.setFieldsValue({ avatar: url });
   };
 
   return (
@@ -224,8 +203,17 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
       open={visible}
       onCancel={handleCancel}
       footer={[
-        <Button key="back" onClick={handleCancel}>取消</Button>,
-        <Button key="submit" type="primary" loading={loading} onClick={handleSave}>创建</Button>,
+        <Button key="cancel" onClick={handleCancel}>
+          取消
+        </Button>,
+        <Button 
+          key="submit" 
+          type="primary" 
+          loading={loading} 
+          onClick={handleSave}
+        >
+          创建活动
+        </Button>,
       ]}
       destroyOnClose
     >
@@ -268,23 +256,13 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
           </div>
         </Form.Item>
         <Form.Item name="coverImage" label="活动封面">
-          <Upload
-            name="coverImage"
-            listType="picture-card"
-            showUploadList={false}
-            customRequest={dummyRequest}
-            beforeUpload={beforeUpload}
-            onChange={handleUploadChange}
-          >
-            {coverImageUrl ? (
-              <img src={coverImageUrl} alt="封面" style={{ width: '100%' }} />
-            ) : (
-              <div>
-                <UploadOutlined />
-                <div style={{ marginTop: 8 }}>上传封面</div>
-              </div>
-            )}
-          </Upload>
+          <SingleImageUpload
+            value={coverImageUrl}
+            onChange={handleCoverImageChange}
+            uploadText="上传封面"
+            maxSize={5}
+            className="avatar-uploader"
+          />
         </Form.Item>
 
         <Form.Item name="rules" label="活动规则">

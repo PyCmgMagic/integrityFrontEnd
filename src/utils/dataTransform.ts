@@ -33,6 +33,24 @@ export function formatDateToNumber(dateString: string): number {
 }
 
 /**
+ * 格式化日期范围显示
+ * @param startDate 开始日期数字，格式如 20250607
+ * @param endDate 结束日期数字，格式如 20250720
+ * @returns 格式化的日期范围字符串，如 "6.7 - 7.20"
+ */
+export function formatDateRange(startDate: number, endDate: number): string {
+  const startStr = startDate.toString();
+  const endStr = endDate.toString();
+  
+  const startMonth = parseInt(startStr.substring(4, 6));
+  const startDay = parseInt(startStr.substring(6, 8));
+  const endMonth = parseInt(endStr.substring(4, 6));
+  const endDay = parseInt(endStr.substring(6, 8));
+  
+  return `${startMonth}.${startDay} - ${endMonth}.${endDay}`;
+}
+
+/**
  * 将后端活动数据转换为前端Activity格式
  * @param apiActivity 后端活动数据
  * @returns 前端Activity格式

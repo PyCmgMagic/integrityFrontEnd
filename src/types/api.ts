@@ -151,3 +151,27 @@ export interface ActivityListParams {
   page_size?: number;
   name?: string;
 }
+
+// 项目详情相关类型定义
+export interface ProjectColumn {
+  id: number;
+  name: string;
+  avatar: string;
+}
+
+export interface ProjectDetail {
+  id: number;
+  name: string;
+  avatar: string;
+  description: string;
+  start_date: number;
+  end_date: number;
+  columns: ProjectColumn[];
+}
+
+export interface ProjectDetailResponse {
+  code: number;
+  msg: string;
+  data: ProjectDetail;
+  timestamp: number;
+}

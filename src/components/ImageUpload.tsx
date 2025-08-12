@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Upload, message, Modal, Image } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Upload, message, Modal, Image, Progress } from 'antd';
+import { PlusOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
+import type { RcFile } from 'antd/es/upload';
+import { uploadImageToCloud, compressImage } from '../utils/imageUpload';
 
 interface ImageUploadProps {
   value?: string[];
@@ -20,6 +22,8 @@ const ImageUpload = ({
 }: ImageUploadProps) => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [fileList, setFileList] = useState<UploadFile[]>(
     value.map((url, index) => ({
       uid: `-${index}`,
@@ -63,26 +67,48 @@ const ImageUpload = ({
     onChange?.(urls);
   };
 
-  const customRequest = async ({ file, onSuccess, onError }: any) => {
-    // 模拟上传过程
+  /**
+   * 自定义上传请求，使用图床API
+   */
+  const customRequest = async ({ 
+    file, 
+    onSuccess, 
+    onError 
+  }: {
+    file: RcFile;
+    onSuccess?: (response: any) => void;
+    onError?: (error: any) => void;
+  }) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // 创建本地预览URL
-      const reader = new FileReader();
-      reader.onload = () => {
-        const imageUrl = reader.result as string;
-        onSuccess?.({
-          url: imageUrl,
-          name: file.name,
-        });
-      };
-      reader.readAsDataURL(file);
+      setUploading(true);
+      setUploadProgress(0);
+
+      // 压缩图片（如果文件大于1MB）
+      let fileToUpload: File = file;
+      if (file.size > 1024 * 1024) {
+        message.info('正在压缩图片...');
+        fileToUpload = await compressImage(file, 1920, 1080, 0.8);
+      }
+
+      // 上传到图床
+      const imageUrl = await uploadImageToCloud(fileToUpload, (percent) => {
+        setUploadProgress(percent);
+      });
+
+      // 调用成功回调
+      onSuccess?.({
+        url: imageUrl,
+        name: file.name,
+      });
       
       message.success('图片上传成功！');
     } catch (error) {
+      console.error('图片上传失败:', error);
       onError?.(error);
-      message.error('图片上传失败！');
+      message.error(error instanceof Error ? error.message : '图片上传失败！');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -104,22 +130,36 @@ const ImageUpload = ({
 
   const uploadButton = (
     <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 transition-colors">
-      <PlusOutlined className="text-2xl text-gray-400 mb-2" />
-      <div className="text-gray-600 text-sm">点击上传</div>
+      {uploading ? (
+        <LoadingOutlined className="text-2xl text-blue-500 mb-2" />
+      ) : (
+        <PlusOutlined className="text-2xl text-gray-400 mb-2" />
+      )}
+      <div className="text-gray-600 text-sm">
+        {uploading ? '上传中...' : '点击上传'}
+      </div>
+      {uploading && uploadProgress > 0 && (
+        <Progress
+          percent={uploadProgress}
+          size="small"
+          style={{ marginTop: 8, width: '80%' }}
+          showInfo={false}
+        />
+      )}
     </div>
   );
 
   return (
     <div className={className}>
       <Upload
-        customRequest={customRequest}
+        // customRequest={customRequest}
         listType="picture-card"
         fileList={fileList}
         onPreview={handlePreview}
         onChange={handleChange}
         onRemove={handleRemove}
         beforeUpload={beforeUpload}
-        disabled={disabled}
+        disabled={disabled || uploading}
         className="image-upload-grid"
       >
         {fileList.length >= maxCount ? null : uploadButton}
@@ -145,4 +185,4 @@ const ImageUpload = ({
   );
 };
 
-export default ImageUpload; 
+export default ImageUpload;

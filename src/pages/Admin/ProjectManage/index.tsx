@@ -1,41 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Progress, message } from 'antd';
+import { Modal, Button, List, Avatar, Progress, message, Spin, Alert } from 'antd';
 import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined, EditOutlined } from '@ant-design/icons';
 import EditProjectModal from './EditProjectModal';
 import moment from 'moment';
 import EditColumnModal from './EditColumnModal';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
+import { useAdminProjectDetail } from '../../../hooks/useAdminProjectDetail';
 
 // 模拟用户信息，可以从 context 或 props 获取
 const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
 
 /**
- * 美化后的活动详情页面
+ * 管理员项目详情页面
  * @returns 
  */
 const ProjectDetailPage = () => {
-  const { activityId , projectId } = useParams();
+  const { activityId, projectId } = useParams();
   const navigate = useNavigate();
   const [isIntroVisible, setIntroVisible] = useState(false);
   const [isScoresVisible, setScoresVisible] = useState(false);
   const [isRankingVisible, setRankingVisible] = useState(false);
   const [isEditProjectVisible, setEditProjectVisible] = useState(false);
-   const [isEditColumnVisible, setEditColumnVisible] = useState(false);
-  // --- 模拟数据 ---
-  const project = {
-    name: '“瑞蛇衔知”,勤学善思',
-    time: '1.3 - 1.31',
-    description: '这是一个旨在鼓励用户在寒假期间坚持学习和锻炼的打卡活动。通过完成每日任务，不仅可以获得积分，还能养成良好习惯。',
-  };
-const projectInitialData = {
-  name: '“瑞蛇衔知”,勤学善思',
-  time: '1.3 - 1.31',
-  description: '这是一个旨在鼓励用户在寒假期间坚持学习和锻炼的打卡活动。通过完成每日任务，不仅可以获得积分，还能养成良好习惯。',
- cover: 'https://i.111666.best/image/HajJhEnP8OGD1NR1Of0IqZ.jpg',
-  timeRange: [moment('2025-01-03'), moment('2025-01-31')],
+  const [isEditColumnVisible, setEditColumnVisible] = useState(false);
 
-}
+  // 解析项目ID
+  const parsedProjectId = useMemo(() => {
+    if (!projectId) return undefined;
+    const id = parseInt(projectId, 10);
+    return isNaN(id) ? undefined : id;
+  }, [projectId]);
+
+  // 使用Hook获取项目详情
+  const {
+    projectDetail,
+    loading,
+    isRetrying,
+    error,
+    refetch,
+    updateProject,
+    updating
+  } = useAdminProjectDetail(parsedProjectId);
+
+  // 格式化日期显示
+  const formatDateRange = (startDate: number, endDate: number) => {
+    const start = moment(startDate.toString(), 'YYYYMMDD').format('M.D');
+    const end = moment(endDate.toString(), 'YYYYMMDD').format('M.D');
+    return `${start} - ${end}`;
+  };
+
+  // 准备编辑表单的初始数据
+  const projectInitialData = useMemo(() => {
+    if (!projectDetail) return null;
+    
+    return {
+      name: projectDetail.name,
+      description: projectDetail.description,
+      cover: projectDetail.avatar,
+      timeRange: [
+        moment(projectDetail.start_date.toString(), 'YYYYMMDD'),
+        moment(projectDetail.end_date.toString(), 'YYYYMMDD')
+      ],
+    };
+  }, [projectDetail]);
   const userStats = {
     totalScore: 23,
     maxStreak: 7,
@@ -43,29 +70,17 @@ const projectInitialData = {
     todayProgress: { completed: 3, total: 5 } // 今日打卡进度
   };
 
-  const columns = [
-    {
-      id: '1',
-      title: '自习打卡',
+  // 使用API返回的栏目数据
+  const columns = useMemo(() => {
+    if (!projectDetail?.columns) return [];
+    
+    return projectDetail.columns.map(column => ({
+      id: column.id.toString(),
+      title: column.name,
       gradient: 'from-amber-500 to-orange-500',
-    },
-    {
-      id: '2',
-      title: '单词打卡',
-      gradient: 'from-amber-500 to-orange-500',
-    }, 
-    {
-      id: '3',
-      title: '阅读打卡',
-      gradient: 'from-amber-500 to-orange-500',
-    },
-    {
-      id: '4',
-      title: '实验打卡',
-      gradient: 'from-amber-500 to-orange-500',
-    },
-
-  ];
+      avatar: column.avatar,
+    }));
+  }, [projectDetail]);
 
   const scoreRecords = [
     { task: '完成“瑞蛇衔知”项目打卡', score: 5, date: '2023-01-15' },
@@ -85,17 +100,35 @@ const projectInitialData = {
     navigate(`/admin/activity/${activityId}/project/${projectId}/column/${columnId}`);
   };
   // 从编辑弹窗接收表单数据的处理函数
-  const handleEditProjectFinish = (values: typeof projectInitialData) => {
-    console.log('表单数据已成功提交到父组件:', {
-        ...values,
-        // 实际提交时格式化日期
-        timeRange: [
-            values.timeRange[0].format('YYYY-MM-DD'),
-            values.timeRange[1].format('YYYY-MM-DD'),
-        ],
-    });
-    message.success('项目信息已成功更新!');
-    setEditProjectVisible(false); // 在这里处理关闭弹窗的逻辑
+  const handleEditProjectFinish = async (values: any) => {
+    if (!parsedProjectId || !activityId) {
+      message.error('项目ID或活动ID无效');
+      return;
+    }
+
+    try {
+      // 格式化数据以匹配API要求
+      const updateData = {
+        name: values.name,
+        description: values.description,
+        activity_id: parseInt(activityId, 10),
+        start_date: parseInt(values.timeRange[0].format('YYYYMMDD'), 10),
+        end_date: parseInt(values.timeRange[1].format('YYYYMMDD'), 10),
+        avatar: values.cover || '',
+      };
+
+      const success = await updateProject(updateData);
+      
+      if (success) {
+        message.success('项目信息已成功更新!');
+        setEditProjectVisible(false);
+      } else {
+        message.error('更新项目信息失败');
+      }
+    } catch (error) {
+      console.error('更新项目失败:', error);
+      message.error('更新项目信息失败');
+    }
   };
   const handleEditColumnFinish = (values: any) => {
     console.log('表单数据已成功提交到父组件:', values);
@@ -123,6 +156,82 @@ const projectInitialData = {
     })
   }
  }
+  // 处理无效项目ID的情况
+  if (!parsedProjectId) {
+    return (
+      <div className="bg-slate-50 min-h-screen font-sans flex items-center justify-center">
+        <Alert
+          message="项目ID无效"
+          description="请检查URL中的项目ID是否正确"
+          type="error"
+          showIcon
+          action={
+            <Button size="small" onClick={() => navigate(-1)}>
+              返回
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  // 加载状态
+  if (loading || isRetrying) {
+    return (
+      <div className="bg-slate-50 min-h-screen font-sans flex items-center justify-center">
+        <div className="text-center">
+          <Spin size="large" />
+          <p className="mt-4 text-gray-600">
+            {isRetrying ? '正在重试加载项目详情...' : '正在加载项目详情...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 错误状态
+  if (error) {
+    return (
+      <div className="bg-slate-50 min-h-screen font-sans flex items-center justify-center">
+        <Alert
+          message="加载失败"
+          description={error}
+          type="error"
+          showIcon
+          action={
+            <div className="space-x-2">
+              <Button size="small" onClick={refetch}>
+                重试
+              </Button>
+              <Button size="small" onClick={() => navigate(-1)}>
+                返回
+              </Button>
+            </div>
+          }
+        />
+      </div>
+    );
+  }
+
+  // 项目数据不存在
+  if (!projectDetail) {
+    return (
+      <div className="bg-slate-50 min-h-screen font-sans flex items-center justify-center">
+        <Alert
+          message="项目不存在"
+          description="未找到指定的项目信息"
+          type="warning"
+          showIcon
+          action={
+            <Button size="small" onClick={() => navigate(-1)}>
+              返回
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     // 使用更柔和的背景色
     <div className="bg-slate-50 min-h-screen font-sans">
@@ -130,13 +239,22 @@ const projectInitialData = {
         {/* 顶部导航栏 */}
         <div className="flex items-center justify-between">
           <Button type="text" shape="circle" icon={<LeftOutlined />} className="text-white hover:bg-white/20" onClick={() => navigate(-1)} />
-          <h1 className="text-xl font-bold">{project.name}</h1>
-          <Button type="text" shape="circle" icon={<EditOutlined />} className="text-white hover:bg-white/20" onClick={() => setEditProjectVisible(true)} />
+          <h1 className="text-xl font-bold">{projectDetail.name}</h1>
+          <Button 
+            type="text" 
+            shape="circle" 
+            icon={<EditOutlined />} 
+            className="text-white hover:bg-white/20" 
+            onClick={() => setEditProjectVisible(true)}
+            loading={updating}
+          />
         </div>
         {/* 活动时间显示*/}
         <div className="text-center mt-3">
             <p className="text-sm opacity-80">活动时间</p>
-            <p className="font-semibold tracking-wider">{project.time}</p>
+            <p className="font-semibold tracking-wider">
+              {formatDateRange(projectDetail.start_date, projectDetail.end_date)}
+            </p>
         </div>
    
       </header>
@@ -178,8 +296,8 @@ const projectInitialData = {
       </main>
 
       {/* --- 弹窗 --- */}
-      <Modal title="活动简介" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
-        <p className="text-gray-600 leading-relaxed">{project.description}</p>
+      <Modal title="项目简介" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
+        <p className="text-gray-600 leading-relaxed">{projectDetail.description}</p>
       </Modal>
 
       <Modal title="我的分数" open={isScoresVisible} onCancel={() => setScoresVisible(false)} footer={null}>
@@ -214,12 +332,14 @@ const projectInitialData = {
           )}
         />
       </Modal>
-      <EditProjectModal
-        visible={isEditProjectVisible}
-        onClose={() => setEditProjectVisible(false)}
-        onFinish={handleEditProjectFinish}
-        initialData={project}
-      />
+      {projectInitialData && (
+        <EditProjectModal
+          visible={isEditProjectVisible}
+          onClose={() => setEditProjectVisible(false)}
+          onFinish={handleEditProjectFinish}
+          initialData={projectInitialData}
+        />
+      )}
       <EditColumnModal
         visible={isEditColumnVisible}
         onClose={() => setEditColumnVisible(false)}

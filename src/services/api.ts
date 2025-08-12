@@ -16,8 +16,11 @@ import type {
   CreateActivityRequest,
   CreateActivityResponse,
   UpdateActivityRequest,
+  ProjectDetail,
 } from '../types/api';
 import type { UserProfile, ActivityData, CheckInData } from '../types/types';
+import CreateNewProject from '../pages/Admin/CreateProject';
+import { data } from 'react-router-dom';
 
 /**
  * 认证相关 API
@@ -215,6 +218,76 @@ export class ActivityAPI {
 }
 
 /**
+ * 项目相关 API
+ */
+export class ProjectAPI {
+  /**
+   * 获取项目详情
+   * @param id 项目ID
+   * @returns 项目详情数据
+   */
+  static async getProjectDetail(id: number): Promise<ProjectDetail> {
+    return request.get<ProjectDetail>(`/project/get/${id}`, undefined, {
+      showLoading: false,
+      showError: false,
+      retries: 1, // 添加重试机制
+    });
+  }
+
+  /**
+   * 更新项目信息（管理员）
+   * @param id 项目ID
+   * @param data 项目更新数据
+   * @returns 更新结果
+   */
+  static async updateProject(
+    id: number,
+    data: {
+      name: string;
+      description: string;
+      activity_id: number;
+      start_date: number;
+      end_date: number;
+      avatar: string;
+    }
+  ): Promise<void> {
+    return request.put<void>(`/project/update/${id}`, data, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+
+  /**
+   * 删除项目（管理员）
+   * @param id 项目ID
+   * @returns 删除结果
+   */
+  static async deleteProject(id: number): Promise<void> {
+    return request.delete<void>(`/project/delete/${id}`, undefined, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+  /** 
+   * 新增项目（管理员）
+   * @param data 项目创建数据
+   * @returns 创建结果
+   */
+  static async CreateNewProject(data: {
+    name: string;
+    description: string;
+    activity_id: number;
+    start_date: number;
+    end_date: number;
+    avatar: string;
+  }): Promise<void> {
+    return request.post<void>('/project/create', data, {
+      showLoading: true,
+      showError: true,
+    });
+  };
+}
+/**
  * 打卡相关 API
  */
 export class CheckInAPI {
@@ -393,6 +466,7 @@ export const API = {
   Auth: AuthAPI,
   User: UserAPI,
   Activity: ActivityAPI,
+  Project: ProjectAPI,
   CheckIn: CheckInAPI,
   File: FileAPI,
   Statistics: StatisticsAPI,
