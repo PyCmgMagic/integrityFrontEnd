@@ -11,6 +11,7 @@ export { default as UserLayout } from './UserLayout';
 export { default as AdminLayout } from './AdminLayout';
 export { default as PageContainer } from './PageContainer';
 export { default as ImageUpload } from './ImageUpload';
+export { default as CoverUpload } from './CoverUpload';
 export { default as BottomNavigation } from './BottomNavigation';
 export type { NavItem } from './BottomNavigation'; 
 export { default as EditProfileModal } from './EditProfileModal';

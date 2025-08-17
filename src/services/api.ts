@@ -271,7 +271,7 @@ export class ProjectAPI {
   /** 
    * 新增项目（管理员）
    * @param data 项目创建数据
-   * @returns 创建结果
+   * @returns 创建结果，包含新创建的项目ID
    */
   static async CreateNewProject(data: {
     name: string;
@@ -280,8 +280,8 @@ export class ProjectAPI {
     start_date: number;
     end_date: number;
     avatar: string;
-  }): Promise<void> {
-    return request.post<void>('/project/create', data, {
+  }): Promise<{ project_id: number }> {
+    return request.post<{ project_id: number }>('/project/create', data, {
       showLoading: true,
       showError: true,
     });
@@ -460,6 +460,57 @@ export class StatisticsAPI {
 }
 
 /**
+ * 栏目相关 API
+ */
+export class ColumnAPI {
+  /**
+   * 创建栏目
+   */
+  static async createColumn(data: {
+    name: string;
+    description: string;
+    project_id: number;
+    start_date: number;
+    end_date: number;
+    avatar: string;
+  }): Promise<{ column_id: number }> {
+    return request.post<{ column_id: number }>('/column/create', data, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+
+  /**
+   * 更新栏目
+   */
+  static async updateColumn(
+    id: number,
+    data: {
+      name?: string;
+      description?: string;
+      start_date?: number;
+      end_date?: number;
+      avatar?: string;
+    }
+  ): Promise<void> {
+    return request.put<void>(`/column/update/${id}`, data, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+
+  /**
+   * 删除栏目
+   */
+  static async deleteColumn(id: number): Promise<void> {
+    return request.delete<void>(`/column/delete/${id}`, undefined, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+}
+
+/**
  * 导出所有 API 类
  */
 export const API = {
@@ -467,6 +518,7 @@ export const API = {
   User: UserAPI,
   Activity: ActivityAPI,
   Project: ProjectAPI,
+  Column: ColumnAPI,
   CheckIn: CheckInAPI,
   File: FileAPI,
   Statistics: StatisticsAPI,

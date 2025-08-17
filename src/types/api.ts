@@ -175,3 +175,25 @@ export interface ProjectDetailResponse {
   data: ProjectDetail;
   timestamp: number;
 }
+
+// 栏目相关类型定义
+export interface CreateColumnRequest {
+  name: string;
+  description: string;
+  project_id: number;
+  start_date: number;
+  end_date: number;
+  avatar: string;
+}
+
+export interface CreateColumnResponse {
+  column_id: number;
+}
+
+export interface UpdateColumnRequest {
+  name?: string;
+  description?: string;
+  start_date?: number;
+  end_date?: number;
+  avatar?: string;
+}

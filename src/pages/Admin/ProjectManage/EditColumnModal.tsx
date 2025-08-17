@@ -4,6 +4,7 @@ import { LoadingOutlined, CalendarOutlined } from '@ant-design/icons';
 import type { UploadChangeParam } from 'antd/es/upload';
 import type { UploadFile } from 'antd/es/upload/interface';
 import dayjs, { type Dayjs } from 'dayjs';
+import { API } from '../../../services/api';
 
 const { TextArea } = Input;
 
@@ -17,11 +18,11 @@ interface MobileDateTimePickerProps {
   minDate?: Dayjs;
 }
 
-const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({ 
-  value, 
-  onChange, 
+const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
+  value,
+  onChange,
   placeholder = "请选择日期",
-  minDate 
+  minDate
 }) => {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [tempDate, setTempDate] = useState<string>('');
@@ -52,7 +53,7 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
 
   return (
     <>
-      <div 
+      <div
         className="flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-blue-400 transition-colors"
         onClick={() => setPickerVisible(true)}
       >
@@ -102,22 +103,22 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
 };
 
 /**
- * 活动编辑弹窗组件
+ * 栏目编辑弹窗组件
  */
 interface EditColumnModalProps {
-
   visible: boolean;
   onClose: () => void;
   onFinish?: (values: any) => void;
   initialData?: any;
+  projectId: number; // 项目ID，用于创建栏目
 }
 
-const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onFinish, initialData }) => {
+const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onFinish, initialData, projectId }) => {
 
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  
+
   // 时间范围状态
   const [startTime, setStartTime] = useState<Dayjs | null>(null);
   const [endTime, setEndTime] = useState<Dayjs | null>(null);
@@ -127,7 +128,7 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
     if (visible) {
       if (initialData) {
         // 将 initialData 中的日期字符串转换为 dayjs 对象
-        const initialTimeRange = initialData.timeRange 
+        const initialTimeRange = initialData.timeRange
           ? [dayjs(initialData.timeRange[0]), dayjs(initialData.timeRange[1])]
           : [null, null];
 
@@ -137,7 +138,7 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         if (initialData.cover) {
           setImageUrl(initialData.cover);
         }
-        
+
         // 设置时间状态
         setStartTime(initialTimeRange[0]);
         setEndTime(initialTimeRange[1]);
@@ -176,17 +177,79 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
     }
   };
 
+  /**
+   * 自定义上传图片到图床
+   * @param file 要上传的文件
+   * @returns Promise<string> 返回图片URL
+   */
+  const uploadToImageHost = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('https://pic.cloud.rpcrpc.com/uploadapi.php', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+      
+      if (result.code === 200) {
+        return result.data.trim(); // 去除可能的空格
+      } else {
+        throw new Error(result.msg || '上传失败');
+      }
+    } catch (error) {
+      console.error('图片上传失败:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * 上传前的验证函数
+   * @param file 要上传的文件
+   * @returns boolean 是否允许上传
+   */
   const beforeUpload = (file: File) => {
     const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
     if (!isJpgOrPng) {
       message.error('你只能上传 JPG/PNG 格式的图片!');
+      return false;
     }
     const isLt2M = file.size / 1024 / 1024 < 2;
     if (!isLt2M) {
       message.error('图片大小必须小于 2MB!');
+      return false;
     }
-    return isJpgOrPng && isLt2M;
+    
+    // 阻止默认上传，使用自定义上传逻辑
+    handleCustomUpload(file);
+    return false;
   };
+
+  /**
+   * 自定义上传处理函数
+   * @param file 要上传的文件
+   */
+  const handleCustomUpload = async (file: File) => {
+    setLoading(true);
+    
+    try {
+      // 上传到图床
+      const imageUrl = await uploadToImageHost(file);
+      
+      // 设置图片URL
+      setImageUrl(imageUrl);
+      form.setFieldsValue({ cover: imageUrl });
+      
+      message.success(`${file.name} 文件上传成功`);
+    } catch (error: any) {
+      message.error(`${file.name} 文件上传失败: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   // 自定义的上传按钮
   const uploadButton = (
@@ -204,24 +267,61 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
     </div>
   );
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = async (values: any) => {
     // 验证时间范围
     if (!startTime || !endTime) {
       message.error('请选择完整的活动时间范围');
       return;
     }
-    
+
     if (endTime.isBefore(startTime)) {
       message.error('结束时间不能早于开始时间');
       return;
     }
 
-    if (onFinish) {
-      onFinish({ 
-        ...values, 
-        cover: imageUrl,
-        timeRange: [startTime, endTime]
-      });
+    if (!imageUrl) {
+      message.error('请上传栏目封面');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 准备API请求数据
+      const apiData = {
+        name: values.name,
+        description: values.description,
+        project_id: projectId,
+        start_date: parseInt(startTime.format('YYYYMMDD')), // 转换为数字格式
+        end_date: parseInt(endTime.format('YYYYMMDD')), // 转换为数字格式
+        avatar: imageUrl, // 使用avatar字段名
+      };
+
+      if (initialData?.id) {
+        // 更新栏目
+        await API.Column.updateColumn(initialData.id, apiData);
+        message.success('栏目更新成功！');
+      } else {
+        // 创建栏目
+        const result = await API.Column.createColumn(apiData);
+        message.success('栏目创建成功！');
+      }
+
+      // 调用父组件的回调函数
+      if (onFinish) {
+        onFinish({
+          ...values,
+          cover: imageUrl,
+          timeRange: [startTime, endTime]
+        });
+      }
+
+      onClose();
+    } catch (error: any) {
+      console.error('栏目操作失败:', error);
+      message.error(error.message || '操作失败，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -231,21 +331,20 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
       open={visible}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
       width={380}
     >
       <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-        <Form.Item 
-          name="name" 
-          label={<span className="font-semibold text-gray-700">栏目名称</span>} 
-          rules={[{ required: true, message: '请输入栏目名称' }]} 
+        <Form.Item
+          name="name"
+          label={<span className="font-semibold text-gray-700">栏目名称</span>}
+          rules={[{ required: true, message: '请输入栏目名称' }]}
         >
           <Input placeholder="请输入栏目名称" />
         </Form.Item>
 
-        <Form.Item 
-          name="description" 
-          label={<span className="font-semibold text-gray-700">栏目详情说明</span>} 
+        <Form.Item
+          name="description"
+          label={<span className="font-semibold text-gray-700">栏目详情说明</span>}
           rules={[{ required: true, message: '请输入栏目详情' }]}
         >
           <TextArea rows={8} placeholder="请输入栏目详情说明" />
@@ -264,11 +363,11 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
                 placeholder="请选择开始时间"
               />
             </div>
-            
+
             <div className="flex justify-center">
               <div className="w-8 h-px bg-gray-300 self-center"></div>
             </div>
-            
+
             <div>
               <div className="text-sm text-gray-600 mb-2">请选择结束</div>
               <MobileDateTimePicker
@@ -281,37 +380,43 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
           </div>
         </Form.Item>
 
-        <Form.Item 
-          name="cover" 
-          label={<span className="font-semibold text-gray-700">设置栏目封面</span>} 
+        <Form.Item
+          name="cover"
+          label={<span className="font-semibold text-gray-700">设置栏目封面</span>}
           rules={[{ required: true, message: '请上传栏目封面' }]}
         >
-          <Upload
-            name="cover-uploader"
-            listType="picture-card"
-            className="activity-cover-uploader"
-            showUploadList={false}
-            action="pic.cloud.rpcrpc.com"
-            beforeUpload={beforeUpload}
-            onChange={handleChange}
-            style={{ width: '100%', height: '100%' }}
-          >
-            {imageUrl ? (
-              <div className="relative w-full h-full group">
-                <img src={imageUrl} alt="activity-cover" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-50 transition-opacity rounded-lg">
-                  <span className="text-white">更换封面</span>
-                </div>
-              </div>
-            ) : (
-              uploadButton
-            )}
-          </Upload>
+          // 修改Upload组件配置
+                  <Upload
+                    name="cover-uploader"
+                    listType="picture-card"
+                    className="activity-cover-uploader"
+                    showUploadList={false}
+                    beforeUpload={beforeUpload}
+                    style={{ width: '100%', height: '100%' }}
+                  >
+                    {imageUrl ? (
+                      <div className="relative w-full h-full group">
+                        <img src={imageUrl} alt="activity-cover" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-50 transition-opacity rounded-lg">
+                          <span className="text-white">更换封面</span>
+                        </div>
+                      </div>
+                    ) : (
+                      uploadButton
+                    )}
+                  </Upload>
         </Form.Item>
-        
+
         <Form.Item style={{ marginTop: '20px' }}>
-          <Button type="primary" htmlType="submit" block size="small" shape="default">
-            完成
+          <Button
+            type="primary"
+            htmlType="submit"
+            block
+            size="small"
+            shape="default"
+            loading={loading}
+          >
+            {loading ? '提交中...' : '完成'}
           </Button>
         </Form.Item>
       </Form>

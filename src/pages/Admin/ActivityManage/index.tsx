@@ -257,7 +257,6 @@ const ActivityDetailPage = () => {
       confirmText: '确认删除',
       cancelText: '取消',
     });
-    
     if (result) {
       try {
         // 调用删除项目API
@@ -268,7 +267,6 @@ const ActivityDetailPage = () => {
           content: '项目删除成功',
           duration: 2000
         });
-        
         // 重新获取活动数据以更新项目列表
         fetchActivityDetail(); 
         
@@ -342,7 +340,7 @@ const ActivityDetailPage = () => {
         </div>
       </header>
 
-      <main className="p-4 pb-20">
+      <main className="p-4 pb-20"> 
         <div className="space-y-4">
             <div  className={`bg-gradient-to-r from-orange-500 to-red-500 p-3 flex-col rounded-2xl shadow-lg border-4 border-white/50 border-dashed  flex items-center justify-center`}>
               <div className="flex items-center"></div>

@@ -7,6 +7,7 @@ import moment from 'moment';
 import EditColumnModal from './EditColumnModal';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 import { useAdminProjectDetail } from '../../../hooks/useAdminProjectDetail';
+import { ColumnAPI, ProjectAPI } from '../../../services/api';
 
 // 模拟用户信息，可以从 context 或 props 获取
 const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
@@ -150,10 +151,21 @@ const ProjectDetailPage = () => {
     cancelText: '取消',
   });
   if(result){
-    //删除项目
-    Toast.show({
-      content:'删除成功',
-    })
+    //删除栏目
+    try {
+      await ColumnAPI.deleteColumn(parseInt(columnId, 10));
+      Toast.show({
+        content:'删除成功',
+        duration: 2000
+      })
+      refetch();
+    } catch (error:any) {
+        console.error('删除项目失败:', error);
+      Toast.show({
+        content:error.message ||'删除失败',
+        duration: 3000
+      })
+    }
   }
  }
   // 处理无效项目ID的情况
@@ -270,7 +282,7 @@ const ProjectDetailPage = () => {
             </div> 
             <p  onClick={() => setEditColumnVisible(true)} className="text-lg font-semibold text-white">新增栏目</p>
             </div>
-          <h3 className="text-lg font-bold text-gray-700 px-2">打卡项目</h3>
+          <h3 className="text-lg font-bold text-gray-700 px-2">打卡栏目</h3>
           {columns.map((column) => (
             <SwipeAction
               key={column.id}

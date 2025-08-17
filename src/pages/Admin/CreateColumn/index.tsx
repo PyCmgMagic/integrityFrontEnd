@@ -1,11 +1,13 @@
-import React, { useState, useRef } from 'react';
-import { ChevronLeft, Plus, Calendar, Clock, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronLeft, Plus, Calendar, Clock } from 'lucide-react';
+import { CoverUpload } from '../../../components';
 
 export interface CreateColumnProps {
   onBack?: () => void;
   onNext?: (columnData: ColumnData) => void;
   columnIndex?: number;
   totalColumns?: number;
+  loading?: boolean;
 }
 
 export interface ColumnData {
@@ -24,7 +26,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
   onBack,
   onNext,
   columnIndex = 1,
-  totalColumns = 1
+  totalColumns = 1,
+  loading = false
 }) => {
   const [columnData, setColumnData] = useState<ColumnData>({
     name: '',
@@ -38,8 +41,11 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
     pointsPerCheckin: 1
   });
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+  /**
+   * 处理输入字段变化
+   * @param field - 字段名
+   * @param value - 字段值
+   */
   const handleInputChange = (field: keyof ColumnData, value: string | number) => {
     setColumnData(prev => ({
       ...prev,
@@ -47,33 +53,15 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
     }));
   };
 
-  const handleCoverUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setColumnData(prev => ({
-          ...prev,
-          coverImage: result
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveCover = () => {
+  /**
+   * 处理封面变化
+   * @param imageUrl - 上传后的图片 URL
+   */
+  const handleCoverChange = (imageUrl: string) => {
     setColumnData(prev => ({
       ...prev,
-      coverImage: undefined
+      coverImage: imageUrl
     }));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const handleNext = () => {
@@ -86,8 +74,6 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
                      columnData.description.trim() !== '' &&
                      columnData.startDate !== '' &&
                      columnData.endDate !== '' &&
-                     columnData.checkinStartTime !== '' &&
-                     columnData.checkinEndTime !== '' &&
                      columnData.dailyCheckinLimit > 0 &&
                      columnData.pointsPerCheckin > 0;
 
@@ -192,43 +178,11 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             设置活动封面
           </label>
-          
-          {/* 隐藏的文件输入 */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
+          <CoverUpload
+            value={columnData.coverImage}
+            onChange={handleCoverChange}
+            placeholder="添加封面"
           />
-          
-          {columnData.coverImage ? (
-            // 显示已上传的封面
-            <div className="relative w-full h-32 bg-gray-100 border-2 border-gray-300 rounded-lg overflow-hidden">
-              <img
-                src={columnData.coverImage}
-                alt="栏目封面"
-                className="w-full h-full object-cover"
-              />
-              <button
-                onClick={handleRemoveCover}
-                className="absolute top-2 right-2 w-6 h-6 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          ) : (
-            // 显示上传按钮
-            <button
-              onClick={handleCoverUpload}
-              className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:border-gray-400 transition-all"
-            >
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
-                <Plus size={24} className="text-blue-500" />
-              </div>
-              <span className="text-sm">添加封面</span>
-            </button>
-          )}
         </div>
 
         {/* 限制每日打卡 */}
@@ -278,14 +232,14 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
           </button> 
           <button
             onClick={handleNext}
-            disabled={!isFormValid}
+            disabled={!isFormValid || loading}
             className={`flex-1 py-3 rounded-lg font-medium transition-all ${
-              isFormValid
+              isFormValid && !loading
                 ? 'bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
           >
-            下一步
+            {loading ? '创建中...' : '下一步'}
           </button>
         </div>
       </div>

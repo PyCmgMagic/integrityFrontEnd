@@ -128,7 +128,7 @@ const SingleImageUpload: React.FC<SingleImageUploadProps> = ({
         {uploading ? <LoadingOutlined style={{ fontSize: 24, color: '#1890ff' }} /> : <PlusOutlined style={{ fontSize: 24, color: '#999' }} />}
         <div style={{ marginTop: 8, color: '#666' }}>
           {uploading ? '上传中...' : uploadText}
-        </div>
+        </div> 
         {uploading && showProgress && uploadProgress > 0 && (
           <Progress
             percent={uploadProgress}

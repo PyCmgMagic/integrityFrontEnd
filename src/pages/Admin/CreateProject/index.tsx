@@ -1,6 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { ChevronLeft, Plus, Calendar, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronLeft, Plus, Calendar } from 'lucide-react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { ProjectAPI } from '../../../services/api';
+import { message } from 'antd';
+import { CoverUpload } from '../../../components';
 
 
 interface CreateProjectProps {
@@ -26,8 +29,8 @@ const CreateNewProject: React.FC<CreateProjectProps> = ({ onBack }) => {
     coverImage: undefined,
     categoryCount: 2
   });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   // 从URL中获取 activityId
   const { activityId } = useParams();
 
@@ -38,47 +41,70 @@ const CreateNewProject: React.FC<CreateProjectProps> = ({ onBack }) => {
     }));
   };
 
-  const handleCoverUpload = () => {
-    fileInputRef.current?.click();
+/**
+   * 处理封面变化
+   * @param imageUrl - 上传后的图片 URL
+   */
+  const handleCoverChange = (imageUrl: string) => {
+    setProjectData(prev => ({ ...prev, coverImage: imageUrl }));
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setProjectData(prev => ({ ...prev, coverImage: result }));
+
+
+  /**
+   * 将日期字符串转换为数字格式 (YYYYMMDD)
+   * @param dateString 日期字符串 (YYYY-MM-DD)
+   * @returns 数字格式的日期
+   */
+  const formatDateToNumber = (dateString: string): number => {
+    return parseInt(dateString.replace(/-/g, ''));
+  };
+
+  /**
+   * 处理项目创建和导航到下一步
+   */
+  const handleNext = async () => {
+    if (!activityId) {
+      message.error('活动ID不存在');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 准备API请求数据
+      const createData = {
+        name: projectData.name,
+        description: projectData.description,
+        activity_id: parseInt(activityId),
+        start_date: formatDateToNumber(projectData.startDate),
+        end_date: formatDateToNumber(projectData.endDate),
+        avatar: projectData.coverImage || '' // 使用上传的封面图片 URL
       };
-      reader.readAsDataURL(file);
+
+      console.log('创建项目请求数据:', createData);
+
+      // 调用API创建项目
+      const response = await ProjectAPI.CreateNewProject(createData);
+      const projectId = response.project_id;
+
+      console.log('项目创建成功，项目ID:', projectId);
+      console.log('将要创建的栏目总数:', projectData.categoryCount);
+
+      message.success('项目创建成功！');
+
+      // 导航到第一个栏目的创建页面
+      navigate(
+        `/admin/create/activity/${activityId}/project/${projectId}/column/1`,
+        {
+          state: { totalCategories: projectData.categoryCount }
+        }
+      );
+    } catch (error) {
+      console.error('创建项目失败:', error);
+      message.error('创建项目失败，请重试');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleRemoveCover = () => {
-    setProjectData(prev => ({ ...prev, coverImage: undefined }));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleNext = () => {
-    // 1. 在这里调用API，根据 projectData 创建新项目，并获取返回的 projectId
-    // const newProject = await api.createProject(projectData);
-    // const projectId = newProject.id;
-    
-    // 为了演示，我们使用一个固定的 projectId
-    const projectId = '123';
-    console.log('新建的项目ID:', projectId);
-    console.log('将要创建的栏目总数:', projectData.categoryCount);
-
-    // 2. 导航到第一个栏目的创建页面
-    // 我们将总栏目数通过 navigation state 传递给下一个页面
-    navigate(
-      `/admin/create/activity/${activityId}/project/${projectId}/column/1`,
-      {
-        state: { totalCategories: projectData.categoryCount }
-      }
-    );
   };
 
   const isFormValid = projectData.name.trim() !== '' && 
@@ -164,40 +190,11 @@ const CreateNewProject: React.FC<CreateProjectProps> = ({ onBack }) => {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             设置活动封面
           </label>
-          
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
+          <CoverUpload
+            value={projectData.coverImage}
+            onChange={handleCoverChange}
+            placeholder="添加封面"
           />
-          
-          {projectData.coverImage ? (
-            <div className="relative w-full h-32 bg-gray-100 border-2 border-gray-300 rounded-lg overflow-hidden">
-              <img
-                src={projectData.coverImage}
-                alt="项目封面"
-                className="w-full h-full object-cover"
-              />
-              <button
-                onClick={handleRemoveCover}
-                className="absolute top-2 right-2 w-6 h-6 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={handleCoverUpload}
-              className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:border-gray-400 transition-all"
-            >
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
-                <Plus size={24} className="text-blue-500" />
-              </div>
-              <span className="text-sm">添加封面</span>
-            </button>
-          )}
         </div>
 
         {/* 栏目数量设置 */}
@@ -226,16 +223,16 @@ const CreateNewProject: React.FC<CreateProjectProps> = ({ onBack }) => {
       {/* Bottom Button */}
       <div className="p-4 pb-10   border-gray-200">
         <button
-          onClick={handleNext}
-          disabled={!isFormValid}
-          className={`w-full py-3 rounded-lg font-medium transition-all ${
-            isFormValid
-              ? 'bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          下一步
-        </button>
+            onClick={handleNext}
+            disabled={!isFormValid || loading}
+            className={`w-full py-3 rounded-lg font-medium transition-all ${
+              isFormValid && !loading
+                ? 'bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            {loading ? '创建中...' : '下一步'}
+          </button>
       </div>
       </div>
     </div>

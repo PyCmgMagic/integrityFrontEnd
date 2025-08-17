@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd';
+import { message, Space } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../../store';
 import { useRequest } from '../../hooks/useRequest';
@@ -36,8 +36,14 @@ const LoginPage = () => {
   /**
    * 处理登录表单提交
    */
-  const handleLogin = async () => {
-    // 基础验证
+  const handleLogin = async (username1?: string, password1?: string) => {
+    if(username1 && password1){
+       await performLogin({
+      student_id: username1,
+      password: password1
+    });
+    }else{
+
     if (!username.trim()) {
       message.error('请输入用户名');
       return;
@@ -52,6 +58,7 @@ const LoginPage = () => {
       student_id: username,
       password
     });
+    }
   };
 
   return (
@@ -71,6 +78,16 @@ const LoginPage = () => {
 
         <div className={styles.formContainer}>
           {/* 切换按钮下移到输入框上方 */}
+          <Space  size="middle" align="center" style={{ display: 'flex', justifyContent: 'space-between' }} >
+          <button className="ant-btn ant-btn-primary" onClick={async () => {
+            handleLogin('2', '123456@qq.com');
+          }}>测试用用户登录</button>
+          <button className="ant-btn ant-btn-primary" onClick={async () => {
+            setUsername('1');
+            setPassword('123456@qq.com');
+            handleLogin('1', '123456@qq.com');
+          }}>测试用管理员登录</button>
+         </Space>
           <div className={styles.roleSwitcher}>
             <button
               className={`${styles.roleButton} ${loginType === 'user' ? styles.active : ''}`}

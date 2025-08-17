@@ -162,7 +162,6 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
         setLoading(false);
         return;
       }
-      
       // 使用封面图片URL，如果没有上传则使用默认图片
       const avatar = coverImageUrl || `https://picsum.photos/300/200?random=${Date.now()}`;
       
@@ -243,7 +242,7 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
             <div className="flex justify-center">
               <div className="w-8 h-px bg-gray-300 self-center"></div>
             </div>
-            
+             
             <div> 
               <div className="text-sm text-gray-600 mb-2">请选择结束时间</div>
               <MobileDateTimePicker
