@@ -361,7 +361,7 @@ const ActivityDetailPage = () => {
                 <div className="mr-4 bg-white/20 p-3 rounded-full">{project.icon}</div>
                 <div>
                   <h2 className="text-xl font-bold text-white">{project.title}</h2>
-                  <p className="text-white/90">{project.subtitle}</p>
+                  <p className="text-gray-100 text-sm h-10 overflow-hidden line-clamp-2">{project.subtitle}</p>
                 </div>
               </div>
               <Button  

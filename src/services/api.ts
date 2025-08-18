@@ -74,7 +74,6 @@ export class AuthAPI {
     return request.get<{ captcha: string; key: string }>('/auth/captcha');
   }
 }
-
 /**
  * 用户相关 API
  */

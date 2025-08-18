@@ -2,69 +2,107 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Input, Empty, Spin, message, Button } from 'antd';
 import { SearchOutlined, CalendarOutlined, UserOutlined, PlusOutlined } from '@ant-design/icons';
-import { useAppStore, useAuthStore, type Activity } from '../../../store';
+import { useAuthStore, type Activity } from '../../../store';
 import { ActivityAPI } from '../../../services/api';
 import { transformActivityFromAPI } from '../../../utils/dataTransform';
+import useInfiniteScroll from '../../../hooks/useInfiniteScroll';
 import styles from './Home.module.css';
 
 const { Search } = Input;
 const { Meta } = Card;
 
+/**
+ * 用户首页组件
+ * 展示活动列表，支持无限滚动加载和搜索功能
+ */
 const UserHomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { activities, loading, setLoading } = useAppStore();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]);
+  const [searchTerm, setSearchTerm] = useState(''); // 输入框的值
+  const [actualSearchTerm, setActualSearchTerm] = useState(''); // 实际用于搜索的值
 
-  useEffect(() => {
-    loadActivities();
-  }, []);
-
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = activities.filter(activity =>
-        activity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        activity.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredActivities(filtered);
-    } else {
-      setFilteredActivities(activities);
-    }
-  }, [activities, searchTerm]);
-
-  const loadActivities = async () => {
-    setLoading(true);
-    try {
-      const response = await ActivityAPI.getActivityList({
-        page: 1,
-        page_size: 20
-      });
+  // 使用无限滚动Hook
+  const {
+    data: allActivities,
+    loading,
+    loadingMore,
+    hasMore,
+    containerRef,
+    refresh,
+    loadMore
+  } = useInfiniteScroll(
+    async ({ page, page_size }) => {
+      // 构建API请求参数，支持通过name进行搜索
+      const params: any = { page, page_size };
+      if (actualSearchTerm.trim()) {
+        params.name = actualSearchTerm.trim();
+      }
       
+      const response = await ActivityAPI.getActivityList(params);
       // 转换API响应数据为前端格式
       const transformedActivities = response.activitys.map(transformActivityFromAPI);
-      setFilteredActivities(transformedActivities);
-    } catch (error) {
-      console.error('加载活动失败:', error);
-      message.error('加载活动失败，请稍后重试');
-    } finally {
-      setLoading(false);
+      return {
+        ...response,
+        activitys: transformedActivities,
+        pageSize: response.page_size 
+      };
+    },
+    {
+      pageSize: 20,
+      deps: [actualSearchTerm], // 当实际搜索词变化时重新加载数据
+      onSuccess: (data, page) => {
+        console.log(`第${page}页加载成功，获得${data.length}条数据`);
+      },
+      onError: (error) => {
+        console.error('加载活动失败:', error);
+        message.error('加载活动失败，请稍后重试');
+      }
     }
+  );
+
+  /**
+   * 处理搜索框输入变化（仅更新输入框显示值，不触发搜索）
+   */
+  const handleInputChange = (value: string) => {
+    setSearchTerm(value);
   };
 
+  /**
+   * 处理搜索执行（点击搜索按钮或按回车时触发）
+   */
+  const handleSearch = (value: string) => {
+    setActualSearchTerm(value);
+    // actualSearchTerm变化会通过deps自动触发数据重新加载
+  };
+
+  /**
+   * 处理活动卡片点击
+   */
   const handleActivityClick = (activityId: string) => {
     navigate(`/user/activity/${activityId}`);
   };
 
+  /**
+   * 处理参加活动
+   */
   const handleJoinActivity = async (activityId: number, event: React.MouseEvent) => {
     event.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击
     try {
       await ActivityAPI.joinActivity(activityId);
       message.success('参加活动成功！');
-      // 可以在这里更新活动状态或重新加载活动列表
+      refresh(); // 刷新活动列表
     } catch (error) {
       console.error('参加活动失败:', error);
       message.error('参加活动失败，请稍后重试');
+    }
+  };
+
+  /**
+   * 手动加载更多
+   */
+  const handleLoadMore = () => {
+    if (hasMore && !loadingMore) {
+      loadMore();
     }
   };
 
@@ -104,7 +142,8 @@ const UserHomePage = () => {
           enterButton={<SearchOutlined />}
           size="large"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => handleInputChange(e.target.value)}
+          onSearch={handleSearch}
         />
       </div>
 
@@ -119,9 +158,9 @@ const UserHomePage = () => {
           <div className="loading-container">
             <Spin size="large" />
           </div>
-        ) : filteredActivities.length > 0 ? (
+        ) : allActivities.length > 0 ? (
           <div className="space-y-4">
-            {filteredActivities.map((activity, index) => {
+            {allActivities.map((activity, index) => {
               const gradientClasses = [
                 'gradient-card-purple',
                 'gradient-card-yellow', 
@@ -132,7 +171,7 @@ const UserHomePage = () => {
               
               return (
                 <Card
-                  key={activity.id}
+                  key={`${activity.id}-${index}`}
                   hoverable
                   className={`${styles.activityCard} modern-card ${gradientClass}`}
                   cover={
@@ -145,7 +184,7 @@ const UserHomePage = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                       <div className="absolute bottom-3 left-4 text-white">
                         <h3 className="font-bold text-lg mb-1">{activity.name}</h3>
-                        <p className="text-sm opacity-90">{activity.description}</p>
+                        <p className="text-sm opacity-95 overflow-hidden overflow-ellipsis line-clamp-2">{activity.description}</p>
                       </div>
                     </div>
                   }
@@ -164,6 +203,33 @@ const UserHomePage = () => {
                 </Card>
               );
             })}
+            
+            {/* 加载更多指示器 */}
+            {loadingMore && (
+              <div className="text-center py-4">
+                <Spin size="small" />
+                <span className="ml-2 text-gray-500">加载更多...</span>
+              </div>
+            )}
+            
+            {/* 手动加载更多按钮*/}
+            {hasMore && !loadingMore && (
+              <div className="text-center py-4">
+                <button
+                  onClick={handleLoadMore}
+                  className="px-4 py-2 text-blue-500 hover:text-blue-700 transition-colors"
+                >
+                  点击加载更多
+                </button>
+              </div>
+            )}
+            
+            {/* 没有更多数据提示 */}
+            {!hasMore && allActivities.length > 0 && (
+              <div className="text-center py-4 text-gray-500">
+                已加载全部活动
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-12">

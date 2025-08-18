@@ -20,16 +20,24 @@ html, body {
 
 /* 移动端容器 */
 .phone-container {
-  max-width: 375px;
-  margin: 0 20px;
+  max-width: 100%;
+  margin: 0 auto;
   min-height: 100vh;
   /* background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); */
   position: relative;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
-  border-radius: 20;
+  width: 100%;
 }
 
-@media (max-width: 375px) {
+/* 在较大屏幕上限制最大宽度并居中显示 */
+@media (min-width: 768px) {
+  .phone-container {
+    max-width: 414px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+  }
+}
+
+@media (max-width: 767px) {
   .phone-container {
     max-width: 100%;
     box-shadow: none;
@@ -62,4 +70,4 @@ html, body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-} 
+}

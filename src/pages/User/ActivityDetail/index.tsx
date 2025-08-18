@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Progress, Spin, message } from 'antd';
+import { Modal, Button, List, Avatar, Progress, Spin, message, Space } from 'antd';
 import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined } from '@ant-design/icons';
 import { ActivityAPI } from '../../../services/api';
 import { useRequest } from '../../../hooks/useRequest';
@@ -10,7 +10,7 @@ import type { ActivityDetailResponse, ProjectItem } from '../../../types/api';
 const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
 
 /**
- * 美化后的活动详情页面
+ * 
  * @returns 
  */
 const ActivityDetailPage = () => {
@@ -26,7 +26,7 @@ const ActivityDetailPage = () => {
     {
       manual: true,
       onError: (error) => {
-        message.error('获取活动详情失败：' + error.message);
+        message.error('获取活动详情失败：' + error.message); 
       }
     }
   );
@@ -42,7 +42,6 @@ const ActivityDetailPage = () => {
         navigate('/user/activities');
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]); // 只依赖id变化
 
   /**
@@ -205,39 +204,22 @@ const ActivityDetailPage = () => {
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡项目</h3>
           {projects.length > 0 ? (
             projects.map((project, index) => (
-              <div key={project.id} className={`bg-gradient-to-r ${getProjectGradient(index)} p-6 rounded-2xl shadow-lg flex items-center justify-between`}>
-                <div className="flex items-center">
-                  {/* 项目封面图片或默认图标 */}
-                  <div className="mr-4 bg-white/20 p-3 rounded-full">
-                    {project.avatar ? (
-                      <img 
-                        src={project.avatar} 
-                        alt={project.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                        onError={(e) => {
-                          // 图片加载失败时显示默认图标
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                        }}
-                      />
-                    ) : null}
-                    <div className={project.avatar ? 'hidden' : ''}>
-                      {getProjectIcon(index)}
-                    </div>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">{project.name}</h2>
-                    <p className="text-white/90">点击开始打卡</p>
-                  </div>
-                </div> 
-                <Button  
-                  shape="round" 
-                  className="bg-white text-red-500 font-bold border-none hover:bg-white/90"
-                  onClick={() => handleProjectClick(project.id)}
-                >
-                  去打卡
-                </Button>
-              </div>
+           <div key={project.id} className={`bg-gradient-to-r ${getProjectGradient(index)} p-6 rounded-2xl shadow-lg flex items-center justify-between h-32`}>
+           <div className="flex items-center">
+            <div className="mr-4 bg-white/20 p-3 rounded-full">{getProjectIcon(index)}</div>
+            <div>
+            <h2 className="text-xl font-bold text-white">{project.name}</h2>
+           <p className="text-gray-100 text-sm h-10 overflow-hidden line-clamp-2">{project.description}</p>
+    </div>
+  </div> 
+  <Button
+    shape="round"
+    className="bg-white text-red-500 font-bold border-none hover:bg-white/90 "
+    onClick={() => handleProjectClick(project.id)}
+  >
+    去打卡
+  </Button>
+</div>
             ))
           ) : (
             <div className="text-center py-8">
@@ -248,23 +230,31 @@ const ActivityDetailPage = () => {
       </main>
 
       {/* --- 弹窗 --- */}
-      <Modal title="活动简介" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-semibold text-gray-700 mb-2">活动名称</h4>
-            <p className="text-gray-600">{activity.name}</p>
-          </div>
-          <div>
-            <h4 className="font-semibold text-gray-700 mb-2">活动时间</h4>
-            <p className="text-gray-600">{formatDateRange(activity.start_date, activity.end_date)}</p>
-          </div>
-          <div>
-            <h4 className="font-semibold text-gray-700 mb-2">活动描述</h4>
-            <p className="text-gray-600 leading-relaxed">{activity.description}</p>
-          </div>
-          <div>
-            <h4 className="font-semibold text-gray-700 mb-2">创建者</h4>
-            <p className="text-gray-600">{activity.user.nick_name}</p>
+      <Modal 
+        title={null}
+        open={isIntroVisible} 
+        onCancel={() => setIntroVisible(false)} 
+        footer={null}
+        width={320}
+        centered
+        className="activity-intro-modal"
+        styles={{
+          body: { padding: '24px 20px' },
+          mask: { backgroundColor: 'rgba(0, 0, 0, 0.6)' }
+        }}
+      >
+        <div className="text-center">
+          {/* 标题 */}
+          <h2 className="text-xl font-bold text-gray-800 ">{activity.name}</h2>
+              
+            {/* 活动时间 */}
+            <p className="text-gray-600 mb-6">
+              活动时间：{formatDateRange(activity.start_date, activity.end_date)}
+            </p>
+          {/* 活动描述 */}
+          <div className="text-left space-y-4 text-sm text-gray-700 leading-relaxed">
+            <h3 className="font-semibold text-gray-800 mb-2">活动描述：</h3>
+            <p>{activity.description}</p>
           </div>
         </div>
       </Modal>

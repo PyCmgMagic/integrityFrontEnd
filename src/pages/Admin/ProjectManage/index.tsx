@@ -134,6 +134,7 @@ const ProjectDetailPage = () => {
   const handleEditColumnFinish = (values: any) => {
     console.log('表单数据已成功提交到父组件:', values);
     setEditColumnVisible(false);
+    refetch();
   };
   // 定义滑动操作的按钮
   const rightActions = (columnId: string) => [
@@ -160,7 +161,7 @@ const ProjectDetailPage = () => {
       })
       refetch();
     } catch (error:any) {
-        console.error('删除项目失败:', error);
+        console.error('删除栏目失败:', error);
       Toast.show({
         content:error.message ||'删除失败',
         duration: 3000
@@ -356,6 +357,7 @@ const ProjectDetailPage = () => {
         visible={isEditColumnVisible}
         onClose={() => setEditColumnVisible(false)}
         onFinish={handleEditColumnFinish}
+        projectId={parsedProjectId}
       />
     </div>
   );

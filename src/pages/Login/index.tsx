@@ -129,7 +129,7 @@ const LoginPage = () => {
           </div>
           <button 
             className={styles.submitButton} 
-            onClick={handleLogin}
+            onClick={() => handleLogin(username, password)}
             disabled={loading}
           >
             {loading ? '加载中...' : '登录'}
@@ -142,7 +142,7 @@ const LoginPage = () => {
         </div>
       </div>
     </div>
-  );
+  );  
 };
 
 export default LoginPage;

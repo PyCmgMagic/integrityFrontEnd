@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, Upload, message, Drawer, Space } from 'antd';
-import { LoadingOutlined, CalendarOutlined } from '@ant-design/icons';
-import type { UploadChangeParam } from 'antd/es/upload';
-import type { UploadFile } from 'antd/es/upload/interface';
+import { Modal, Form, Input, Button, message, Drawer, Space } from 'antd';
+import { CalendarOutlined } from '@ant-design/icons';
 import dayjs, { type Dayjs } from 'dayjs';
 import { API } from '../../../services/api';
+import { CoverUpload } from '../../../components';
 
 const { TextArea } = Input;
 
@@ -117,7 +116,7 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
 
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string>('');
 
   // 时间范围状态
   const [startTime, setStartTime] = useState<Dayjs | null>(null);
@@ -145,127 +144,21 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
       } else {
         // 如果是新建活动，则清空所有状态
         form.resetFields();
-        setImageUrl(null);
+        setImageUrl('');
         setStartTime(null);
         setEndTime(null);
       }
     }
   }, [initialData, visible, form]);
 
-  // 文件上传相关的函数
-  const getBase64 = (img: File, callback: (url: string) => void) => {
-    const reader = new FileReader();
-    reader.addEventListener('load', () => callback(reader.result as string));
-    reader.readAsDataURL(img);
-  };
-
-  const handleChange = (info: UploadChangeParam<UploadFile>) => {
-    if (info.file.status === 'uploading') {
-      setLoading(true);
-      return;
-    }
-    if (info.file.status === 'done') {
-      getBase64(info.file.originFileObj as File, (url: string) => {
-        setLoading(false);
-        setImageUrl(url);
-        form.setFieldsValue({ cover: url });
-      });
-      message.success(`${info.file.name} 文件上传成功`);
-    } else if (info.file.status === 'error') {
-      setLoading(false);
-      message.error(`${info.file.name} 文件上传失败.`);
-    }
-  };
-
   /**
-   * 自定义上传图片到图床
-   * @param file 要上传的文件
-   * @returns Promise<string> 返回图片URL
+   * 处理封面图片变化
+   * @param url - 新的图片URL
    */
-  const uploadToImageHost = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('image', file);
-
-    try {
-      const response = await fetch('https://pic.cloud.rpcrpc.com/uploadapi.php', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const result = await response.json();
-      
-      if (result.code === 200) {
-        return result.data.trim(); // 去除可能的空格
-      } else {
-        throw new Error(result.msg || '上传失败');
-      }
-    } catch (error) {
-      console.error('图片上传失败:', error);
-      throw error;
-    }
+  const handleCoverChange = (url: string) => {
+    setImageUrl(url);
+    form.setFieldsValue({ cover: url });
   };
-
-  /**
-   * 上传前的验证函数
-   * @param file 要上传的文件
-   * @returns boolean 是否允许上传
-   */
-  const beforeUpload = (file: File) => {
-    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
-    if (!isJpgOrPng) {
-      message.error('你只能上传 JPG/PNG 格式的图片!');
-      return false;
-    }
-    const isLt2M = file.size / 1024 / 1024 < 2;
-    if (!isLt2M) {
-      message.error('图片大小必须小于 2MB!');
-      return false;
-    }
-    
-    // 阻止默认上传，使用自定义上传逻辑
-    handleCustomUpload(file);
-    return false;
-  };
-
-  /**
-   * 自定义上传处理函数
-   * @param file 要上传的文件
-   */
-  const handleCustomUpload = async (file: File) => {
-    setLoading(true);
-    
-    try {
-      // 上传到图床
-      const imageUrl = await uploadToImageHost(file);
-      
-      // 设置图片URL
-      setImageUrl(imageUrl);
-      form.setFieldsValue({ cover: imageUrl });
-      
-      message.success(`${file.name} 文件上传成功`);
-    } catch (error: any) {
-      message.error(`${file.name} 文件上传失败: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  // 自定义的上传按钮
-  const uploadButton = (
-    <div className="w-full h-full bg-sky-100 bg-opacity-50 flex flex-col items-center justify-center rounded-lg hover:bg-sky-200 transition-colors">
-      {loading ? (
-        <LoadingOutlined />
-      ) : (
-        <>
-          <div className="w-16 h-16 rounded-full flex items-center justify-center my-2 border-2 border-dashed border-gray-300 bg-white">
-            <span className="text-4xl font-bold text-gray-400">+</span>
-          </div>
-          <p className="text-gray-500">上传封面</p>
-        </>
-      )}
-    </div>
-  );
 
   const handleFormSubmit = async (values: any) => {
     // 验证时间范围
@@ -385,26 +278,12 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
           label={<span className="font-semibold text-gray-700">设置栏目封面</span>}
           rules={[{ required: true, message: '请上传栏目封面' }]}
         >
-          // 修改Upload组件配置
-                  <Upload
-                    name="cover-uploader"
-                    listType="picture-card"
-                    className="activity-cover-uploader"
-                    showUploadList={false}
-                    beforeUpload={beforeUpload}
-                    style={{ width: '100%', height: '100%' }}
-                  >
-                    {imageUrl ? (
-                      <div className="relative w-full h-full group">
-                        <img src={imageUrl} alt="activity-cover" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-50 transition-opacity rounded-lg">
-                          <span className="text-white">更换封面</span>
-                        </div>
-                      </div>
-                    ) : (
-                      uploadButton
-                    )}
-                  </Upload>
+          <CoverUpload
+            value={imageUrl}
+            onChange={handleCoverChange}
+            placeholder="上传栏目封面"
+            height="h-40"
+          />
         </Form.Item>
 
         <Form.Item style={{ marginTop: '20px' }}>

@@ -53,10 +53,12 @@ const reviewedData: CheckInItem[] = [
  * 打卡管理页面 - 管理员审核视角 
  */
 const ColumnManage: React.FC = () => {
+  
   const navigate = useNavigate();
   const [editColumnVisible, setEditColumnVisible] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'unreviewed' | 'reviewed'>('unreviewed');
   const { activityId, projectId, columnId } = useParams();
+  const parsedProjectId = parseInt(projectId || '0');
   const handleEditColumnFinish = (values: any): void => {
     console.log('Received values from edit form: ', values);
     setEditColumnVisible(false);
@@ -201,6 +203,7 @@ const ColumnManage: React.FC = () => {
         visible={editColumnVisible}
         onClose={() => setEditColumnVisible(false)}
         onFinish={handleEditColumnFinish} 
+        projectId={parsedProjectId}
       />
     </div>
   );

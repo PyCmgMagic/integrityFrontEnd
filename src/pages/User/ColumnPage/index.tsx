@@ -36,8 +36,6 @@ const ColumnPage = () => {
     
     //这里显示打卡组件
     setGotoCheckIn(true);
-    
-  
   }
 
 
