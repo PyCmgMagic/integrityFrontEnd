@@ -1,14 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import  { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Progress, Spin, message, Space } from 'antd';
+import { Modal, Button, List, Avatar, Spin, message } from 'antd';
 import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined } from '@ant-design/icons';
 import { ActivityAPI } from '../../../services/api';
 import { useRequest } from '../../../hooks/useRequest';
-import type { ActivityDetailResponse, ProjectItem } from '../../../types/api';
-
-// 模拟用户信息，可以从 context 或 props 获取
-const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
-
 /**
  * 
  * @returns 
@@ -21,7 +16,7 @@ const ActivityDetailPage = () => {
   const [isRankingVisible, setRankingVisible] = useState(false);
 
   // 使用useRequest hook获取活动详情
-  const { data: activityData, loading, error, run: fetchActivityDetail } = useRequest(
+  const { data: activityData, loading, run: fetchActivityDetail } = useRequest(
     (activityId: number) => ActivityAPI.getActivityDetail(activityId),
     {
       manual: true,
@@ -56,7 +51,8 @@ const ActivityDetailPage = () => {
       const year = dateStr.substring(0, 4);
       const month = dateStr.substring(4, 6);
       const day = dateStr.substring(6, 8);
-      return `${month}.${day}`;
+      return `${year}.${month}.${day}`;
+
     };
     
     return `${formatDate(startDate)} - ${formatDate(endDate)}`;

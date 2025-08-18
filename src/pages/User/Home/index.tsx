@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Input, Empty, Spin, message, Button } from 'antd';
-import { SearchOutlined, CalendarOutlined, UserOutlined, PlusOutlined } from '@ant-design/icons';
-import { useAuthStore, type Activity } from '../../../store';
+import { Card, Input, Empty, Spin, message } from 'antd';
+import { SearchOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
+import { useAuthStore } from '../../../store';
 import { ActivityAPI } from '../../../services/api';
 import { transformActivityFromAPI } from '../../../utils/dataTransform';
 import useInfiniteScroll from '../../../hooks/useInfiniteScroll';
 import styles from './Home.module.css';
 
 const { Search } = Input;
-const { Meta } = Card;
+
 
 /**
  * 用户首页组件
@@ -27,7 +27,6 @@ const UserHomePage = () => {
     loading,
     loadingMore,
     hasMore,
-    containerRef,
     refresh,
     loadMore
   } = useInfiniteScroll(
@@ -81,22 +80,6 @@ const UserHomePage = () => {
   const handleActivityClick = (activityId: string) => {
     navigate(`/user/activity/${activityId}`);
   };
-
-  /**
-   * 处理参加活动
-   */
-  const handleJoinActivity = async (activityId: number, event: React.MouseEvent) => {
-    event.stopPropagation(); // 阻止事件冒泡，避免触发卡片点击
-    try {
-      await ActivityAPI.joinActivity(activityId);
-      message.success('参加活动成功！');
-      refresh(); // 刷新活动列表
-    } catch (error) {
-      console.error('参加活动失败:', error);
-      message.error('参加活动失败，请稍后重试');
-    }
-  };
-
   /**
    * 手动加载更多
    */

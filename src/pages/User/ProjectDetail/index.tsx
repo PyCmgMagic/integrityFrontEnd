@@ -1,12 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Progress, Spin, Result } from 'antd';
-import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined } from '@ant-design/icons';
+import { Modal, Button, List, Avatar,  Spin, Result } from 'antd';
+import { LeftOutlined, InfoCircleOutlined} from '@ant-design/icons';
 import { useProjectDetail } from '../../../hooks/useProjectDetail';
 import { formatDateRange } from '../../../utils/dataTransform';
 
-// 模拟用户信息，可以从 context 或 props 获取
-const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
 
 /**
  * 美化后的项目详情页面
@@ -49,7 +47,7 @@ const ProjectDetailPage = () => {
     rank: i + 1,
     name: `用户${String.fromCharCode(65 + (i % 26))}${i + 1}`,
     score: 100 - i * 2,
-    avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${i}` // 使用 placeholder 头像
+    avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${i}` 
   }));
 
   /**
@@ -59,14 +57,7 @@ const ProjectDetailPage = () => {
   const handleColumnClick = (columnId: number) => {
     navigate(`/user/activity/${activityId}/project/${projectId}/column/${columnId}`);
   };
-  const Icons = [
-    <BookOutlined />,
-    <ExperimentOutlined />,
-    <InfoCircleOutlined />,
-  ]
-  const getIcons = (index: number) => {
-    return Icons[index % Icons.length]
-  }
+
   // 加载状态
   if (loading) {
     return (
@@ -169,7 +160,7 @@ const ProjectDetailPage = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡栏目</h3>
           {projectDetail.columns.map((column, index) => ( 
-            <div key={column.id} className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 rounded-2xl shadow-lg flex items-center justify-between">
+            <div key={`${column.id}-${index}`} className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 rounded-2xl shadow-lg flex items-center justify-between">
               <div className="flex items-center">
                 <div>
                   <h2 className="text-2xl font-bold text-white">{column.name}</h2>
