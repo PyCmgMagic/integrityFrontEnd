@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Upload, message, Progress } from 'antd';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import type { RcFile } from 'antd/es/upload';
-import { uploadImageToCloud, compressImage } from '../utils/imageUpload';
+import { uploadImageToCloud, compressImage } from '../../utils/imageUpload';
 
 /**
  * 单图片上传组件属性接口

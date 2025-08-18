@@ -5,7 +5,6 @@ interface AvatarProps {
   size?: number;
   name?: string;
 }
-
 export const Avatar: React.FC<AvatarProps> = ({ src, size = 40, name = 'User' }) => (
   <div 
     className="avatar"

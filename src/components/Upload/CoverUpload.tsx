@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Plus } from 'lucide-react';
 import { message } from 'antd';
-import { uploadImageToCloud } from '../utils/imageUpload';
+import { uploadImageToCloud } from '../../utils/imageUpload';
 
 interface CoverUploadProps {
   /** 当前封面图片 URL */

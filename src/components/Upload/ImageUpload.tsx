@@ -3,8 +3,7 @@ import { Upload, message, Modal, Image, Progress } from 'antd';
 import { PlusOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
 import type { RcFile } from 'antd/es/upload';
-import { uploadImageToCloud, compressImage } from '../utils/imageUpload';
-
+import { uploadImageToCloud, compressImage } from '../../utils/imageUpload';
 interface ImageUploadProps {
   value?: string[];
   onChange?: (urls: string[]) => void;

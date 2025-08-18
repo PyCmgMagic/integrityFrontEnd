@@ -4,13 +4,12 @@ import { CalendarOutlined } from '@ant-design/icons';
 import dayjs, { type Dayjs } from 'dayjs';
 import { ActivityAPI } from '../services/api';
 import { transformActivityToCreateRequest } from '../utils/dataTransform';
-import SingleImageUpload from './SingleImageUpload';
+import SingleImageUpload from './Upload/SingleImageUpload';
+import CoverUpload from './Upload/CoverUpload';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 // 导入活动类型定义
-import type { ActivityData } from '../types/types';
 
 /**
  * 移动端友好的日期时间选择器组件
@@ -255,12 +254,9 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
           </div>
         </Form.Item>
         <Form.Item name="coverImage" label="活动封面">
-          <SingleImageUpload
+          <CoverUpload
             value={coverImageUrl}
             onChange={handleCoverImageChange}
-            uploadText="上传封面"
-            maxSize={5}
-            className="avatar-uploader"
           />
         </Form.Item>
 

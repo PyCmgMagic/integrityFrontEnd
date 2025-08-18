@@ -89,7 +89,8 @@ export const uploadImageToCloud = async (
     xhr.timeout = 30000;
 
     // 发送请求
-    xhr.open('POST', 'https://pic.cloud.rpcrpc.com/uploadapi.php');
+    const uploadUrl = import.meta.env.VITE_IMAGE_UPLOAD_URL;
+    xhr.open('POST', uploadUrl);
     xhr.send(formData);
   });
 };

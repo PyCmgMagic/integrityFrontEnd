@@ -1,23 +1,11 @@
-import { useState } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Layout, Menu, Button, Drawer, Avatar } from 'antd';
+import { Outlet } from 'react-router-dom';
+import { Layout } from 'antd';
 import { 
-  PlusOutlined, 
-  CheckSquareOutlined,
-  StarOutlined,
-  ExportOutlined,
-  LogoutOutlined,
-  MenuOutlined,
   UserOutlined
 } from '@ant-design/icons';
-import { useAuthStore } from '../store';
 import BottomNavigation, { type NavItem } from './BottomNavigation/BottomNavigation';
-
-const { Header, Sider, Content } = Layout;
-
-
+const { Content } = Layout;
 const UserLayout = () => {
-  // 只保留主页和个人中心
   const navItems: NavItem[] = [
     {
       path: '/user/home',
@@ -42,12 +30,6 @@ const UserLayout = () => {
       <BottomNavigation items={navItems} />
         </Content>
       </Layout>
-    // <div className="phone-container">
-    //   <main className="page-container">
-    //     <Outlet />
-    //   </main>
-    //   <BottomNavigation items={navItems} />
-    // </div>
   );
 };
 
