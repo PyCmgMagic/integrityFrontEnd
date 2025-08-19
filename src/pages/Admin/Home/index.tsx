@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Input, Empty, Spin, message } from 'antd';
+import { Card, Input, Empty, Spin } from 'antd';
 import { SearchOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
-import { useAuthStore, type Activity } from '../../../store';
+import { useAuthStore  } from '../../../store';
 import { ActivityAPI } from '../../../services/api';
 import { transformActivityFromAPI } from '../../../utils/dataTransform';
 import CreateActivityModal from '../../../components/CreateActivityModal';
@@ -27,7 +27,6 @@ const AdminHomePage = () => {
     loading,
     loadingMore,
     hasMore,
-    containerRef,
     refresh,
     loadMore
   } = useInfiniteScroll(

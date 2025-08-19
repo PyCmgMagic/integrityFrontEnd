@@ -117,7 +117,7 @@ const CreateNewProject: React.FC<CreateProjectProps> = ({ onBack }) => {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center">
         <button 
-          onClick={onBack}
+          onClick={() => navigate(-1)}
           className="p-2 -ml-2 text-gray-600 hover:text-gray-800 transition-colors"
         >
           <ChevronLeft size={24} />

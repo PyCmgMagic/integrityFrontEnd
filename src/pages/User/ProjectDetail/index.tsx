@@ -181,9 +181,8 @@ const ProjectDetailPage = () => {
               <p>暂无打卡栏目</p>
             </div>
           )}
-        </div>
+        </div> 
       </main>
-
       {/* --- 弹窗 --- */}
             <Modal 
         title={null}
