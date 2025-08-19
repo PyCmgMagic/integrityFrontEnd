@@ -179,7 +179,7 @@ const ReviewManagePage = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                         <div className="absolute bottom-3 left-4 text-white">
                           <h3 className="font-bold text-lg mb-1">{activity.name}</h3>
-                          <p className="text-sm opacity-90">{activity.description}</p>
+                          <p className="text-sm opacity-95 overflow-hidden overflow-ellipsis line-clamp-2">{activity.description}</p>
                         </div>
                       </div>
                     }

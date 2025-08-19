@@ -159,22 +159,28 @@ const ProjectDetailPage = () => {
         {/* 打卡栏目卡片 */}
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡栏目</h3>
-          {projectDetail.columns.map((column, index) => ( 
-            <div key={`${column.id}-${index}`} className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 rounded-2xl shadow-lg flex items-center justify-between">
-              <div className="flex items-center">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">{column.name}</h2>
+          {projectDetail.columns && projectDetail.columns.length > 0 ? (
+            projectDetail.columns.map((column, index) => ( 
+              <div key={`${column.id}-${index}`} className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 rounded-2xl shadow-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{column.name}</h2>
+                  </div>
                 </div>
+                <Button  
+                  shape="round" 
+                  className="bg-white text-red-500 font-bold border-none hover:bg-white/90"
+                  onClick={() => handleColumnClick(column.id)}
+                >
+                  进入栏目
+                </Button>
               </div>
-              <Button  
-                shape="round" 
-                className="bg-white text-red-500 font-bold border-none hover:bg-white/90"
-                onClick={() => handleColumnClick(column.id)}
-              >
-                进入栏目
-              </Button>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>暂无打卡栏目</p>
             </div>
-          ))}
+          )}
         </div>
       </main>
 

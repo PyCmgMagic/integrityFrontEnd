@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'; // 添加 useRef
+import  { useState, useEffect, useCallback, useRef } from 'react'; // 添加 useRef
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Progress, Space, message, Spin } from 'antd';
-import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined, EditOutlined } from '@ant-design/icons';
+import { Modal, Button, List, Avatar, Space, message, Spin } from 'antd';
+import { LeftOutlined, BookOutlined, ExperimentOutlined, EditOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 // 导入外部的编辑弹窗组件
@@ -12,8 +12,7 @@ import { formatDateFromNumber } from '../../../utils/dataTransform';
 import type { ActivityDetailResponse } from '../../../types/api';
 
 // 模拟用户信息，可以从 context 或 props 获取
-const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
-
+const currentUser = JSON.parse(localStorage.getItem('auth-storage') || 'null');
 /**
  * 美化后的活动详情页面
  * @returns 
@@ -37,7 +36,6 @@ const ActivityDetailPage = () => {
   const [isScoresVisible, setScoresVisible] = useState(false);
   const [isRankingVisible, setRankingVisible] = useState(false);
   const [isEditModalVisible, setEditModalVisible] = useState(false);
-  
   // API数据状态
   const [loading, setLoading] = useState(true);
   const [activityData, setActivityData] = useState<ActivityDetailResponse | null>(null);
@@ -56,7 +54,7 @@ const ActivityDetailPage = () => {
   }, []);
 
   /**
-   * 获取活动详情数据 (优化版本 - 修复无限循环)
+   * 获取活动详情数据 
    */
   const fetchActivityDetail = useCallback(async (activityId?: string) => {
     const currentId = activityId || id;
@@ -86,7 +84,6 @@ const ActivityDetailPage = () => {
     // 创建新的请求控制器
     const controller = new AbortController();
     abortControllerRef.current = controller;
-
        try {
       // 重置状态，准备发起新的请求
       setLoading(true);
@@ -94,7 +91,11 @@ const ActivityDetailPage = () => {
       console.log('📡 调用API获取活动详情, activityId:', numericId);
       
       const response = await ActivityAPI.getActivityDetail(numericId);
-      
+      if(response.activity.owner_id !==  currentUser?.state.user.id ){
+        navigate(`/user/activity/${numericId}`);
+        return;
+      }
+
       // 检查组件是否仍然挂载以及请求是否被取消
       if (!mountedRef.current || controller.signal.aborted) {
         console.log('🚫 组件已卸载或请求被取消，忽略响应');
@@ -326,7 +327,11 @@ const ActivityDetailPage = () => {
         <div className="flex items-center justify-between">
           <Button type="text" shape="circle" icon={<LeftOutlined />} className="text-white hover:bg-white/20" onClick={() => navigate(-1)} />
           <h1 className="text-xl font-bold">{activity.name}</h1>
-          <Button type="text" shape="circle" icon={<EditOutlined />} className="text-white hover:bg-white/20" onClick={() => setEditModalVisible(true)} />
+          {<Button  type="text" shape="circle" icon={<EditOutlined />} className={`text-white hover:bg-white/20 ${
+            activityData?.activity?.owner_id !== currentUser?.state.user.id 
+              ? 'invisible pointer-events-none' 
+              : ''
+          }`} onClick={() => setEditModalVisible(true)} />}
         </div>
         <div className='flex items-center justify-between mt-6'>
           <Space className='flex items-between'>
@@ -342,13 +347,16 @@ const ActivityDetailPage = () => {
 
       <main className="p-4 pb-20"> 
         <div className="space-y-4">
-            <div  className={`bg-gradient-to-r from-orange-500 to-red-500 p-3 flex-col rounded-2xl shadow-lg border-4 border-white/50 border-dashed  flex items-center justify-center`}>
+           {
+            activityData?.activity?.owner_id === currentUser?.state.user.id &&  
+            <div  className={`bg-gradient-to-r from-orange-500 to-red-500 p-3 flex-col rounded-2xl shadow-lg border-4 border-white/50 border-dashed  flex items-center justify-center `}>
               <div className="flex items-center"></div>
             <div onClick={() => navigate(`/admin/create/activity/${id}/project`)} className=" w-16 h-16 rounded-full flex items-center justify-center mb-2 border-2 border-white/50 border-dashed shadow">
               <span className="text-4xl font-bold text-white">+</span>
             </div> 
             <p onClick={handleNewProjectClick} className="text-lg font-semibold text-white">新增项目</p> 
-            </div>
+            </div>  
+            }
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡项目</h3>
           {projects.map((project) => (
             <SwipeAction
