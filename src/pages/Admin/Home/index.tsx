@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Input, Empty, Spin } from 'antd';
-import { SearchOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
+import { Card, Input, Empty, Spin, Dropdown, message } from 'antd';
+import { SearchOutlined, CalendarOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthStore  } from '../../../store';
 import { ActivityAPI } from '../../../services/api';
 import { transformActivityFromAPI } from '../../../utils/dataTransform';
@@ -16,7 +16,7 @@ const { Search } = Input;
  */
 const AdminHomePage = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState(''); // 输入框的值
   const [actualSearchTerm, setActualSearchTerm] = useState(''); // 实际用于搜索的值
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -32,7 +32,12 @@ const AdminHomePage = () => {
   } = useInfiniteScroll(
     async ({ page, page_size }) => {
       // 构建API请求参数，支持通过name进行搜索
-      const params: any = { page, page_size };
+      interface ActivityListParams {
+        page: number;
+        page_size: number;
+        name?: string;
+      }
+      const params: ActivityListParams = { page, page_size };
       if (actualSearchTerm.trim()) {
         params.name = actualSearchTerm.trim();
       }
@@ -94,6 +99,48 @@ const AdminHomePage = () => {
       loadMore();
     }
   };
+
+  /**
+   * 处理退出登录
+   */
+  const handleLogout = () => {
+    logout();
+    message.success('已退出登录');
+    navigate('/login');
+  };
+
+  /**
+   * 处理跳转到个人页面
+   */
+  const handleGoToProfile = () => {
+    navigate('/admin/profile');
+  };
+
+  /**
+   * 用户头像下拉菜单配置
+   */
+  const userMenuItems = [
+    {
+      key: 'profile',
+      label: (
+        <div className="flex items-center px-2 py-1">
+          <UserOutlined className="mr-2" />
+          我的
+        </div>
+      ),
+      onClick: handleGoToProfile,
+    },
+    {
+      key: 'logout',
+      label: (
+        <div className="flex items-center px-2 py-1 text-red-500">
+          <LogoutOutlined className="mr-2" />
+          退出登录
+        </div>
+      ),
+      onClick: handleLogout,
+    },
+  ];
   return (
     <div className="page-container">
       {/* 用户欢迎区域 */}
@@ -106,9 +153,15 @@ const AdminHomePage = () => {
               </h1>
               <p className="text-white/80">要发布新活动了吗？</p>
             </div>
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <UserOutlined className="text-white text-lg" />
-            </div>
+            <Dropdown
+              menu={{ items: userMenuItems }}
+              placement="bottomRight"
+              trigger={['click']}
+            >
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center cursor-pointer hover:bg-white/30 transition-colors">
+                <UserOutlined className="text-white text-lg" />
+              </div>
+            </Dropdown>
           </div>
           <div onClick={() => setCreateModalVisible(true)} className=" rounded-lg border-2 border-dashed  p-4 flex flex-col items-center justify-center text-center cursor-pointer">
             <div className="w-16 h-16 border-2 border-white/50 rounded-full flex items-center justify-center mb-2 shadow border-dashed">

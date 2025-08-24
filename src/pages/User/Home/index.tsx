@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Input, Empty, Spin, message } from 'antd';
-import { SearchOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
+import { Card, Input, Empty, Spin, message, Dropdown } from 'antd';
+import { SearchOutlined, CalendarOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../../../store';
 import { ActivityAPI } from '../../../services/api';
 import { transformActivityFromAPI } from '../../../utils/dataTransform';
@@ -17,7 +17,7 @@ const { Search } = Input;
  */
 const UserHomePage = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user ,logout} = useAuthStore();
   const [searchTerm, setSearchTerm] = useState(''); // 输入框的值
   const [actualSearchTerm, setActualSearchTerm] = useState(''); // 实际用于搜索的值
 
@@ -32,7 +32,7 @@ const UserHomePage = () => {
   } = useInfiniteScroll(
     async ({ page, page_size }) => {
       // 构建API请求参数，支持通过name进行搜索
-      const params: any = { page, page_size };
+      const params: { page: number; page_size: number; name?: string } = { page, page_size };
       if (actualSearchTerm.trim()) {
         params.name = actualSearchTerm.trim();
       }
@@ -89,6 +89,48 @@ const UserHomePage = () => {
     }
   };
 
+
+  /**
+   * 处理退出登录
+   */
+  const handleLogout = () => {
+    logout();
+    message.success('已退出登录');
+    navigate('/login');
+  };
+
+  /**
+   * 处理跳转到个人页面
+   */
+  const handleGoToProfile = () => {
+    navigate('/user/profile');
+  };
+
+  /**
+   * 用户头像下拉菜单配置
+   */
+  const userMenuItems = [
+    {
+      key: 'profile',
+      label: (
+        <div className="flex items-center px-2 py-1">
+          <UserOutlined className="mr-2" />
+          我的
+        </div>
+      ),
+      onClick: handleGoToProfile,
+    },
+    {
+      key: 'logout',
+      label: (
+        <div className="flex items-center px-2 py-1 text-red-500">
+          <LogoutOutlined className="mr-2" />
+          退出登录
+        </div>
+      ),
+      onClick: handleLogout,
+    },
+  ];
   return (
     <div className="page-container">
       {/* 用户欢迎区域 */}
@@ -101,9 +143,15 @@ const UserHomePage = () => {
               </h1>
               <p className="text-white/80">让我们开始今天的打卡之旅</p>
             </div>
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <UserOutlined className="text-white text-lg" />
-            </div>
+              <Dropdown
+              menu={{ items: userMenuItems }}
+              placement="bottomRight"
+              trigger={['click']}
+            >
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center cursor-pointer hover:bg-white/30 transition-colors">
+                <UserOutlined className="text-white text-lg" />
+              </div>
+            </Dropdown>
           </div>
           <div className="bg-white/20 rounded-2xl p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between text-sm">
