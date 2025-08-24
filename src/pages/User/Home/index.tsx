@@ -38,7 +38,6 @@ const UserHomePage = () => {
       }
       
       const response = await ActivityAPI.getActivityList(params);
-      // 转换API响应数据为前端格式
       const transformedActivities = response.activitys.map(transformActivityFromAPI);
       return {
         ...response,
@@ -60,14 +59,14 @@ const UserHomePage = () => {
   );
 
   /**
-   * 处理搜索框输入变化（仅更新输入框显示值，不触发搜索）
+   * 处理搜索框输入变化
    */
   const handleInputChange = (value: string) => {
     setSearchTerm(value);
   };
 
   /**
-   * 处理搜索执行（点击搜索按钮或按回车时触发）
+   * 处理搜索执行
    */
   const handleSearch = (value: string) => {
     setActualSearchTerm(value);

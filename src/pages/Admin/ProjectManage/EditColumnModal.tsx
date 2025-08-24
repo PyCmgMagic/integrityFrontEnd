@@ -188,6 +188,8 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         start_date: parseInt(startTime.format('YYYYMMDD')), // 转换为数字格式
         end_date: parseInt(endTime.format('YYYYMMDD')), // 转换为数字格式
         avatar: imageUrl, // 使用avatar字段名
+        daily_punch_limit: parseInt(values.daily_punch_limit), // 每日可打卡次数
+        point_earned: parseInt(values.point_earned), // 每次打卡获得积分
       };
 
       if (initialData?.id) {
@@ -196,7 +198,7 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         message.success('栏目更新成功！');
       } else {
         // 创建栏目
-        const result = await API.Column.createColumn(apiData);
+        await API.Column.createColumn(apiData);
         message.success('栏目创建成功！');
       }
 
@@ -284,6 +286,30 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
             placeholder="上传栏目封面"
             height="h-40"
           />
+        </Form.Item>
+
+        <Form.Item
+          name="daily_punch_limit"
+          label={<span className="font-semibold text-gray-700">每日可打卡次数</span>}
+          rules={[
+            { required: true, message: '请输入每日可打卡次数' },
+            { type: 'number', min: 1, max: 100, message: '请输入1-100之间的数字' }
+          ]}
+          initialValue={1}
+        >
+          <Input type="number" placeholder="请输入每日可打卡次数" min={1} max={100} />
+        </Form.Item>
+
+        <Form.Item
+          name="point_earned"
+          label={<span className="font-semibold text-gray-700">每次打卡获得积分</span>}
+          rules={[
+            { required: true, message: '请输入每次打卡获得积分' },
+            { type: 'number', min: 1, max: 1000, message: '请输入1-1000之间的数字' }
+          ]}
+          initialValue={1}
+        >
+          <Input type="number" placeholder="请输入每次打卡获得积分" min={1} max={1000} />
         </Form.Item>
 
         <Form.Item style={{ marginTop: '20px' }}>

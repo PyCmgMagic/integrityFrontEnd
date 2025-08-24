@@ -50,7 +50,9 @@ const CreateColumnFlow: React.FC = () => {
         project_id: parseInt(projectId, 10),
         start_date: formatDateToNumber(columnData.startDate),
         end_date: formatDateToNumber(columnData.endDate),
-        avatar: columnData.coverImage || ''
+        avatar: columnData.coverImage || '',
+        daily_punch_limit: columnData.dailyCheckinLimit,
+        point_earned: columnData.pointsPerCheckin,
       };
 
       console.log(`正在保存第 ${currentStep} 个栏目的数据:`, apiData);

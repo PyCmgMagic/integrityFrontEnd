@@ -5,6 +5,8 @@
 
 import type { ActivityItem } from '../types/api';
 import type { Activity } from '../store/useAppStore';
+import type { PunchRecord, CheckInData } from '../types/types';
+import dayjs from 'dayjs';
 
 /**
  * 将日期数字转换为字符串格式
@@ -110,4 +112,33 @@ export function transformActivityToUpdateRequest(activity: {
   if (activity.endTime !== undefined) request.end_date = formatDateToNumber(activity.endTime);
   
   return request;
+}
+
+/**
+ * 将后端打卡记录转换为前端组件所需格式
+ * @param punchRecord 后端返回的打卡记录
+ * @returns 前端组件使用的打卡记录格式
+ */
+export function transformPunchRecordToCheckInData(punchRecord: PunchRecord): CheckInData {
+  const createdAt = dayjs(punchRecord.CreatedAt);
+  
+  return {
+    id: punchRecord.ID,
+    title: punchRecord.content || '打卡记录',
+    time: createdAt.format('HH:mm'),
+    date: createdAt.format('YYYY-MM-DD'),
+  };
+}
+
+/**
+ * 将打卡记录数组转换为前端CheckInData数组
+ * @param punchRecords 打卡记录数组，可能为null
+ * @returns CheckInData数组
+ */
+export function transformPunchRecordsToCheckInData(punchRecords: PunchRecord[] | null): CheckInData[] {
+  // 处理null或undefined的情况，返回空数组
+  if (!punchRecords || !Array.isArray(punchRecords)) {
+    return [];
+  }
+  return punchRecords.map(transformPunchRecordToCheckInData);
 }

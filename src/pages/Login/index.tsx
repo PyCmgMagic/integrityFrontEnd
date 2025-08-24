@@ -9,7 +9,7 @@ import styles from './Login.module.css';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const { login, setUserProfile } = useAuthStore();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginType, setLoginType] = useState<'user' | 'admin'>('user');
@@ -22,9 +22,19 @@ const LoginPage = () => {
     showError: true,
     showSuccess: true,
     successMessage: '登录成功！',
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // 更新认证状态
       login(data);
+      
+      try {
+        // 获取用户个人信息
+        const userProfile = await API.User.getCurrentUser();
+        setUserProfile(userProfile);
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+        // 即使获取用户信息失败，也不影响登录流程
+      }
+      
       // 根据角色跳转到相应页面
       const targetPath = data.role_id === 1 ? '/admin/home' : '/user/home';
       navigate(targetPath);

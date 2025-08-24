@@ -148,7 +148,15 @@ class RequestService {
   private handleError(error: AxiosError): Promise<never> {
     let apiError: ApiError;
 
-    if (error.code === 'ECONNABORTED') {
+    // 检查是否为请求取消
+    if (error.name === 'AbortError' || error.message === 'canceled') {
+      // 请求被取消，不显示错误信息
+      apiError = {
+        code: -2,
+        message: 'Request canceled',
+        silent: true, // 标记为静默错误，不显示给用户
+      };
+    } else if (error.code === 'ECONNABORTED') {
       // 请求超时
       apiError = {
         code: -1,

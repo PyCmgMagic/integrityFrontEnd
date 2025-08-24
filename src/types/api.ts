@@ -49,6 +49,7 @@ export interface ApiError {
   code: number;
   message: string;
   details?: any;
+  silent?: boolean; // 标记为静默错误，不显示给用户
 }
 
 // 登录相关类型
@@ -66,15 +67,11 @@ export interface LoginResponse {
 
 // 用户信息更新请求
 export interface UpdateUserRequest {
-  name?: string;
+  nick_name?: string;
   avatar?: string;
-  bio?: string;
-  studentId?: string;
-  grade?: string;
   college?: string;
   major?: string;
-  dob?: string;
-  gender?: '男' | '女';
+  grade?: string;
 }
 
 // 活动相关类型定义
@@ -157,6 +154,8 @@ export interface ProjectColumn {
   id: number;
   name: string;
   avatar: string;
+  daily_punch_limit: number; // 每日可打卡次数
+  point_earned: number; // 每次打卡获得积分
 }
 
 export interface ProjectDetail {
@@ -184,6 +183,8 @@ export interface CreateColumnRequest {
   start_date: number;
   end_date: number;
   avatar: string;
+  daily_punch_limit: number; // 每日可打卡次数
+  point_earned: number; // 每次打卡获得积分
 }
 
 export interface CreateColumnResponse {
@@ -196,4 +197,28 @@ export interface UpdateColumnRequest {
   start_date?: number;
   end_date?: number;
   avatar?: string;
+  daily_punch_limit?: number; // 每日可打卡次数
+  point_earned?: number; // 每次打卡获得积分
+}
+
+// 参与活动历史相关类型定义
+export interface ParticipationActivityItem {
+  ID: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  name: string;
+  description: string;
+  owner_id: string;
+  start_date: number;
+  end_date: number;
+  avatar: string;
+  user: ActivityUser;
+}
+
+export interface ParticipationHistoryResponse {
+  activities: ParticipationActivityItem[];
+  columns: any[];
+  projects: any[];
+  punches: any[];
 }

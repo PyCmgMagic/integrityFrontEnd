@@ -7,10 +7,9 @@ import moment from 'moment';
 import EditColumnModal from './EditColumnModal';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 import { useAdminProjectDetail } from '../../../hooks/useAdminProjectDetail';
-import { ColumnAPI, ProjectAPI } from '../../../services/api';
+import { ColumnAPI } from '../../../services/api';
 
 // 模拟用户信息，可以从 context 或 props 获取
-const currentUser = { name: "1", avatarUrl: "/path/to/avatar.png" };
 
 /**
  * 管理员项目详情页面

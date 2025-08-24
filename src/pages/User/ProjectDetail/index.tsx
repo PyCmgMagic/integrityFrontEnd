@@ -161,19 +161,27 @@ const ProjectDetailPage = () => {
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡栏目</h3>
           {projectDetail.columns && projectDetail.columns.length > 0 ? (
             projectDetail.columns.map((column, index) => ( 
-              <div key={`${column.id}-${index}`} className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 rounded-2xl shadow-lg flex items-center justify-between">
-                <div className="flex items-center">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">{column.name}</h2>
+              <div key={`${column.id}-${index}`} className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 rounded-2xl shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">{column.name}</h2>
+                    </div>
+                  </div>
+                  <Button  
+                    shape="round" 
+                    className="bg-white text-red-500 font-bold border-none hover:bg-white/90"
+                    onClick={() => handleColumnClick(column.id)}
+                  >
+                    进入栏目
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between text-white/90 text-sm">
+                  <div className="flex items-center space-x-4">
+                    <span>每日可打卡: {column.daily_punch_limit}次</span>
+                    <span>每次获得: {column.point_earned}积分</span>
                   </div>
                 </div>
-                <Button  
-                  shape="round" 
-                  className="bg-white text-red-500 font-bold border-none hover:bg-white/90"
-                  onClick={() => handleColumnClick(column.id)}
-                >
-                  进入栏目
-                </Button>
               </div>
             ))
           ) : (

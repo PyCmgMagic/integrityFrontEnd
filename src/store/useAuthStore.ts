@@ -9,6 +9,11 @@ export interface User {
   email?: string;
   student_id?: string;
   role_id?: number;
+  nick_name?: string;
+  college?: string;
+  major?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface AuthState {
@@ -18,6 +23,7 @@ interface AuthState {
   login: (loginData: { role_id: number; student_id: string; token: string }) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
+  setUserProfile: (profileData: any) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -62,6 +68,23 @@ export const useAuthStore = create<AuthState>()(
         const currentUser = get().user;
         if (currentUser) {
           set({ user: { ...currentUser, ...updates } });
+        }
+      },
+      
+      setUserProfile: (profileData: any) => {
+        const currentUser = get().user;
+        if (currentUser && profileData) {
+          const updatedUser: User = {
+            ...currentUser,
+            name: profileData.nick_name || currentUser.name,
+            nick_name: profileData.nick_name,
+            avatar: profileData.avatar?.trim(),
+            college: profileData.college,
+            major: profileData.major,
+            created_at: profileData.created_at,
+            updated_at: profileData.updated_at,
+          };
+          set({ user: updatedUser });
         }
       },
     }),

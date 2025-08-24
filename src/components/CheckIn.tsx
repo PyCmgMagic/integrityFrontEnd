@@ -1,38 +1,57 @@
 import React, { useState } from 'react';
 import { Button, Toast, TextArea, ImageUploader,Divider } from 'antd-mobile';
 import type { ImageUploadItem  } from 'antd-mobile';
+import { API } from '../services/api';
+import { uploadImageToCloud, compressImage } from '../utils/imageUpload';
 // 定义传递给组件的 props 类型
 interface CheckInPageProps {
+  columnId: number; // 添加column_id参数
   onSuccess?: (data: { content: string; images: ImageUploadItem[] }) => void;
-  setIsCheckedIn: (isCheckIn: boolean) => void;
-setGotoCheckIn: (gotoCheckIn: boolean) => void;
+  setGotoCheckIn: (gotoCheckIn: boolean) => void;
 }
 /**
- * 模拟上传函数
+ * 真实图片上传函数
  * @param file 用户选择的文件
  * @returns 返回一个包含图片URL的Promise
  */
-async function mockUpload(file: File): Promise<ImageUploadItem> {
-  // 模拟网络延迟
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  // 返回一个包含本地预览 URL 的对象
-  return {
-    url: URL.createObjectURL(file),
-  };
-}
+async function realUpload(file: File): Promise<ImageUploadItem> {
+  try {
+    // 如果文件大于1MB，先进行压缩
+    let fileToUpload: File = file;
+    if (file.size > 1024 * 1024) {
+      Toast.show({
+        content: '正在压缩图片...',
+        duration: 1000,
+      });
+      fileToUpload = await compressImage(file, 1920, 1080, 0.8);
+    }
 
+    // 上传到图床
+    const imageUrl = await uploadImageToCloud(fileToUpload, (percent) => {
+      console.log(`上传进度: ${percent}%`);
+    });
+    return {
+      url: imageUrl,
+    };
+  } catch (error) {
+    console.error('图片上传失败:', error);
+    Toast.show({
+      content: error instanceof Error ? error.message : '图片上传失败',
+      position: 'bottom',
+    });
+    throw error;
+  }
+}
 /**
  * 打卡页面组件
- * (已使用 antd-mobile 的 ImageUploader)
  */
-const CheckInPage: React.FC<CheckInPageProps> = ({ onSuccess, setIsCheckedIn, setGotoCheckIn }) => {
+const CheckIn: React.FC<CheckInPageProps> = ({ columnId, onSuccess, setGotoCheckIn }) => {
   // 图片文件列表状态
   const [fileList, setFileList] = useState<ImageUploadItem[]>([]);
   // 提交按钮的加载状态
   const [loading, setLoading] = useState(false);
   // 文本域内容状态
   const [content, setContent] = useState('');
-
   /**
    * 处理提交打卡逻辑
    */
@@ -54,31 +73,49 @@ const CheckInPage: React.FC<CheckInPageProps> = ({ onSuccess, setIsCheckedIn, se
     }
 
     setLoading(true);
-    // 模拟异步提交过程
     try {
-      console.log('提交的内容:', content);
-      console.log('提交的图片:', fileList);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      Toast.show({
-        content: '打卡成功！',
+      // 提取图片URL
+      const images = fileList.map(item => item.url).filter(Boolean) as string[];
+      
+      // 调用API提交打卡记录
+      const response = await API.Column.insertPunchRecord({
+        column_id: columnId,
+        content: content.trim(),
+        images: images
       });
+
+      // 根据审核状态显示不同的提示信息
+      const statusMessage = response.status === 0 ? '打卡提交成功，正在审核中...' : '打卡成功！';
+      
+      Toast.show({
+        content: statusMessage,
+        duration: 2000,
+      });
+      
       // 成功后清空表单
       setFileList([]);
       setContent('');
+      
+      // 调用成功回调
+      if (onSuccess) {
+        onSuccess({ content, images: fileList });
+      }
+      
     } catch (error) {
+      console.error('打卡提交失败:', error);
       Toast.show({
-        content: '打卡失败，请重试',
+        content: '打卡提交失败，请重试',
+        position: 'bottom',
       });
     } finally {
       setLoading(false);
     }
     setGotoCheckIn(false);
-    setIsCheckedIn(true);
   };
 
   return (
-    // 页面主容器
-    <div className="flex flex-col h-screen bg-gray-50 font-sans">
+    // 页面主容器 
+    <div className="flex flex-col h-80vh bg-gray-50 font-sans">
       {/* 主要内容区 */}
       <main className="flex-grow p-4 overflow-y-auto">
         {/* 打卡任务描述和文本输入 */}
@@ -98,9 +135,9 @@ const CheckInPage: React.FC<CheckInPageProps> = ({ onSuccess, setIsCheckedIn, se
             <ImageUploader
               value={fileList}
               onChange={setFileList}
-              upload={mockUpload}
+              upload={realUpload}
               style={{ '--cell-size': '90px' }}
-              beforeUpload={(file, files) => {
+              beforeUpload={(file) => {
                 const isImage = file.type.startsWith('image/');
                 if (!isImage) {
                   Toast.show('只能上传图片文件！');
@@ -166,4 +203,4 @@ const CheckInPage: React.FC<CheckInPageProps> = ({ onSuccess, setIsCheckedIn, se
   );
 };
 
-export default CheckInPage;
+export default CheckIn;

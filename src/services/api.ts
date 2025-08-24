@@ -17,8 +17,9 @@ import type {
   CreateActivityResponse,
   UpdateActivityRequest,
   ProjectDetail,
+  ParticipationHistoryResponse,
 } from '../types/api';
-import type { UserProfile, ActivityData, CheckInData } from '../types/types';
+import type { UserProfile, ActivityData, CheckInData, PunchRecordsData } from '../types/types';
 import CreateNewProject from '../pages/Admin/CreateProject';
 import { data } from 'react-router-dom';
 
@@ -88,11 +89,24 @@ export class UserAPI {
   /**
    * 更新用户信息
    */
-  static async updateProfile(data: UpdateUserRequest): Promise<UserProfile> {
-    return request.put<UserProfile>('/user/profile', data, {
-      showLoading: true,
-      showError: true,
-    });
+  static async updateProfile(data: UpdateUserRequest): Promise<{ code: number; msg: string; timestamp: number }> {
+    try {
+      await request.put<{ code: number; msg: string; timestamp: number }>('/user/update', data, {
+        showLoading: true,
+        showError: false, // 关闭自动错误提示，由调用方处理
+      });
+      return { code: 200, msg: '更新成功', timestamp: Date.now() };
+    } catch (error: any) {
+      // 处理API错误响应
+      if (error && typeof error === 'object') {
+        return {
+          code: error.code || 500,
+          msg: error.message || '更新失败',
+          timestamp: Date.now()
+        };
+      }
+      return { code: 500, msg: '网络错误，请重试', timestamp: Date.now() };
+    }
   }
 
   /**
@@ -131,6 +145,16 @@ export class UserAPI {
     role?: string;
   }): Promise<PaginatedResponse<UserProfile>> {
     return request.get<PaginatedResponse<UserProfile>>('/admin/users', params);
+  }
+
+  /**
+   * 获取用户参与活动历史
+   */
+  static async getParticipationHistory(): Promise<ParticipationHistoryResponse> {
+    return request.get<ParticipationHistoryResponse>('/punch/recent-participation', undefined, {
+      showLoading: true,
+      showError: true,
+    });
   }
 }
 
@@ -472,6 +496,8 @@ export class ColumnAPI {
     start_date: number;
     end_date: number;
     avatar: string;
+    daily_punch_limit: number; // 每日可打卡次数
+    point_earned: number; // 每次打卡获得积分
   }): Promise<{ column_id: number }> {
     return request.post<{ column_id: number }>('/column/create', data, {
       showLoading: true,
@@ -490,6 +516,8 @@ export class ColumnAPI {
       start_date?: number;
       end_date?: number;
       avatar?: string;
+      daily_punch_limit?: number; // 每日可打卡次数
+      point_earned?: number; // 每次打卡获得积分
     }
   ): Promise<void> {
     return request.put<void>(`/column/update/${id}`, data, {
@@ -503,6 +531,91 @@ export class ColumnAPI {
    */
   static async deleteColumn(id: number): Promise<void> {
     return request.delete<void>(`/column/delete/${id}`, undefined, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+/**
+ * 获取栏目信息
+ */
+  static async getColumnInfo(id: number): Promise<{
+        ID: number;
+        CreatedAt: string;
+        UpdatedAt: string;
+        DeletedAt: null;
+        name: string;
+        description: string;
+        owner_id: string;
+        project_id: number;
+  }> {
+    return request.get<{
+        ID: number;
+        CreatedAt: string;
+        UpdatedAt: string;
+        DeletedAt: null;
+        name: string;
+        description: string;
+        owner_id: string;
+        project_id: number;
+    }>(`/column/get/${id}`, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+  /**
+   * 获取栏目下的打卡记录
+   */
+  static async getPunchRecords(columnId: number): Promise<PunchRecordsData> {
+    return request.get<PunchRecordsData>(`/punch/${columnId}`, {
+      showLoading: true,
+      showError: true,
+    });
+  }  /**
+   * 获取栏目下的打卡记录
+   */
+  static async getTodayTotalPunchRecords(columnId: number): Promise<{today_punch_count: number}> {
+    return request.get<{today_punch_count: number}>(`/punch/today/${columnId}`, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+  /**
+   * 删除打卡记录
+   */
+    static async deletePunchRecord(punchId: number): Promise<void> {
+    return request.delete<void>(`/punch/delete/${punchId}`, undefined, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+
+  /**
+   * 提交打卡记录
+   */
+  static async insertPunchRecord(data: {
+    column_id: number;
+    content: string;
+    images: string[];
+  }): Promise<{
+    ID: number;
+    CreatedAt: string;
+    UpdatedAt: string;
+    DeletedAt: null;
+    column_id: number;
+    user_id: string;
+    content: string;
+    status: number;
+  }> {
+    return request.post<{
+      ID: number;
+      CreatedAt: string;
+      UpdatedAt: string;
+      DeletedAt: null;
+      column_id: number;
+      user_id: string;
+      content: string;
+      status: number;
+    }>('/punch/insert', data, {
       showLoading: true,
       showError: true,
     });
