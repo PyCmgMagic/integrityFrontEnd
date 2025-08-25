@@ -7,7 +7,7 @@ const { Text } = Typography;
 
 interface CheckInTabProps {
   checkInData: CheckInData[];
-  onDelete: (id: number) => void;
+  onDelete: (id: number) => Promise<void>;
   formatDate: (dateString: string) => string;
 }
 
@@ -33,8 +33,16 @@ const CheckInTab: React.FC<CheckInTabProps> = ({ checkInData, onDelete, formatDa
           cancelText: '取消',
         });
         if (result) {
-          onDelete(id);
-          Toast.show({ content: '删除成功', position: 'bottom' });
+          try {
+            await onDelete(id);
+            Toast.show({ content: '删除成功', position: 'bottom' });
+          } catch (error: any) {
+            console.error('删除打卡记录失败:', error);
+            Toast.show({ 
+              content: error.message || '删除失败，请稍后重试', 
+              position: 'bottom' 
+            });
+          }
         }
       },
     },

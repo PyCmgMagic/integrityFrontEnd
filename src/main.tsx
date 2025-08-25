@@ -7,7 +7,7 @@ import './styles/global.css'
 import './styles/antd-override.css'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  // <StrictMode>
     <App />
-  </StrictMode>,
+  // </StrictMode>,
 )

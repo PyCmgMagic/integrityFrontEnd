@@ -1,30 +1,27 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Button,Image  } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Button, Spin } from 'antd';
 import { 
   LeftOutlined, 
-  StarOutlined, 
-  CloudDownloadOutlined,
-  RightOutlined 
+  RightOutlined,
+  CloudDownloadOutlined
 } from '@ant-design/icons';
-import { Toast, Dialog, Divider } from 'antd-mobile';
+import { Toast } from 'antd-mobile';
 import { useSwipeable } from 'react-swipeable';
+import { API } from '../../../services/api';
+
+// 导入重构后的模块
+import { transformPendingData, type CheckInItem } from './utils/checkInDataTransform';
+import { useCheckInReview } from './hooks/useCheckInReview';
+import { useCheckInNavigation } from './hooks/useCheckInNavigation';
+import CheckInDetailHeader from './components/CheckInDetailHeader';
+import CheckInContent from './components/CheckInContent';
+import ReviewButtons from './components/ReviewButtons';
 
 // 类型定义
-interface CheckInItem {
-  id: string;
-  date: string;
-  title: string;
-  text: string;
-  images: string[];
-  starred: boolean;
-  username?: string;
-  time?: string;
-}
-
 interface LocationState {
-  items: CheckInItem[];
-  currentIndex: number;
+  columnId?: number;
+  columnName?: string;
 }
 
 /**
@@ -33,12 +30,113 @@ interface LocationState {
 const CheckInDetail: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
 
-  // 从路由状态中获取打卡列表和当前点击的索引
-  const { items = [], currentIndex = 0 } = (location.state as LocationState) || {};
+  // 从路由状态或参数中获取栏目信息
+  const { columnId } = (location.state as LocationState) || {};
+  const finalColumnId = columnId || parseInt(params.columnId || '0');
   
-  const [index, setIndex] = useState<number>(currentIndex);
+  const [items, setItems] = useState<CheckInItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // 使用自定义 hooks
+  const { currentIndex, currentItem, goToPrevious, goToNext } = useCheckInNavigation(items, parseInt(params.index || '0'), navigate);
   
+  /**
+   * 从列表中移除当前项并处理导航
+   */
+  const removeCurrentItem = (): void => {
+    const newItems = items.filter((_, i) => i !== currentIndex);
+    setItems(newItems);
+    
+    if (newItems.length === 0) {
+      // 如果没有更多记录，返回上一页
+      navigate(-1);
+      return;
+    }
+  };
+  
+  const { handleApprove, handleReject, toggleStar, isStarred } = useCheckInReview({
+    currentItem,
+    onItemRemoved: removeCurrentItem
+  });
+
+  /**
+   * 获取待审核列表数据
+   */
+  const fetchPendingList = async () => {
+    if (!finalColumnId) {
+      Toast.show({ content: '缺少栏目ID参数', icon: 'fail' });
+      navigate(-1);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await API.Column.getPendingList(finalColumnId);
+      
+      // 处理直接返回数组的情况
+      if (Array.isArray(response)) {
+        if (response.length > 0) {
+          const transformedItems = transformPendingData(response);
+          setItems(transformedItems);
+        } else {
+          setItems([]);
+        }
+      } else if (response && typeof response === 'object' && 'code' in response) {
+        // 处理标准API响应格式
+        if (response.code === 200 && response.data) {
+          const transformedItems = transformPendingData(response.data);
+          setItems(transformedItems);
+        } else {
+          Toast.show({ content: response.msg || '获取数据失败', icon: 'fail' });
+        }
+      } else {
+        setItems([]);
+      }
+    } catch (error) {
+      console.error('获取待审核列表失败:', error);
+      Toast.show({ content: '获取数据失败', icon: 'fail' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
+  // react-swipeable hook
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (currentIndex < items.length - 1) {
+        goToNext();
+      }
+    },
+    onSwipedRight: () => {
+      if (currentIndex > 0) {
+        goToPrevious();
+      }
+    },
+    preventScrollOnSwipe: true,
+    trackMouse: true
+  });
+
+  /**
+   * 组件挂载时获取数据
+   */
+  useEffect(() => {
+    fetchPendingList();
+  }, [finalColumnId]);
+
+  // 加载状态
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
+        <Spin size="large" />
+        <p className="mt-4 text-gray-600">加载中...</p>
+      </div>
+    );
+  }
+
   // 如果没有数据，则返回提示
   if (items.length === 0) {
     return (
@@ -62,179 +160,65 @@ const CheckInDetail: React.FC = () => {
     );
   }
 
-  const currentItem = items[index];
-  const [isStarred, setIsStarred] = useState<boolean>(currentItem.starred);
 
-  const handleNext = (): void => {
-    if (index < items.length - 1) {
-      setIndex(index + 1);
-      setIsStarred(items[index + 1].starred);
-    } else {
-      Toast.show({ content: '已经是最后一条了', position: 'bottom' });
-    }
-  };
-
-  const handlePrev = (): void => {
-    if (index > 0) {
-      setIndex(index - 1);
-      setIsStarred(items[index - 1].starred);
-    } else {
-      Toast.show({ content: '已经是第一条了', position: 'bottom' });
-    }
-  };
-  
-  const handleApprove = (): void => {
-    Toast.show({ icon: 'success', content: '已通过' });
-    handleNext();
-  };
-
-  const handleReject = async (): Promise<void> => {
-    const result = await Dialog.confirm({
-      content: '确定要驳回此条打卡吗？',
-    });
-    if (result) {
-      Toast.show({ icon: 'fail', content: '已驳回' });
-      handleNext();
-    }
-  };
-  
-  const toggleStar = (): void => {
-    setIsStarred(!isStarred);
-    Toast.show({ 
-      content: !isStarred ? '已设为精华' : '已取消精华', 
-      position: 'bottom' 
-    });
-  };
-
-  // react-swipeable hook
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => handleNext(),
-    onSwipedRight: () => handlePrev(),
-    preventScrollOnSwipe: true,
-    trackMouse: true
-  });
 
   return (
-    <div className="flex flex-col h-screen bg-blue-500 font-sans rounded-3xl">
-      {/* 顶部导航栏 */}
-      <header className=" text-white p-4 flex items-center justify-between">
-        <Button 
-          type="text" 
-          shape="circle" 
-          icon={<LeftOutlined />} 
-          className="text-white hover:bg-white/20 border-0"
-          onClick={() => navigate(-1)} 
-        />
-        
-        <h1 className="text-lg font-medium">{currentItem.date} {currentItem.title}</h1>
-        
-        <Button 
-          type="text" 
-          shape="circle" 
-          icon={
-            <StarOutlined 
-              style={{ 
-                color: isStarred ? '#FFD700' : 'white',
-                fontSize: '18px'
-              }} 
-            />
-          } 
-          className="text-white hover:bg-white/20 border-0"
-          onClick={toggleStar} 
-        />
-      </header>
-
-      {/* 主内容区域 - 白色卡片 */}
-      <div className="flex-1  bg-blue-300 p-4  rounded-3xl">
-
-        <div {...swipeHandlers} className="bg-white  rounded-3xl h-full relative overflow-hidden">
-          {/* 左箭头 */}
-          {index > 0 && (
-            <button
-              onClick={handlePrev}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
-            >
-              <LeftOutlined className="text-gray-600 text-sm" />
-            </button>
-          )}
-
-          {/* 右箭头 */}
-          {index < items.length - 1 && ( 
-            <button
-              onClick={handleNext}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
-            >
-              <RightOutlined className="text-gray-600 text-sm" />
-            </button>
-          )}
+    <div className="min-h-screen bg-gray-50" {...swipeHandlers}>
+      {loading ? (
+        <div className="flex justify-center items-center h-screen">
+          <Spin size="large" />
+        </div>
+      ) : (
+        <>
+          {/* 头部组件 */}
+          <CheckInDetailHeader
+            currentItem={currentItem}
+            isStarred={isStarred}
+            onBack={() => navigate(-1)}
+            onToggleStar={toggleStar}
+          />
 
           {/* 内容区域 */}
-          <div className="p-6 h-full flex flex-col">
-            {/* 文字内容区域 */}
-            <div className="flex-1 mb-6">
-              <div className="flex items-start justify-between mb-4">
-                <p className="text-gray-800 text-base leading-relaxed flex-1 pr-4">
-                  {currentItem.text}
-                </p>
-                <CloudDownloadOutlined className="text-gray-400 mt-1 flex-shrink-0" />
-              </div>
-            </div>
-
-            {/* 分割线 */}
-            <Divider />
-            {/* 图片网格区域 */}
-            <div className="mb-8">
-              <div className="grid grid-cols-3 gap-3 max-w-xs mx-auto">
-                {Array.from({ length: 6 }, (_, i) => (
-                  <div 
-                    key={i} 
-                    className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center"
-                  >
-                    {currentItem.images[i] ? (
-                      <Image  
-                        src={currentItem.images[i]} 
-                        alt={`图片 ${i + 1}`} 
-                        height={80}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <span className="text-gray-400 text-xs">
-                        图片 {i + 1}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-center mb-6">
-              <div className="w-3 h-3  rounded-full"></div>
-            </div>
-
-            {/* 底部按钮 */}
-            <div className="flex gap-4 pb-4 mb-10">
-              <Button
-                danger
-                shape="round"
-                size="large"
-                className="flex-1 h-12 font-medium"
-                onClick={handleReject}
-              >
-                不通过
-              </Button>
-              <Button
-                type="primary"
-                shape="round"
-                size="large"
-                className="flex-1 h-12 font-medium bg-green-500 hover:bg-green-600 border-green-500"
-                onClick={handleApprove}
-              >
-                通过
-              </Button>
-            </div>
+          <div className="flex-1 p-4">
+            {currentItem && (
+              <CheckInContent currentItem={currentItem} />
+            )}
           </div>
-        </div>
-      </div>
+
+          {/* 底部审核按钮 */}
+          <div className="bg-white p-4 border-t">
+            <ReviewButtons
+              onApprove={handleApprove}
+              onReject={handleReject}
+            />
+          </div>
+
+          {/* 导航按钮 */}
+          <div className="fixed bottom-20 left-4 right-4 flex justify-between pointer-events-none">
+            <Button
+              type="primary"
+              shape="circle"
+              size="large"
+              icon={<LeftOutlined />}
+              onClick={goToPrevious}
+              disabled={currentIndex === 0}
+              className={`pointer-events-auto ${currentIndex === 0 ? 'opacity-30' : ''}`}
+            />
+            <div className="flex items-center gap-2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+              {currentIndex + 1} / {items.length}
+            </div>
+            <Button
+              type="primary"
+              shape="circle"
+              size="large"
+              icon={<RightOutlined />}
+              onClick={goToNext}
+              disabled={currentIndex === items.length - 1}
+              className={`pointer-events-auto ${currentIndex === items.length - 1 ? 'opacity-30' : ''}`}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

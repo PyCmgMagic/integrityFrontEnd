@@ -10,6 +10,8 @@ export default defineConfig({
       'localhost',
       '127.0.0.1',
       '.ngrok-free.app', // 允许所有ngrok域名
+      '.natappfree.cc', // 允许所有natapp免费域名
+      'z68d6abb.natappfree.cc', // 允许当前natapp域名
     ]
   }
 })

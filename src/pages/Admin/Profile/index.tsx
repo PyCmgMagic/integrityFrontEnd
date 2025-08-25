@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Typography, Avatar, Tabs, List, Button, message, Empty, Spin, Space } from 'antd';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 import { EditOutlined, CalendarOutlined, StarOutlined, DownloadOutlined, PlusOutlined, LogoutOutlined } from '@ant-design/icons';
+import type { TabsProps } from 'antd';
 
 // 导入组件
 import { 
@@ -24,7 +25,6 @@ interface FavoriteData {
 }
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 // 为初始数据应用类型
 const initialCheckInData: CheckInData[] = [
@@ -276,103 +276,120 @@ const ProfilePage: React.FC = () => {
           
           {/* 打卡与活动历史 */}
           <Card className="rounded-2xl border-0 bg-white">
-            <Tabs defaultActiveKey="1" centered size="large">
-              <TabPane tab="我创建的活动" key="1">
-                <div className="p-4 pt-0">
-                  {checkInData.map((item, index) => (
-                    <SwipeAction
-                      key={item.id}
-                      style={{ ['--adm-swipe-action-actions-border-radius' as string]: '0.75rem' }}
-                      rightActions={rightActions(item.id)}
-                      className={index === checkInData.length - 1 ? '' : 'mb-3'}
-                    >
-                      <div className="w-full bg-blue-50 rounded-xl p-4 transition-all hover:bg-blue-100 hover:shadow-md">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center">
-                            <div>
-                                <Text strong className="text-gray-800">{item.title}</Text>
-                                <div className="flex justify-between items-center mt-1">
-                                  <p className="text-gray-500 text-sm m-0">{item.time}</p> 
-                                  <Text type="secondary" className="font-semibold ml-4">{item.date}</Text>
-                                </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </SwipeAction>
-                  ))}
-                </div>
-              </TabPane>
-              <TabPane tab="导出活动数据" key="2">
-                <div className="p-4 pt-0">
-                  <Button 
-                    type="primary" 
-                    icon={<DownloadOutlined />} 
-                    className="mb-4 bg-green-500 hover:bg-green-600" 
-                    onClick={showExportDataModal}
-                  >
-                    导出数据
-                  </Button>
-                  <List
-                    className="mt-2"
-                    dataSource={activityHistoryData}
-                    renderItem={(item) => (
-                     <List.Item key={item.id} className="border-0 px-0 py-2">
-                      <div className="w-full bg-gray-50 rounded-xl p-4 transition-all hover:bg-gray-100 hover:shadow-md">
-                        <div className="flex justify-between items-center">
-                           <div className="flex items-center">
-                              <CalendarOutlined className="text-purple-500 mr-4 text-xl" />
-                              <Text className="text-gray-700">{item.title}</Text>
-                           </div>
-                           <Text type="secondary">{item.date}</Text>
-                        </div>
-                      </div>
-                    </List.Item>
-                  )}
-                  />
-                </div>
-              </TabPane>
-              <TabPane tab="我的收藏" key="3">
-                <div className="p-4 pt-0">
-                  {favoriteData.length > 0 ? (
-                    <List
-                      dataSource={favoriteData}
-                      renderItem={(item) => (
-                        <List.Item key={item.id} className="border-0 px-0 py-2">
-                          <div className="w-full bg-yellow-50 rounded-xl p-4 transition-all hover:bg-yellow-100 hover:shadow-md">
+            <Tabs 
+              defaultActiveKey="1" 
+              centered 
+              size="large"
+              items={[
+                {
+                  key: '1',
+                  label: '我创建的活动',
+                  children: (
+                    <div className="p-4 pt-0">
+                      {checkInData.map((item, index) => (
+                        <SwipeAction
+                          key={item.id}
+                          style={{ ['--adm-swipe-action-actions-border-radius' as string]: '0.75rem' }}
+                          rightActions={rightActions(item.id)}
+                          className={index === checkInData.length - 1 ? '' : 'mb-3'}
+                        >
+                          <div className="w-full bg-blue-50 rounded-xl p-4 transition-all hover:bg-blue-100 hover:shadow-md">
                             <div className="flex justify-between items-center">
                               <div className="flex items-center">
-                                <StarOutlined className="text-yellow-500 mr-4 text-xl" />
                                 <div>
-                                  <Text strong className="text-gray-800">{item.title}</Text>
-                                  <div className="mt-1">
-                                    <Text type="secondary">{item.description}</Text>
-                                  </div>
+                                    <Text strong className="text-gray-800">{item.title}</Text>
+                                    <div className="flex justify-between items-center mt-1">
+                                      <p className="text-gray-500 text-sm m-0">{item.time}</p> 
+                                      <Text type="secondary" className="font-semibold ml-4">{item.date}</Text>
+                                    </div>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-end">
-                                <Text type="secondary">{item.date}</Text>
-                                <Button 
-                                  type="text" 
-                                  danger 
-                                  size="small" 
-                                  className="mt-2"
-                                  onClick={() => handleRemoveFavorite(item.id)}
-                                >
-                                  取消收藏
-                                </Button>
-                              </div>
+                            </div>
+                          </div>
+                        </SwipeAction>
+                      ))}
+                    </div>
+                  ),
+                },
+                {
+                  key: '2',
+                  label: '导出活动数据',
+                  children: (
+                    <div className="p-4 pt-0">
+                      <Button 
+                        type="primary" 
+                        icon={<DownloadOutlined />} 
+                        className="mb-4 bg-green-500 hover:bg-green-600" 
+                        onClick={showExportDataModal}
+                      >
+                        导出数据
+                      </Button>
+                      <List
+                        className="mt-2"
+                        dataSource={activityHistoryData}
+                        renderItem={(item) => (
+                         <List.Item key={item.id} className="border-0 px-0 py-2">
+                          <div className="w-full bg-gray-50 rounded-xl p-4 transition-all hover:bg-gray-100 hover:shadow-md">
+                            <div className="flex justify-between items-center">
+                               <div className="flex items-center">
+                                  <CalendarOutlined className="text-purple-500 mr-4 text-xl" />
+                                  <Text className="text-gray-700">{item.title}</Text>
+                               </div>
+                               <Text type="secondary">{item.date}</Text>
                             </div>
                           </div>
                         </List.Item>
                       )}
-                    />
-                  ) : (
-                    <Empty description="暂无收藏" />
-                  )}
-                </div>
-              </TabPane>
-            </Tabs>
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: '3',
+                  label: '我的收藏',
+                  children: (
+                    <div className="p-4 pt-0">
+                      {favoriteData.length > 0 ? (
+                        <List
+                          dataSource={favoriteData}
+                          renderItem={(item) => (
+                            <List.Item key={item.id} className="border-0 px-0 py-2">
+                              <div className="w-full bg-yellow-50 rounded-xl p-4 transition-all hover:bg-yellow-100 hover:shadow-md">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center">
+                                    <StarOutlined className="text-yellow-500 mr-4 text-xl" />
+                                    <div>
+                                      <Text strong className="text-gray-800">{item.title}</Text>
+                                      <div className="mt-1">
+                                        <Text type="secondary">{item.description}</Text>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col items-end">
+                                    <Text type="secondary">{item.date}</Text>
+                                    <Button 
+                                      type="text" 
+                                      danger 
+                                      size="small" 
+                                      className="mt-2"
+                                      onClick={() => handleRemoveFavorite(item.id)}
+                                    >
+                                      取消收藏
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </List.Item>
+                          )}
+                        />
+                      ) : (
+                        <Empty description="暂无收藏" />
+                      )}
+                    </div>
+                  ),
+                },
+              ]}
+            />
           </Card>
         </div>
       </div>

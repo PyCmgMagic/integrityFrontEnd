@@ -222,3 +222,37 @@ export interface ParticipationHistoryResponse {
   projects: any[];
   punches: any[];
 }
+
+// 待审核打卡记录相关类型
+export interface PendingPunchItem {
+  punch: {
+    ID: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: null;
+    column_id: number;
+    user_id: string;
+    content: string;
+    status: number;
+  };
+  imgs: string[];
+  nick_name: string;
+}
+
+export interface PendingListResponse {
+  code: number;
+  msg: string;
+  data: PendingPunchItem[];
+  timestamp: number;
+}
+
+export interface ReviewPunchRequest {
+  punch_id: number;
+  status: number; // 1: 通过, 2: 不通过
+}
+
+export interface ReviewPunchResponse {
+  code: number;
+  msg: string;
+  timestamp: number;
+}

@@ -19,7 +19,7 @@ import type {
   ProjectDetail,
   ParticipationHistoryResponse,
 } from '../types/api';
-import type { UserProfile, ActivityData, CheckInData, PunchRecordsData } from '../types/types';
+import type { UserProfile, ActivityData, CheckInData, PunchRecordsData, MyPunchListResponse } from '../types/types';
 import CreateNewProject from '../pages/Admin/CreateProject';
 import { data } from 'react-router-dom';
 
@@ -616,6 +616,84 @@ export class ColumnAPI {
       content: string;
       status: number;
     }>('/punch/insert', data, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+
+  /**
+   * 获取待审核列表
+   */
+  static async getPendingList(columnId: number): Promise<{
+    code: number;
+    msg: string;
+    data: Array<{
+      punch: {
+        ID: number;
+        created_at: string;
+        updated_at: string;
+        deleted_at: null;
+        column_id: number;
+        user_id: string;
+        content: string;
+        status: number;
+      };
+      imgs: string[];
+      nick_name: string;
+    }>;
+    timestamp: number;
+  }> {
+    return request.get<{
+      code: number;
+      msg: string;
+      data: Array<{
+        punch: {
+          ID: number;
+          created_at: string;
+          updated_at: string;
+          deleted_at: null;
+          column_id: number;
+          user_id: string;
+          content: string;
+          status: number;
+        };
+        imgs: string[];
+        nick_name: string;
+      }>;
+      timestamp: number;
+    }>(`/punch/pending-list?column_id=${columnId}`, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+
+  /**
+   * 审核打卡记录
+   */
+  static async reviewPunchRecord(punchId: number, status: number): Promise<{
+    code: number;
+    msg: string;
+    timestamp: number;
+  }> {
+    return request.post<{
+      code: number;
+      msg: string;
+      timestamp: number;
+    }>('/punch/review', {
+      punch_id: punchId,
+      status: status // 1: 通过, 2: 不通过
+    }, {
+      showLoading: true,
+      showError: false, // 让组件自己处理错误消息
+    });
+  }
+
+  /**
+   * 获取用户的打卡记录列表
+   * @returns 用户打卡记录列表
+   */
+  static async getMyPunchList(): Promise<MyPunchListResponse> {
+    return request.get<MyPunchListResponse>('/punch/my-list', {}, {
       showLoading: true,
       showError: true,
     });

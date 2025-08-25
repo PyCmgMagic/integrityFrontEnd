@@ -27,6 +27,32 @@ export interface CheckInData {
   date: string;
 }
 
+// API 返回的打卡记录详细数据结构
+export interface PunchItem {
+  punch: {
+    ID: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    column_id: number;
+    user_id: string;
+    content: string;
+    status: number;
+  };
+  imgs: string[];
+  column_name: string;
+  project_name: string;
+  activity_name: string;
+}
+
+// 用户打卡记录 API 响应结构
+export interface MyPunchListResponse {
+  code: number;
+  msg: string;
+  data: PunchItem[];
+  timestamp: number;
+}
+
 // 后端返回的打卡记录原始数据结构
 export interface PunchRecord {
   ID: number;
