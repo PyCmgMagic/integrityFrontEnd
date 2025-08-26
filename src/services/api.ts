@@ -495,6 +495,8 @@ export class ColumnAPI {
     project_id: number;
     start_date: number;
     end_date: number;
+    start_time: string;
+    end_time: string;
     avatar: string;
     daily_punch_limit: number; // 每日可打卡次数
     point_earned: number; // 每次打卡获得积分

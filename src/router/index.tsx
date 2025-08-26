@@ -2,7 +2,6 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { Spin } from 'antd';
 import ProtectedRoute from '../components/ProtectedRoute';
-import CheckInDetail from '../pages/Admin/ColumnManage/CheckInDetail';
 
 // 懒加载页面组件
 const LoginPage = lazy(() => import('../pages/Login/index'));
@@ -28,12 +27,13 @@ const SuccessPage = lazy(() => import('../pages/Admin/Success/index'));
 const ReviewManage = lazy(() => import('../pages/Admin/ReviewManage/index'));
 const ActivityManage = lazy(() => import('../pages/Admin/ActivityManage/index'));
 const ProjectManage = lazy(() => import('../pages/Admin/ProjectManage/index'));
-const ColumnManage = lazy(() => import('../pages/Admin/ColumnManage/index'));
+const ColumnManage = lazy(() => import('../pages/Admin/ColumnManage/index.tsx'));
 const ReviewDetail = lazy(() => import('../pages/Admin/ReviewDetail/index'));
 const Favorites = lazy(() => import('../pages/Admin/Favorites/index'));
 const ExportData = lazy(() => import('../pages/Admin/ExportData/index'));
 const AdminProfile = lazy(() => import('../pages/Admin/Profile/index'));
 const ActivityTest = lazy(() => import('../pages/Admin/ActivityTest'));
+const CheckInDetail = lazy(() => import('../pages/Admin/ColumnManage/CheckInDetail'));
 
 // 加载组件
 const LoadingComponent = () => (

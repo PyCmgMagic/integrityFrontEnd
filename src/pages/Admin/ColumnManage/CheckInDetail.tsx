@@ -16,7 +16,6 @@ import { useCheckInReview } from './hooks/useCheckInReview';
 import { useCheckInNavigation } from './hooks/useCheckInNavigation';
 import CheckInDetailHeader from './components/CheckInDetailHeader';
 import CheckInContent from './components/CheckInContent';
-import ReviewButtons from './components/ReviewButtons';
 
 // 类型定义
 interface LocationState {
@@ -104,7 +103,6 @@ const CheckInDetail: React.FC = () => {
 
 
 
-  // react-swipeable hook
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => {
       if (currentIndex < items.length - 1) {
@@ -130,9 +128,9 @@ const CheckInDetail: React.FC = () => {
   // 加载状态
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50 px-4">
         <Spin size="large" />
-        <p className="mt-4 text-gray-600">加载中...</p>
+        <p className="mt-4 text-gray-600 text-center">加载中...</p>
       </div>
     );
   }
@@ -140,17 +138,17 @@ const CheckInDetail: React.FC = () => {
   // 如果没有数据，则返回提示
   if (items.length === 0) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gray-50 px-6">
-        <div className="bg-white rounded-lg shadow-sm p-8 text-center max-w-sm w-full">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CloudDownloadOutlined className="text-2xl text-gray-400" />
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50 px-4 sm:px-6">
+        <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8 text-center max-w-sm w-full mx-auto">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CloudDownloadOutlined className="text-xl sm:text-2xl text-gray-400" />
           </div>
-          <p className="text-gray-600 mb-6">没有可供审核的打卡记录</p>
+          <p className="text-gray-600 mb-6 text-sm sm:text-base">没有可供审核的打卡记录</p>
           <Button 
             type="primary" 
             size="large" 
             shape="round"
-            className="w-full"
+            className="w-full h-10 sm:h-12"
             onClick={() => navigate(-1)}
           >
             返回
@@ -163,61 +161,77 @@ const CheckInDetail: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50" {...swipeHandlers}>
-      {loading ? (
-        <div className="flex justify-center items-center h-screen">
-          <Spin size="large" />
+    <div className="min-h-screen bg-blue-500 flex flex-col relative overflow-hidden" {...swipeHandlers}>
+      {/* 头部 */}
+      <CheckInDetailHeader 
+        currentItem={currentItem}
+        isStarred={isStarred}
+        onBack={() => navigate(-1)}
+        onToggleStar={toggleStar}
+      />
+      
+      {/* 内容区域 */}
+      <div className="flex-1 flex flex-col relative">
+        <CheckInContent 
+          currentItem={currentItem}
+          onApprove={handleApprove}
+          onReject={handleReject}
+        />
+      </div>
+      
+      {/* 导航箭头 - 响应式定位 */}
+      {currentIndex > 0 && (
+        <div className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-10">
+          <button 
+            onClick={goToPrevious}
+            className="w-10 h-10 sm:w-12 sm:h-12 bg-white/60 rounded-full flex items-center justify-center border border-gray-300 text-black hover:bg-white/80 transition-all duration-200 shadow-lg active:scale-95 touch-manipulation"
+          >
+            <LeftOutlined className="text-sm sm:text-base" />
+          </button>
         </div>
-      ) : (
-        <>
-          {/* 头部组件 */}
-          <CheckInDetailHeader
-            currentItem={currentItem}
-            isStarred={isStarred}
-            onBack={() => navigate(-1)}
-            onToggleStar={toggleStar}
-          />
-
-          {/* 内容区域 */}
-          <div className="flex-1 p-4">
-            {currentItem && (
-              <CheckInContent currentItem={currentItem} />
-            )}
-          </div>
-
-          {/* 底部审核按钮 */}
-          <div className="bg-white p-4 border-t">
-            <ReviewButtons
-              onApprove={handleApprove}
-              onReject={handleReject}
-            />
-          </div>
-
-          {/* 导航按钮 */}
-          <div className="fixed bottom-20 left-4 right-4 flex justify-between pointer-events-none">
-            <Button
-              type="primary"
-              shape="circle"
-              size="large"
-              icon={<LeftOutlined />}
-              onClick={goToPrevious}
-              disabled={currentIndex === 0}
-              className={`pointer-events-auto ${currentIndex === 0 ? 'opacity-30' : ''}`}
-            />
-            <div className="flex items-center gap-2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-              {currentIndex + 1} / {items.length}
+      )}
+      
+      {currentIndex < items.length - 1 && (
+        <div className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-10">
+          <button 
+            onClick={goToNext}
+            className="w-10 h-10 sm:w-12 sm:h-12 bg-white/60 rounded-full flex items-center justify-center border border-gray-300 text-black hover:bg-white/80 transition-all duration-200 shadow-lg active:scale-95 touch-manipulation"
+          >
+            <RightOutlined className="text-sm sm:text-base" />
+          </button>
+        </div>
+      )}
+      
+      {/* 页码指示器 - 响应式定位 */}
+      {items.length > 1 && (
+        <div className="absolute bottom-32 sm:bottom-40 md:bottom-48 left-1/2 transform -translate-x-1/2 z-10">
+          <div className="bg-black/30 backdrop-blur-sm rounded-full px-3 py-2 sm:px-4 sm:py-3">
+            <div className="flex space-x-1.5 sm:space-x-2">
+              {Array.from({ length: items.length }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    const diff = i - currentIndex;
+                    if (diff > 0) {
+                      for (let j = 0; j < diff; j++) {
+                        setTimeout(() => goToNext(), j * 100);
+                      }
+                    } else if (diff < 0) {
+                      for (let j = 0; j < Math.abs(diff); j++) {
+                        setTimeout(() => goToPrevious(), j * 100);
+                      }
+                    }
+                  }}
+                  className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 touch-manipulation ${
+                    i === currentIndex 
+                      ? 'bg-white shadow-lg scale-125 ring-2 ring-white/50' 
+                      : 'bg-white/60 hover:bg-white/80 active:scale-110'
+                  }`}
+                />
+              ))}
             </div>
-            <Button
-              type="primary"
-              shape="circle"
-              size="large"
-              icon={<RightOutlined />}
-              onClick={goToNext}
-              disabled={currentIndex === items.length - 1}
-              className={`pointer-events-auto ${currentIndex === items.length - 1 ? 'opacity-30' : ''}`}
-            />
           </div>
-        </>
+        </div>
       )}
     </div>
   );

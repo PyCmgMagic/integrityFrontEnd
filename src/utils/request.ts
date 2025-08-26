@@ -95,7 +95,7 @@ class RequestService {
           if (response.data.success === false || (response.data.code && response.data.code !== 200)) {
             const error: ApiError = {
               code: response.data.code || -1,
-              message: response.data.message || '请求失败',
+              message: response.data.msg || '请求失败',
               details: response.data,
             };
             return Promise.reject(error);
@@ -196,8 +196,8 @@ class RequestService {
    * 获取错误信息
    */
   private getErrorMessage(status: number, data: any): string {
-    if (data && data.message) {
-      return data.message;
+    if (data && (data.msg || data.message)) {
+      return data.msg || data.message;
     }
 
     const statusMessages: Record<number, string> = {

@@ -72,7 +72,8 @@ const ColumnManage: React.FC = () => {
             setUnreviewedData([]);
           }
         } else {
-          Toast.show({ content: response.msg || '获取数据失败', position: 'bottom' });
+          const message = typeof response.msg === 'string' && response.msg ? response.msg : '获取数据失败';
+          Toast.show({ content: message, position: 'bottom' });
         }
       } else {
         setUnreviewedData([]);

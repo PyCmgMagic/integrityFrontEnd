@@ -8,16 +8,16 @@ import { CoverUpload } from '../../../components';
 const { TextArea } = Input;
 
 /**
- * 移动端友好的日期时间选择器组件
+ * 移动端友好的日期选择器组件
  */
-interface MobileDateTimePickerProps {
+interface MobileDatePickerProps {
   value?: Dayjs;
   onChange?: (date: Dayjs | null) => void;
   placeholder?: string;
   minDate?: Dayjs;
 }
 
-const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
+const MobileDatePicker: React.FC<MobileDatePickerProps> = ({
   value,
   onChange,
   placeholder = "请选择日期",
@@ -25,30 +25,28 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
 }) => {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [tempDate, setTempDate] = useState<string>('');
-  const [tempTime, setTempTime] = useState<string>('');
 
   useEffect(() => {
     if (value) {
       setTempDate(value.format('YYYY-MM-DD'));
-      setTempTime(value.format('HH:mm'));
     }
   }, [value]);
 
   const handleConfirm = () => {
-    if (tempDate && tempTime) {
-      const combinedDateTime = dayjs(`${tempDate} ${tempTime}`);
-      if (minDate && combinedDateTime.isBefore(minDate)) {
-        message.error('选择的时间不能早于开始时间');
+    if (tempDate) {
+      const selectedDate = dayjs(tempDate);
+      if (minDate && selectedDate.isBefore(minDate)) {
+        message.error('选择的日期不能早于开始日期');
         return;
       }
-      onChange?.(combinedDateTime);
+      onChange?.(selectedDate);
       setPickerVisible(false);
     } else {
-      message.error('请选择完整的日期和时间');
+      message.error('请选择日期');
     }
   };
 
-  const displayValue = value ? value.format('YYYY-MM-DD HH:mm') : '';
+  const displayValue = value ? value.format('YYYY-MM-DD') : '';
 
   return (
     <>
@@ -63,7 +61,7 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
       </div>
 
       <Drawer
-        title="选择日期时间"
+        title="选择日期"
         placement="bottom"
         open={pickerVisible}
         onClose={() => setPickerVisible(false)}
@@ -75,7 +73,7 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
           </Space>
         }
       >
-        <div className="p-4 space-y-4">
+        <div className="p-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">选择日期</label>
             <input
@@ -86,18 +84,34 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
               className="w-full p-3 border border-gray-300 rounded-lg text-lg"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">选择时间</label>
-            <input
-              type="time"
-              value={tempTime}
-              onChange={(e) => setTempTime(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg text-lg"
-            />
-          </div>
         </div>
       </Drawer>
     </>
+  );
+};
+
+/**
+ * 时间选择器组件
+ */
+interface TimePickerProps {
+  value?: string;
+  onChange?: (time: string) => void;
+  placeholder?: string;
+}
+
+const TimePicker: React.FC<TimePickerProps> = ({
+  value,
+  onChange,
+  placeholder = "请选择时间"
+}) => {
+  return (
+    <input
+      type="time"
+      value={value || ''}
+      onChange={(e) => onChange?.(e.target.value)}
+      placeholder={placeholder}
+      className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:border-blue-400 focus:outline-none"
+    />
   );
 };
 
@@ -118,19 +132,17 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>('');
 
-  // 时间范围状态
-  const [startTime, setStartTime] = useState<Dayjs | null>(null);
-  const [endTime, setEndTime] = useState<Dayjs | null>(null);
+  // 日期范围状态
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
+  // 每日打卡时间段状态
+  const [dailyStartTime, setDailyStartTime] = useState<string>('');
+  const [dailyEndTime, setDailyEndTime] = useState<string>('');
 
   // 当弹窗打开或初始数据变化时，同步表单数据
   useEffect(() => {
     if (visible) {
       if (initialData) {
-        // 将 initialData 中的日期字符串转换为 dayjs 对象
-        const initialTimeRange = initialData.timeRange
-          ? [dayjs(initialData.timeRange[0]), dayjs(initialData.timeRange[1])]
-          : [null, null];
-
         // 设置表单所有字段的值
         form.setFieldsValue({ ...initialData });
 
@@ -138,15 +150,33 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
           setImageUrl(initialData.cover);
         }
 
-        // 设置时间状态
-        setStartTime(initialTimeRange[0]);
-        setEndTime(initialTimeRange[1]);
+        // 设置日期状态（从start_date和end_date数字格式转换）
+        if (initialData.start_date) {
+          const startDateStr = initialData.start_date.toString();
+          const formattedStartDate = `${startDateStr.slice(0, 4)}-${startDateStr.slice(4, 6)}-${startDateStr.slice(6, 8)}`;
+          setStartDate(dayjs(formattedStartDate));
+        }
+        if (initialData.end_date) {
+          const endDateStr = initialData.end_date.toString();
+          const formattedEndDate = `${endDateStr.slice(0, 4)}-${endDateStr.slice(4, 6)}-${endDateStr.slice(6, 8)}`;
+          setEndDate(dayjs(formattedEndDate));
+        }
+
+        // 设置每日打卡时间
+        if (initialData.start_time) {
+          setDailyStartTime(initialData.start_time);
+        }
+        if (initialData.end_time) {
+          setDailyEndTime(initialData.end_time);
+        }
       } else {
-        // 如果是新建活动，则清空所有状态
+        // 如果是新建栏目，则清空所有状态
         form.resetFields();
         setImageUrl('');
-        setStartTime(null);
-        setEndTime(null);
+        setStartDate(null);
+        setEndDate(null);
+        setDailyStartTime('');
+        setDailyEndTime('');
       }
     }
   }, [initialData, visible, form]);
@@ -161,14 +191,25 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
   };
 
   const handleFormSubmit = async (values: any) => {
-    // 验证时间范围
-    if (!startTime || !endTime) {
-      message.error('请选择完整的活动时间范围');
+    // 验证日期范围
+    if (!startDate || !endDate) {
+      message.error('请选择完整的栏目日期范围');
       return;
     }
 
-    if (endTime.isBefore(startTime)) {
-      message.error('结束时间不能早于开始时间');
+    if (endDate.isBefore(startDate)) {
+      message.error('结束日期不能早于开始日期');
+      return;
+    }
+
+    // 验证每日打卡时间
+    if (!dailyStartTime || !dailyEndTime) {
+      message.error('请选择完整的每日打卡时间段');
+      return;
+    }
+
+    if (dailyEndTime <= dailyStartTime) {
+      message.error('每日打卡结束时间必须晚于开始时间');
       return;
     }
 
@@ -185,8 +226,10 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         name: values.name,
         description: values.description,
         project_id: projectId,
-        start_date: parseInt(startTime.format('YYYYMMDD')), // 转换为数字格式
-        end_date: parseInt(endTime.format('YYYYMMDD')), // 转换为数字格式
+        start_date: parseInt(startDate.format('YYYYMMDD')), // 转换为数字格式
+        end_date: parseInt(endDate.format('YYYYMMDD')), // 转换为数字格式
+        start_time: dailyStartTime, // 每日打卡开始时间
+        end_time: dailyEndTime, // 每日打卡结束时间
         avatar: imageUrl, // 使用avatar字段名
         daily_punch_limit: parseInt(values.daily_punch_limit), // 每日可打卡次数
         point_earned: parseInt(values.point_earned), // 每次打卡获得积分
@@ -207,7 +250,10 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         onFinish({
           ...values,
           cover: imageUrl,
-          timeRange: [startTime, endTime]
+          start_date: parseInt(startDate.format('YYYYMMDD')),
+          end_date: parseInt(endDate.format('YYYYMMDD')),
+          start_time: dailyStartTime,
+          end_time: dailyEndTime
         });
       }
 
@@ -245,17 +291,17 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
           <TextArea rows={8} placeholder="请输入栏目详情说明" />
         </Form.Item>
         <Form.Item
-          name="timeRange"
-          label={<span className="font-semibold text-gray-700">栏目时间</span>}
+          name="dateRange"
+          label={<span className="font-semibold text-gray-700">栏目日期范围</span>}
           required
         >
           <div className="space-y-3">
             <div>
-              <div className="text-sm text-gray-600 mb-2">请选择开始</div>
-              <MobileDateTimePicker
-                value={startTime || undefined}
-                onChange={setStartTime}
-                placeholder="请选择开始时间"
+              <div className="text-sm text-gray-600 mb-2">开始日期</div>
+              <MobileDatePicker
+                value={startDate || undefined}
+                onChange={setStartDate}
+                placeholder="请选择开始日期"
               />
             </div>
 
@@ -264,12 +310,42 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
             </div>
 
             <div>
-              <div className="text-sm text-gray-600 mb-2">请选择结束</div>
-              <MobileDateTimePicker
-                value={endTime || undefined}
-                onChange={setEndTime}
-                placeholder="请选择结束时间"
-                minDate={startTime || undefined}
+              <div className="text-sm text-gray-600 mb-2">结束日期</div>
+              <MobileDatePicker
+                value={endDate || undefined}
+                onChange={setEndDate}
+                placeholder="请选择结束日期"
+                minDate={startDate || undefined}
+              />
+            </div>
+          </div>
+        </Form.Item>
+
+        <Form.Item
+          name="dailyTimeRange"
+          label={<span className="font-semibold text-gray-700">每日打卡时间段</span>}
+          required
+        >
+          <div className="space-y-3">
+            <div>
+              <div className="text-sm text-gray-600 mb-2">每日开始时间</div>
+              <TimePicker
+                value={dailyStartTime}
+                onChange={setDailyStartTime}
+                placeholder="请选择每日开始时间"
+              />
+            </div>
+
+            <div className="flex justify-center">
+              <div className="w-8 h-px bg-gray-300 self-center"></div>
+            </div>
+
+            <div>
+              <div className="text-sm text-gray-600 mb-2">每日结束时间</div>
+              <TimePicker
+                value={dailyEndTime}
+                onChange={setDailyEndTime}
+                placeholder="请选择每日结束时间"
               />
             </div>
           </div>

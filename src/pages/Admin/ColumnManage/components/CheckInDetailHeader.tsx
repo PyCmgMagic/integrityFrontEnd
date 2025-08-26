@@ -24,33 +24,37 @@ const CheckInDetailHeader: React.FC<CheckInDetailHeaderProps> = ({
   onToggleStar
 }) => {
   return (
-    <header className="text-white p-4 flex items-center justify-between">
-      <Button 
-        type="text" 
-        shape="circle" 
-        icon={<LeftOutlined />} 
-        className="text-white hover:bg-white/20 border-0"
-        onClick={onBack} 
-      />
-      
-      <h1 className="text-lg font-medium">
-        {currentItem ? `${currentItem.username} - ${currentItem.date}` : '加载中...'}
-      </h1>
-      
-      <Button 
-        type="text" 
-        shape="circle" 
-        icon={
-          <StarOutlined 
-            style={{ 
-              color: isStarred ? '#FFD700' : 'white',
-              fontSize: '18px'
-            }} 
-          />
-        } 
-        className="text-white hover:bg-white/20 border-0"
-        onClick={onToggleStar} 
-      />
+    <header className="bg-blue-500 text-white p-4 sm:p-6 shadow-lg rounded-b-2xl sm:rounded-b-3xl">
+      <div className="flex items-center justify-between">
+        <Button 
+          type="text" 
+          shape="circle" 
+          icon={<LeftOutlined />} 
+          className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center touch-manipulation"
+          onClick={onBack} 
+        />
+        <h1 className="text-lg sm:text-xl font-bold truncate mx-4">打卡审核</h1>
+        <Button 
+          type="text" 
+          shape="circle" 
+          icon={
+            <StarOutlined 
+              style={{ 
+                color: isStarred ? '#FFD700' : 'white',
+                fontSize: window.innerWidth >= 640 ? '18px' : '16px'
+              }} 
+            />
+          } 
+          className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center touch-manipulation"
+          onClick={onToggleStar} 
+        />
+      </div>
+      <div className="text-center mt-2 sm:mt-3">
+        <p className="text-xs sm:text-sm opacity-80">审核时间</p>
+        <p className="font-semibold tracking-wider text-sm sm:text-base">
+          {currentItem ? `${currentItem.date} ${currentItem.time}` : '加载中...'}
+        </p>
+      </div>
     </header>
   );
 };

@@ -5,7 +5,7 @@
 // 基础 API 响应结构
 export interface ApiResponse<T = any> {
   code: number;
-  message: string;
+  msg: string;
   data: T;
   success: boolean;
   timestamp?: number;

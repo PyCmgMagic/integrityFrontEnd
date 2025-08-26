@@ -53,6 +53,8 @@ const CreateColumnFlow: React.FC = () => {
         avatar: columnData.coverImage || '',
         daily_punch_limit: columnData.dailyCheckinLimit,
         point_earned: columnData.pointsPerCheckin,
+        start_time: columnData.start_time,
+        end_time: columnData.end_time,
       };
 
       console.log(`正在保存第 ${currentStep} 个栏目的数据:`, apiData);
@@ -97,8 +99,7 @@ const CreateColumnFlow: React.FC = () => {
         }
       );
     } else {
-      // 如果是第一个栏目，则返回项目创建页面
-      // 使用 navigate(-1) 更简单，它会返回历史记录的上一页
+    
       navigate(-1);
     }
   };

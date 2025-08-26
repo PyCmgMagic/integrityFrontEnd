@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, Select, message, Drawer, Space } from 'antd';
+import { Modal, Form, Input, Button,  message, Drawer, Space } from 'antd';
 import { CalendarOutlined } from '@ant-design/icons';
 import dayjs, { type Dayjs } from 'dayjs';
 import { ActivityAPI } from '../services/api';
 import { transformActivityToCreateRequest } from '../utils/dataTransform';
-import SingleImageUpload from './Upload/SingleImageUpload';
 import CoverUpload from './Upload/CoverUpload';
 
 const { TextArea } = Input;
@@ -213,7 +212,7 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
           创建活动
         </Button>,
       ]}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form form={form} layout="vertical">
         <Form.Item name="title" label="活动标题" rules={[{ required: true, message: '请输入活动标题!' }]}>

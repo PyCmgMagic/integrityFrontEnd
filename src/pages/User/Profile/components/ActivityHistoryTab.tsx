@@ -25,7 +25,9 @@ const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <Spin size="large" tip="加载活动历史中..." />
+        <Spin size="large">
+          <div className="p-8 text-center text-gray-600">加载活动历史中...</div>
+        </Spin>
       </div>
     );
   }

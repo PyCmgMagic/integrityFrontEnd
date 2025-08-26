@@ -59,7 +59,9 @@ const ProfilePage: React.FC = () => {
   if (loading) {
     return (
       <div className="bg-gray-50 min-h-screen font-sans pb-12 p-1 flex items-center justify-center">
-        <Spin size="large" tip="加载用户信息中..." />
+        <Spin size="large">
+          <div className="p-8 text-center text-gray-600">加载用户信息中...</div>
+        </Spin>
       </div>
     );
   }
@@ -107,7 +109,9 @@ const ProfilePage: React.FC = () => {
                     <>
                       {checkInLoading ? (
                         <div className="flex justify-center items-center py-8">
-                          <Spin size="large" tip="加载打卡记录中..." />
+                          <Spin size="large">
+                            <div className="p-8 text-center text-gray-600">加载打卡记录中...</div>
+                          </Spin>
                         </div>
                       ) : checkInError ? (
                         <div className="text-center py-8">

@@ -229,7 +229,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, o
       open={visible}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       width={380}
     >
       <Form form={form} layout="vertical" onFinish={handleFormSubmit}>

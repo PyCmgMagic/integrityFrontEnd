@@ -292,7 +292,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose,
       open={visible}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       width={380}
     >
       <Form form={form} layout="vertical" onFinish={handleFormSubmit}>

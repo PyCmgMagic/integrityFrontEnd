@@ -3,9 +3,6 @@
  * 统一导出所有重构后的组件、hooks和工具函数
  */
 
-// 主组件
-export { default as ColumnManage } from './index.tsx';
-
 // 子组件
 export { CheckInList } from './components/CheckInList';
 export { AuditStatsDisplay } from './components/AuditStatsDisplay';

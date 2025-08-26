@@ -77,7 +77,7 @@ const ExportDataModal: React.FC<ExportDataModalProps> = ({ visible, onCancel, on
           导出
         </Button>,
       ]}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form form={form} layout="vertical" initialValues={{ format: 'excel', dataTypes: ['activities', 'checkins'] }}>
         <Form.Item name="dateRange" label="时间范围" rules={[{ required: true, message: '请选择时间范围!' }]}>

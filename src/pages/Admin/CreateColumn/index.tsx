@@ -15,8 +15,8 @@ export interface ColumnData {
   description: string;
   startDate: string;
   endDate: string;
-  checkinStartTime: string;
-  checkinEndTime: string;
+  start_time: string;
+  end_time: string;
   coverImage?: string;
   dailyCheckinLimit: number;
   pointsPerCheckin: number;
@@ -34,8 +34,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
     description: '',
     startDate: '',
     endDate: '',
-    checkinStartTime: '',
-    checkinEndTime: '',
+    start_time: '',
+    end_time: '',
     coverImage: undefined,
     dailyCheckinLimit: 1,
     pointsPerCheckin: 1
@@ -155,8 +155,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
               <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="time"
-                value={columnData.checkinStartTime}
-                onChange={(e) => handleInputChange('checkinStartTime', e.target.value)}
+                value={columnData.start_time}
+                onChange={(e) => handleInputChange('start_time', e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
               />
             </div>
@@ -165,8 +165,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
               <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="time"
-                value={columnData.checkinEndTime}
-                onChange={(e) => handleInputChange('checkinEndTime', e.target.value)}
+                value={columnData.end_time}
+                onChange={(e) => handleInputChange('end_time', e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
               />
             </div>
