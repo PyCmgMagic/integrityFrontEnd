@@ -1,10 +1,10 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
-import { Spin } from 'antd';
+import { Suspense, lazy } from 'react';
 import ProtectedRoute from '../components/ProtectedRoute';
+import LoadingComponent from '../components/LoadingComponent'; 
 
 // 懒加载页面组件
-const LoginPage = lazy(() => import('../pages/Login/index'));
+const LoginPage = lazy(() => import('../pages/Login'));
 
 // 用户端页面
 const UserLayout = lazy(() => import('../components/UserLayout'));
@@ -22,7 +22,6 @@ const AdminHome = lazy(() => import('../pages/Admin/Home/index'));
 const CreateActivity = lazy(() => import('../pages/Admin/CreateActivity/index'));
 const CreateNewProject = lazy(() => import('../pages/Admin/CreateProject/index'));
 const CreateColumnFlow = lazy(() => import('../pages/Admin/CreateColumn/CreateColumnFlow'));
-const CreateColumn = lazy(() => import('../pages/Admin/CreateColumn/index'));
 const SuccessPage = lazy(() => import('../pages/Admin/Success/index'));
 const ReviewManage = lazy(() => import('../pages/Admin/ReviewManage/index'));
 const ActivityManage = lazy(() => import('../pages/Admin/ActivityManage/index'));
@@ -33,14 +32,16 @@ const Favorites = lazy(() => import('../pages/Admin/Favorites/index'));
 const ExportData = lazy(() => import('../pages/Admin/ExportData/index'));
 const AdminProfile = lazy(() => import('../pages/Admin/Profile/index'));
 const ActivityTest = lazy(() => import('../pages/Admin/ActivityTest'));
+const StarTest = lazy(() => import('../pages/Admin/ColumnManage/StarTest'));
 const CheckInDetail = lazy(() => import('../pages/Admin/ColumnManage/CheckInDetail'));
+const PunchDetailTest = lazy(() => import('../pages/Admin/ColumnManage/PunchDetailTest'));
 
 // 加载组件
-const LoadingComponent = () => (
-  <div className="flex justify-center items-center min-h-screen">
-    <Spin size="large" />
-  </div>
-);
+// const LoadingComponent = () => (
+//   <div className="flex justify-center items-center min-h-screen">
+//     <Spin size="large" />
+//   </div>
+// );
 
 // 路由配置
 export const router = createBrowserRouter([
@@ -228,6 +229,22 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'punch/:punchId',
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <CheckInDetail />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'punch-test',
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <PunchDetailTest />
+          </Suspense>
+        ),
+      },
+      {
         path: 'review/:id',
         element: (
           <Suspense fallback={<LoadingComponent />}>
@@ -256,6 +273,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingComponent />}>
             <ActivityTest />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'test/star',
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <StarTest />
           </Suspense>
         ),
       },

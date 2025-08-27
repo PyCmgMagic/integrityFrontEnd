@@ -1,16 +1,18 @@
+
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Progress } from 'antd';
-import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import {  BookOutlined,  } from '@ant-design/icons';
 import { SwipeAction ,Dialog, Toast } from 'antd-mobile';
-import API from '../../../services/api';
+import SimpleCheckInModal from '../../../pages/User/Profile/components/SimpleCheckInModal';
+import type { CheckInData } from '../../../types/types';
 
 interface ChenkInDataProps {
-  columns: any[];
+  columns: CheckInData[];
   column: any;
   onDeleteRecord?: (recordId: number) => Promise<void>;
   totalRecords?: number;
   currentUserCheckInCount?: number;
+  onUpdate?: (updatedData: CheckInData) => void;
+  onRefresh?: () => void; // 新增：用于触发数据刷新
 }
 
 /**
@@ -23,8 +25,56 @@ const ChenkInData = ({
   column = {}, 
   onDeleteRecord,
   totalRecords = 0,
-  currentUserCheckInCount = 0 
+  currentUserCheckInCount = 0,
+  onUpdate,
+  onRefresh 
 }: ChenkInDataProps) => {
+  // 弹窗状态管理
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedCheckIn, setSelectedCheckIn] = useState<CheckInData | null>(null);
+
+  /**
+   * 处理打卡记录点击事件
+   * @param checkInRecord 打卡记录数据
+   */
+  const handleCheckInClick = (checkInRecord: CheckInData) => {
+    // 将打卡记录数据转换为 CheckInData 格式
+    
+    const checkInData: CheckInData = {
+      id: checkInRecord.id || 0,
+      title: checkInRecord.title || '打卡记录',
+      content: checkInRecord.content || '',
+      date: checkInRecord.date || new Date().toISOString(),
+      time: checkInRecord.time || '',
+      imgs: checkInRecord.imgs || [],
+      column_id: checkInRecord.column_id || 0,
+    };
+
+    setSelectedCheckIn(checkInData);
+    setModalVisible(true);
+  };
+
+  /**
+   * 关闭弹窗
+   */
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setSelectedCheckIn(null);
+  };
+
+  /**
+   * 处理打卡记录更新
+   * @param updatedData 更新后的打卡数据
+   */
+  const handleCheckInUpdate = (updatedData: CheckInData) => {
+    // 更新本地选中的打卡记录
+    setSelectedCheckIn(updatedData);
+    // 通知父组件更新数据
+    if (onUpdate) {
+      onUpdate(updatedData);
+    }
+  };
+
   /**
    * 右滑删除操作配置
    * @param id 记录ID
@@ -76,22 +126,37 @@ const ChenkInData = ({
               <p className="text-gray-400 text-sm">完成你的第一次打卡吧！↓</p>
             </div>
           ) : (
-            columns.map((column,index) => (
+            columns.map((column) => (
                <SwipeAction
                 key={column.id}
                 rightActions={rightActions(column.id)}
               >
-              <div key={column.id} className={`bg-gradient-to-r ${column.gradient} p-5  shadow-lg flex items-center justify-between`}>
+              <div 
+                key={column.id} 
+                className={`bg-gradient-to-r ${column.gradient} p-5 shadow-lg flex items-center justify-between cursor-pointer hover:opacity-90 transition-opacity`}
+                onClick={() => handleCheckInClick(column)}
+              >
                 <div className="flex items-center">
                   <div>  
                     <h2 className="text-xl font-bold text-white">{column.title}</h2>
                   </div>
-                </div>
+                </div> 
               </div> 
           </SwipeAction>
             ))
           )}
         </div>
+ 
+        {/* 打卡详情弹窗 */}
+        {selectedCheckIn && (
+          <SimpleCheckInModal
+            visible={modalVisible}
+            onClose={handleCloseModal}
+            checkInData={selectedCheckIn}
+            onUpdate={handleCheckInUpdate}
+            onRefresh={onRefresh}
+          />
+        )}
         </>
     )
 }

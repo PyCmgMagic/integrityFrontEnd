@@ -4,7 +4,6 @@ import {
   UserOutlined
 } from '@ant-design/icons';
 import BottomNavigation, { type NavItem } from './BottomNavigation/BottomNavigation';
-import { useState } from 'react';
 const { Content } = Layout;
 const UserLayout = () => {
   // 直接从localStorage计算isAdmin状态，避免无限重渲染

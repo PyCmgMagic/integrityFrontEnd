@@ -6,6 +6,7 @@ import { Dialog, Toast } from 'antd-mobile';
 import ChenkInData from './ChenkInData';
 import CheckIn from '../../../components/CheckIn';
 import { usePunchRecords } from '../../../hooks/usePunchRecords';
+import type { CheckInData } from '../Profile/types';
 // 模拟用户信息，可以从 context 或 props 获取
 
 /**
@@ -94,12 +95,15 @@ const ColumnPage = () => {
   };
 
 // 将API获取的打卡记录转换为组件需要的格式
-const formattedPunchRecords = (punchRecords || []).map((record, index) => ({
+const formattedPunchRecords:CheckInData[] = (punchRecords || []).map((record, index) => ({
   id: record.id,
   title: `第${(punchRecords?.length || 0) - index}次打卡`,
   gradient: 'from-blue-400 to-blue-600',
   date: record.date,
   time: record.time,
+  imgs: record.imgs,
+  content: record.content,
+  column_id:currentColumnId
 }));
 
   return (

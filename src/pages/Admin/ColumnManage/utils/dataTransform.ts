@@ -19,9 +19,18 @@ export interface CheckInItem {
  * 专栏信息接口定义
  */
 export interface ColumnInfo {
-  name: string;
-  activityTime: string;
-  checkRequirement: string;
+    ID: number,
+    name: string,
+    description: string,
+    avatar: string,
+    daily_punch_limit: number,
+    point_earned: number,
+    end_time: string,
+    start_time: string,
+    start_date: number,
+    today_punch_count: number,
+    owner_id: string,
+    project_id: number,
 }
 
 /**
@@ -35,9 +44,10 @@ export interface AuditStats {
 /**
  * 将后端返回的PendingPunchItem转换为前端CheckInItem格式
  * @param item - 后端返回的待审核打卡项
+ * @param starredStatus - 可选的收藏状态，如果提供则使用该状态，否则默认为false
  * @returns 转换后的打卡项
  */
-export const transformPendingData = (item: PendingPunchItem): CheckInItem => {
+export const transformPendingData = (item: PendingPunchItem, starredStatus?: boolean): CheckInItem => {
   const createdAt = new Date(item.punch.created_at);
   const date = createdAt.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
   const time = createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
@@ -55,9 +65,24 @@ export const transformPendingData = (item: PendingPunchItem): CheckInItem => {
     time: time,
     content: item.punch.content,
     images: cleanImages,
-    starred: false,
+    starred: starredStatus ?? false, // 使用传入的收藏状态，如果未提供则默认为false
     status: 'pending'
   };
+};
+
+/**
+ * 批量转换待审核数据并应用收藏状态
+ * @param items - 后端返回的待审核打卡项列表
+ * @param starStatusMap - 收藏状态映射表，key为punchId，value为是否收藏
+ * @returns 转换后的打卡项列表
+ */
+export const transformPendingDataWithStarStatus = (
+  items: PendingPunchItem[], 
+  starStatusMap: Map<number, boolean>
+): CheckInItem[] => {
+  return items.map(item => 
+    transformPendingData(item, starStatusMap.get(item.punch.ID))
+  );
 };
 
 /**

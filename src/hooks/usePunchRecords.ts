@@ -58,6 +58,8 @@ export const usePunchRecords = (columnId: number) => {
       const today_punch_count = await API.Column.getTodayTotalPunchRecords(columnId);
       const columnInfo = await API.Column.getColumnInfo(columnId)
       setColumnInfo(columnInfo)
+      console.log("111",data);
+      
       // 转换数据格式
       const transformedRecords = transformPunchRecordsToCheckInData(data.records);
       

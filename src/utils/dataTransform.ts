@@ -120,13 +120,15 @@ export function transformActivityToUpdateRequest(activity: {
  * @returns 前端组件使用的打卡记录格式
  */
 export function transformPunchRecordToCheckInData(punchRecord: PunchRecord): CheckInData {
-  const createdAt = dayjs(punchRecord.CreatedAt);
-  
+  const updatedAt  = dayjs(punchRecord.updated_at);
   return {
     id: punchRecord.ID,
     title: punchRecord.content || '打卡记录',
-    time: createdAt.format('HH:mm'),
-    date: createdAt.format('YYYY-MM-DD'),
+    time: updatedAt.format('HH:mm'),
+    date: updatedAt.format('YYYY-MM-DD'),
+    content: punchRecord.content || '',
+    imgs: punchRecord.imgs || [],
+    gradient: '',
   };
 }
 
@@ -138,6 +140,7 @@ export function transformPunchRecordToCheckInData(punchRecord: PunchRecord): Che
 export function transformPunchRecordsToCheckInData(punchRecords: PunchRecord[] | null): CheckInData[] {
   // 处理null或undefined的情况，返回空数组
   if (!punchRecords || !Array.isArray(punchRecords)) {
+    console.log("kong");
     return [];
   }
   return punchRecords.map(transformPunchRecordToCheckInData);

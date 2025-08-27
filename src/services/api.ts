@@ -18,6 +18,7 @@ import type {
   UpdateActivityRequest,
   ProjectDetail,
   ParticipationHistoryResponse,
+  ApiResponse,
 } from '../types/api';
 import type { UserProfile, ActivityData, CheckInData, PunchRecordsData, MyPunchListResponse } from '../types/types';
 import CreateNewProject from '../pages/Admin/CreateProject';
@@ -540,30 +541,38 @@ export class ColumnAPI {
 /**
  * 获取栏目信息
  */
-  static async getColumnInfo(id: number): Promise<{
-        ID: number;
-        CreatedAt: string;
-        UpdatedAt: string;
-        DeletedAt: null;
-        name: string;
-        description: string;
-        owner_id: string;
-        project_id: number;
-  }> {
-    return request.get<{
-        ID: number;
-        CreatedAt: string;
-        UpdatedAt: string;
-        DeletedAt: null;
-        name: string;
-        description: string;
-        owner_id: string;
-        project_id: number;
-    }>(`/column/get/${id}`, {
-      showLoading: true,
-      showError: true,
-    });
-  }
+static async getColumnInfo(id: number): Promise<ApiResponse<{
+  ID: number;
+  name: string;
+  description: string;
+  avatar: string; // 栏目封面
+  daily_punch_limit: number; // 每日可打卡次数
+  point_earned: number; // 每次打卡获得积分
+  end_time: string; // 结束时间
+  start_time: string; // 开始时间
+  start_date: number; // 开始日期
+  today_punch_count: number; // 今日打卡次数
+  owner_id: string;
+  project_id: number;
+}>> {
+  return request.getFull<{
+  ID: number;
+  name: string;
+  description: string;
+  avatar: string; // 栏目封面
+  daily_punch_limit: number; // 每日可打卡次数
+  point_earned: number; // 每次打卡获得积分
+  end_time: string; // 结束时间
+  start_time: string; // 开始时间
+  start_date: number; // 开始日期
+  today_punch_count: number; // 今日打卡次数
+  owner_id: string;
+  project_id: number;
+  }>(`/column/get/${id}`, {
+    showLoading: true,
+    showError: true,
+  });
+}
   /**
    * 获取栏目下的打卡记录
    */
@@ -691,12 +700,182 @@ export class ColumnAPI {
   }
 
   /**
+   * 获取打卡详细信息
+   * @param id - 打卡记录ID
+   * @returns 打卡详细信息
+   */
+  static async getPunchDetail(id: number): Promise<{
+    code: number;
+    msg: string;
+    data: {
+      imgs: string[];
+      punch: {
+        ID: number;
+        created_at: string;
+        updated_at: string;
+        deleted_at: null;
+        column_id: number;
+        user_id: string;
+        content: string;
+        status: number;
+      };
+      stared: boolean;
+    };
+    timestamp: number;
+  }> {
+    return request.getFull<{
+      code: number;
+      msg: string;
+      data: {
+        imgs: string[];
+        punch: {
+          ID: number;
+          created_at: string;
+          updated_at: string;
+          deleted_at: null;
+          column_id: number;
+          user_id: string;
+          content: string;
+          status: number;
+        };
+        stared: boolean;
+      };
+      timestamp: number;
+    }>(`/punch/get/${id}`, {}, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+
+  /**
    * 获取用户的打卡记录列表
    * @returns 用户打卡记录列表
    */
   static async getMyPunchList(): Promise<MyPunchListResponse> {
     return request.get<MyPunchListResponse>('/punch/my-list', {}, {
       showLoading: true,
+      showError: true,
+    });
+  }
+
+  /**
+   * 更新打卡记录
+   */
+  static async updatePunchRecord(id: number, data: {
+    column_id: number;
+    content: string;
+    images: string[];
+  }): Promise<{
+      ID: number;
+      created_at: string;
+      updated_at: string;
+      deleted_at: null;
+      column_id: number;
+      user_id: string;
+      content: string;
+      status: number;
+      imgs: string[];
+  }> {
+    return request.put(`/punch/update/${id}`, data, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+}
+
+/**
+ * 收藏/精华相关 API
+ */
+export class StarAPI {
+  /**
+   * 添加到收藏/精华
+   * @param punchId 打卡记录ID
+   * @returns 操作结果
+   */
+  static async addStar(punchId: number): Promise<{ code: number; msg: string; timestamp: number }> {
+    const response = await request.postFull<null>(`/star/add?punch_id=${punchId}`, undefined, {
+      showLoading: false,
+      showError: false,
+    });
+    return {
+      code: response.code,
+      msg: response.msg,
+      timestamp: response.timestamp || Date.now()
+    };
+  }
+
+  /**
+   * 取消收藏/精华
+   * @param punchId 打卡记录ID
+   * @returns 操作结果
+   */
+  static async cancelStar(punchId: number): Promise<{ code: number; msg: string; timestamp: number }> {
+    const response = await request.deleteFull<null>(`/star/cancel?punch_id=${punchId}`, undefined, {
+      showLoading: false,
+      showError: false,
+    });
+    return {
+      code: response.code,
+      msg: response.msg,
+      timestamp: response.timestamp || Date.now()
+    };
+  }
+
+  /**
+   * 查询是否已收藏/精华
+   * @param punchId 打卡记录ID
+   * @returns 收藏状态
+   */
+  static async checkStarStatus(punchId: number): Promise<{ code: number; data: boolean; msg: string; timestamp: number }> {
+    const response = await request.getFull<boolean>('/star/ask', {
+      punch_id: punchId
+    }, {
+      showLoading: false,
+      showError: false,
+    });
+    return {
+      code: response.code,
+      data: response.data,
+      msg: response.msg,
+      timestamp: response.timestamp || Date.now()
+    };
+  }
+
+  /**
+   * 批量查询收藏状态
+   * @param punchIds 打卡记录ID数组
+   * @returns 收藏状态映射
+   */
+  static async checkMultipleStarStatus(punchIds: number[]): Promise<{ code: number; data: Record<number, boolean>; msg: string; timestamp: number }> {
+    const response = await request.postFull<Record<number, boolean>>('/star/batch-ask', {
+      punch_ids: punchIds
+    }, {
+      showLoading: false,
+      showError: false,
+    });
+    return {
+      code: response.code,
+      data: response.data,
+      msg: response.msg,
+      timestamp: response.timestamp || Date.now()
+    };
+  }
+
+  /**
+   * 获取收藏列表
+   * @param params 查询参数
+   * @param params.page 页码，默认为1
+   * @param params.page_size 每页数量，默认为10
+   * @returns 收藏列表响应
+   */
+  static async getStarList(params?: { page?: number; page_size?: number }): Promise<import('../types/types').StarListResponse> {
+    const { page = 1, page_size = 10 } = params || {};
+
+    return request.getFull<import('../types/types').StarListData>('/star/list', {
+      page,
+      page_size
+    }, {
+      showLoading: false,
       showError: true,
     });
   }
@@ -714,6 +893,7 @@ export const API = {
   CheckIn: CheckInAPI,
   File: FileAPI,
   Statistics: StatisticsAPI,
+  Star: StarAPI,
 };
 
 export default API;

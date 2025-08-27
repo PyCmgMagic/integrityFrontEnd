@@ -146,6 +146,7 @@ const ProfilePage: React.FC = () => {
                           checkInData={checkInData}
                           onDelete={deleteCheckIn}
                           formatDate={formatDate}
+                          onRefresh={refreshData}
                         />
                       )}
                     </>

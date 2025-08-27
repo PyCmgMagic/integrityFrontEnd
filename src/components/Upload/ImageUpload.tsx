@@ -151,7 +151,7 @@ const ImageUpload = ({
   return (
     <div className={className}>
       <Upload
-        // customRequest={customRequest}
+        customRequest={customRequest}
         listType="picture-card"
         fileList={fileList}
         onPreview={handlePreview}

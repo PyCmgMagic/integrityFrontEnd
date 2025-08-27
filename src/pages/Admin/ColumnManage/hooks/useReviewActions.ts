@@ -66,13 +66,13 @@ export const useReviewActions = ({
       
       console.log('API响应:', response);
       
-      // 更新本地状态
+      // 更新本地状态，确保保持收藏状态
       const updatedItem = { ...item, status: action };
       
       // 从未审核列表中移除
       setUnreviewedData(prev => prev.filter(i => i.id !== item.id));
       
-      // 添加到已审核列表
+      // 添加到已审核列表，保持原有的收藏状态
       setReviewedData(prev => [updatedItem, ...prev]);
       
       // 显示成功提示

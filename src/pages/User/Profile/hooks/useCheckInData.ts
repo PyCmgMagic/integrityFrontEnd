@@ -24,12 +24,14 @@ const transformPunchData = (punchItems: PunchItem[] | [] | undefined): CheckInDa
     
     // 生成时间描述
     const time = `第${punchItems.length - index}次打卡`;
-    
     return {
       id: item.punch.ID,
       title,
       time,
       date: formattedDate,
+      content: item.punch.content,
+      project_id: item.punch.column_id,
+      imgs:item.imgs
     };
   });
 };

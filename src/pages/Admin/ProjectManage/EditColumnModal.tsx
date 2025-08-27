@@ -146,8 +146,8 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         // 设置表单所有字段的值
         form.setFieldsValue({ ...initialData });
 
-        if (initialData.cover) {
-          setImageUrl(initialData.cover);
+        if (initialData.avatar) {
+          setImageUrl(initialData.avatar);
         }
 
         // 设置日期状态（从start_date和end_date数字格式转换）
@@ -187,7 +187,7 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
    */
   const handleCoverChange = (url: string) => {
     setImageUrl(url);
-    form.setFieldsValue({ cover: url });
+    form.setFieldsValue({ avatar: url });
   };
 
   const handleFormSubmit = async (values: any) => {
@@ -352,7 +352,7 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         </Form.Item>
 
         <Form.Item
-          name="cover"
+          name="avatar"
           label={<span className="font-semibold text-gray-700">设置栏目封面</span>}
           rules={[{ required: true, message: '请上传栏目封面' }]}
         >

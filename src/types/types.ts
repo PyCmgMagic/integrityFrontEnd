@@ -19,12 +19,17 @@ export interface UserProfileForm extends Omit<UserProfile, 'dob'> {
     dob?: Dayjs | null;
 }
 
-// 打卡记录的类型（前端组件使用）
+// 打卡记录的类型
 export interface CheckInData {
   id: number;
   title: string;
   time: string;
   date: string;
+  project_id?: number;
+  column_id?: number;
+  content: string;
+  imgs:string[];
+  gradient?: string;
 }
 
 // API 返回的打卡记录详细数据结构
@@ -43,6 +48,7 @@ export interface PunchItem {
   column_name: string;
   project_name: string;
   activity_name: string;
+  project_id?: number; // 项目ID，用于跳转到详情页
 }
 
 // 用户打卡记录 API 响应结构
@@ -56,14 +62,14 @@ export interface MyPunchListResponse {
 // 后端返回的打卡记录原始数据结构
 export interface PunchRecord {
   ID: number;
-  CreatedAt: string;
-  UpdatedAt: string;
-  DeletedAt: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
   column_id: number;
   user_id: string;
   content: string;
   status: number;
-  img_url: string;
+  imgs: string[];
 }
 
 // 后端API响应的完整数据结构
@@ -104,4 +110,35 @@ export interface ActivityData {
   type: string;
   coverImage?: string;
   rules?: string;
+}
+
+// 收藏项目的类型定义
+export interface StarItem {
+  created_at: string;
+  punch: {
+    ID: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    column_id: number;
+    user_id: string;
+    content: string;
+    status: number;
+  };
+}
+
+// 收藏列表响应的数据结构
+export interface StarListData {
+  user_id: string;
+  page_size: number;
+  page: number;
+  stars: StarItem[];
+}
+
+// 收藏列表API响应结构
+export interface StarListResponse {
+  code: number;
+  msg: string;
+  data: StarListData;
+  timestamp?: number;
 }

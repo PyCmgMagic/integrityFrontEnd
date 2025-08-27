@@ -6,8 +6,9 @@ import EditColumnModal from '../ProjectManage/EditColumnModal';
 import { API } from '../../../services/api';
 
 // 导入重构后的模块
-import { transformPendingData, calculateAuditStats } from './utils/dataTransform';
+import {  transformPendingDataWithStarStatus, calculateAuditStats } from './utils/dataTransform';
 import { useReviewActions } from './hooks/useReviewActions';
+import { useStarStatusLoader } from './hooks/useStarStatusLoader';
 import { CheckInList } from './components/CheckInList';
 import { AuditStatsDisplay } from './components/AuditStatsDisplay';
 import { ReviewTabs, type ReviewTabType } from './components/ReviewTabs';
@@ -27,11 +28,28 @@ const ColumnManage: React.FC = () => {
   const [unreviewedData, setUnreviewedData] = useState<CheckInItem[]>([]);
   const [reviewedData, setReviewedData] = useState<CheckInItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [columnInfo, setColumnInfo] = useState<ColumnInfo>({
+    ID: 0,
+    name: '',
+    description: '',
+    avatar: '',
+    daily_punch_limit: 0,
+    point_earned: 0,
+    end_time: '',
+    start_time: '',
+    start_date: 0,
+    today_punch_count: 0,
+    owner_id: '',
+    project_id: 0,
+  });
   const { activityId, projectId, columnId } = useParams();
   const parsedProjectId = parseInt(projectId || '0');
   
   // 使用ref来跟踪当前请求
   const currentRequestRef = useRef<number>(0);
+
+  // 使用收藏状态加载器
+  const { loadStarStatus, loadStarStatusMap } = useStarStatusLoader();
   
   /**
    * 获取待审核列表数据 - 使用useCallback避免重复创建
@@ -48,7 +66,10 @@ const ColumnManage: React.FC = () => {
     setLoading(true);
     try {
       const response = await API.Column.getPendingList(parseInt(columnId));
-      
+      const columnInfoResponse = await API.Column.getColumnInfo(parseInt(columnId));
+      if(columnInfoResponse.code === 200) {
+        setColumnInfo(columnInfoResponse.data);
+      }
       // 检查是否是最新的请求
       if (requestId !== currentRequestRef.current) {
         return; // 忽略过期的请求
@@ -57,31 +78,26 @@ const ColumnManage: React.FC = () => {
       // 处理直接返回数组的情况
       if (Array.isArray(response)) {
         if (response.length > 0) {
-          const transformedData = response.map(transformPendingData);
+          // 提取所有打卡记录ID
+          const punchIds = response.map(item => item.punch.ID);
+          // 批量获取收藏状态
+          const starStatusMap = await loadStarStatusMap(punchIds);
+          // 使用优化的转换方法，一次性应用收藏状态
+          console.log(starStatusMap);
+          
+          const transformedData = transformPendingDataWithStarStatus(response, starStatusMap);
+          console.log('transformedData:', transformedData);
           setUnreviewedData(transformedData);
         } else {
           setUnreviewedData([]);
         }
-      } else if (response && typeof response === 'object' && 'code' in response) {
-        // 处理标准API响应格式
-        if (response.code === 200) {
-          if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-            const transformedData = response.data.map(transformPendingData);
-            setUnreviewedData(transformedData);
-          } else {
-            setUnreviewedData([]);
-          }
-        } else {
-          const message = typeof response.msg === 'string' && response.msg ? response.msg : '获取数据失败';
-          Toast.show({ content: message, position: 'bottom' });
-        }
-      } else {
+      }  else {
         setUnreviewedData([]);
       }
     } catch (error) {
       // 检查是否是最新的请求
       if (requestId !== currentRequestRef.current) {
-        return; // 忽略过期的请求错误
+        return;
       }
       console.error('获取待审核列表失败:', error);
       Toast.show({ content: '网络错误，请稍后重试', position: 'bottom' });
@@ -91,7 +107,7 @@ const ColumnManage: React.FC = () => {
         setLoading(false);
       }
     }
-  }, [columnId]);
+  }, [columnId, loadStarStatusMap]);
   
 
   
@@ -107,11 +123,7 @@ const ColumnManage: React.FC = () => {
     setEditColumnVisible(false);
   };
 
-  const column: ColumnInfo = {
-    name: '单词打卡',
-    activityTime: '1.3 - 1.31',
-    checkRequirement: '打卡要求：每日背诵英文单词不少于20个，通过单词App学习单词，上传打卡信息截图，或对自己每日学习的成果（阅读笔记）进行拍照打卡，图片中需要附有自己的姓名以及当天日期，每日内容不得重复。（该项如提交笔记，不得与上一项自习笔记重复）。打卡时间为每日6时至22时。'
-  };
+
 
   // 计算审核统计信息
   const auditStats: AuditStats = calculateAuditStats(reviewedData.length, unreviewedData.length);
@@ -123,6 +135,25 @@ const ColumnManage: React.FC = () => {
     setUnreviewedData,
     setReviewedData
   });
+
+  /**
+   * 处理收藏状态变化
+   */
+  const handleStarChange = useCallback((punchId: number, isStarred: boolean): void => {
+    // 更新未审核数据中的收藏状态
+    setUnreviewedData(prevData =>
+      prevData.map(item =>
+        item.id === punchId ? { ...item, starred: isStarred } : item
+      )
+    );
+
+    // 更新已审核数据中的收藏状态
+    setReviewedData(prevData =>
+      prevData.map(item =>
+        item.id === punchId ? { ...item, starred: isStarred } : item
+      )
+    );
+  }, []);
 
   // 列表渲染和滑动操作逻辑已移至CheckInList组件
 
@@ -137,13 +168,13 @@ const ColumnManage: React.FC = () => {
         </div>
         <div className="text-center mt-3">
           <p className="text-sm opacity-80">活动时间</p>
-          <p className="font-semibold tracking-wider">{column.activityTime}</p>
+          <p className="font-semibold tracking-wider">{columnInfo.start_time} - {columnInfo.end_time}</p>
         </div>
       </header>
 
       <main className="p-4 pb-10">
         <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
-          <p className="text-gray-600 text-sm leading-relaxed">{column.checkRequirement}</p>
+          <p className="text-gray-600 text-sm leading-relaxed">{columnInfo.description}</p>
         </div>
 
         {/* 审核统计信息 */}
@@ -171,6 +202,7 @@ const ColumnManage: React.FC = () => {
               activityId={activityId!}
               projectId={projectId!}
               columnId={columnId!}
+              onStarChange={handleStarChange}
             />
           )}
         </div>
@@ -181,6 +213,7 @@ const ColumnManage: React.FC = () => {
         onClose={() => setEditColumnVisible(false)}
         onFinish={handleEditColumnFinish} 
         projectId={parsedProjectId}
+        initialData={columnInfo}
       />
     </div>
   );

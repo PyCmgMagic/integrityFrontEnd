@@ -1,11 +1,12 @@
 import React from 'react';
 import { Button } from 'antd';
-import { LeftOutlined, StarOutlined } from '@ant-design/icons';
+import { LeftOutlined, StarOutlined, StarFilled, LoadingOutlined } from '@ant-design/icons';
 import type { CheckInItem } from '../utils/checkInDataTransform';
 
 interface CheckInDetailHeaderProps {
   currentItem: CheckInItem | undefined;
   isStarred: boolean;
+  isStarLoading?: boolean;
   onBack: () => void;
   onToggleStar: () => void;
 }
@@ -14,12 +15,14 @@ interface CheckInDetailHeaderProps {
  * 打卡详情页面头部组件
  * @param currentItem - 当前打卡项目
  * @param isStarred - 是否已标记为精华
+ * @param isStarLoading - 是否正在加载收藏状态
  * @param onBack - 返回按钮点击回调
  * @param onToggleStar - 精华按钮点击回调
  */
 const CheckInDetailHeader: React.FC<CheckInDetailHeaderProps> = ({
   currentItem,
   isStarred,
+  isStarLoading = false,
   onBack,
   onToggleStar
 }) => {
@@ -34,19 +37,38 @@ const CheckInDetailHeader: React.FC<CheckInDetailHeaderProps> = ({
           onClick={onBack} 
         />
         <h1 className="text-lg sm:text-xl font-bold truncate mx-4">打卡审核</h1>
-        <Button 
-          type="text" 
-          shape="circle" 
+        <Button
+          type="text"
+          shape="circle"
           icon={
-            <StarOutlined 
-              style={{ 
-                color: isStarred ? '#FFD700' : 'white',
-                fontSize: window.innerWidth >= 640 ? '18px' : '16px'
-              }} 
-            />
-          } 
+            isStarLoading ? (
+              <LoadingOutlined
+                style={{
+                  color: 'white',
+                  fontSize: window.innerWidth >= 640 ? '18px' : '16px'
+                }}
+              />
+            ) : (
+              isStarred ? (
+                <StarFilled
+                  style={{
+                    color: '#FFD700',
+                    fontSize: window.innerWidth >= 640 ? '18px' : '16px'
+                  }}
+                />
+              ) : (
+                <StarOutlined
+                  style={{
+                    color: 'white',
+                    fontSize: window.innerWidth >= 640 ? '18px' : '16px'
+                  }}
+                />
+              )
+            )
+          }
           className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center touch-manipulation"
-          onClick={onToggleStar} 
+          onClick={onToggleStar}
+          disabled={isStarLoading}
         />
       </div>
       <div className="text-center mt-2 sm:mt-3">

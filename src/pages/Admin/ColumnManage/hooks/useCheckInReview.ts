@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Toast, Dialog } from 'antd-mobile';
 import { API } from '../../../../services/api';
+import { useStarManagement } from './useStarManagement';
 import type { CheckInItem } from '../utils/checkInDataTransform';
 
 interface UseCheckInReviewProps {
   currentItem: CheckInItem | undefined;
   onItemRemoved: () => void;
+  onStarChange?: (punchId: number, isStarred: boolean) => void;
 }
 
 interface UseCheckInReviewReturn {
@@ -13,20 +15,32 @@ interface UseCheckInReviewReturn {
   setIsStarred: (starred: boolean) => void;
   handleApprove: () => Promise<void>;
   handleReject: () => Promise<void>;
-  toggleStar: () => void;
+  toggleStar: () => Promise<void>;
+  isStarLoading: boolean;
 }
 
 /**
  * 打卡审核操作的自定义 Hook
  * @param currentItem - 当前打卡项目
  * @param onItemRemoved - 项目移除后的回调函数
+ * @param onStarChange - 收藏状态变化回调
  * @returns 审核操作相关的状态和方法
  */
 export const useCheckInReview = ({
   currentItem,
-  onItemRemoved
+  onItemRemoved,
+  onStarChange
 }: UseCheckInReviewProps): UseCheckInReviewReturn => {
-  const [isStarred, setIsStarred] = useState<boolean>(currentItem?.starred || false);
+  // 使用收藏管理 Hook
+  const {
+    isStarred,
+    isLoading: isStarLoading,
+    toggleStar: toggleStarAPI
+  } = useStarManagement({
+    punchId: currentItem?.punchId || 0,
+    initialStarred: currentItem?.starred || false,
+    onStarChange
+  });
 
   /**
    * 审核通过
@@ -93,17 +107,21 @@ export const useCheckInReview = ({
   /**
    * 切换精华状态
    */
-  const toggleStar = (): void => {
+  const toggleStar = async (): Promise<void> => {
     if (!currentItem) {
       Toast.show({ icon: 'fail', content: '当前项目不存在' });
       return;
     }
-    
-    setIsStarred(!isStarred);
-    Toast.show({ 
-      content: !isStarred ? '已设为精华' : '已取消精华', 
-      position: 'bottom' 
-    });
+
+    await toggleStarAPI();
+  };
+
+  /**
+   * 设置收藏状态（兼容性方法）
+   */
+  const setIsStarred = (starred: boolean): void => {
+    // 这个方法保留用于兼容性，但实际状态由 useStarManagement 管理
+    console.log('setIsStarred called with:', starred);
   };
 
   return {
@@ -111,6 +129,7 @@ export const useCheckInReview = ({
     setIsStarred,
     handleApprove,
     handleReject,
-    toggleStar
+    toggleStar,
+    isStarLoading
   };
 };

@@ -4,6 +4,7 @@ import { List } from 'antd';
 import { CheckOutlined, CloseOutlined, StarOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 import type { CheckInItem } from '../utils/dataTransform';
+import { StarButton } from './StarButton';
 
 /**
  * 打卡列表组件的属性接口
@@ -21,6 +22,8 @@ interface CheckInListProps {
   projectId: string;
   /** 专栏ID */
   columnId: string;
+  /** 收藏状态变化回调 */
+  onStarChange?: (punchId: number, isStarred: boolean) => void;
 }
 
 /**
@@ -35,9 +38,11 @@ export const CheckInList: React.FC<CheckInListProps> = ({
   onReview,
   activityId,
   projectId,
-  columnId
+  columnId,
+  onStarChange
 }) => {
   const navigate = useNavigate();
+console.log("000",data);
 
   /**
    * 获取未审核项目的滑动操作
@@ -80,22 +85,6 @@ export const CheckInList: React.FC<CheckInListProps> = ({
    */
   const getReviewedActions = (item: CheckInItem) => [
     {
-      key: 'star',
-      text: (
-        <div className="flex flex-col justify-center items-center h-full">
-          <StarOutlined />
-          <span className="text-xs mt-1">精华</span>
-        </div>
-      ),
-      color: 'warning',
-      onClick: (): void => {
-        Toast.show({ 
-          content: `已将 "${item.title}" 设为精华`, 
-          position: 'bottom' 
-        });
-      },
-    },
-    {
       key: 'delete',
       text: (
         <div className="flex flex-col justify-center items-center h-full">
@@ -108,9 +97,9 @@ export const CheckInList: React.FC<CheckInListProps> = ({
         const confirmed = await Dialog.confirm({ content: '确定要删除吗？' });
         if (confirmed) {
           // 在实际应用中，这里应该更新状态来移除项目
-          Toast.show({ 
-            content: `已删除 "${item.title}"`, 
-            position: 'bottom' 
+          Toast.show({
+            content: `已删除 "${item.title}"`,
+            position: 'bottom'
           });
         }
       },
@@ -151,6 +140,7 @@ export const CheckInList: React.FC<CheckInListProps> = ({
       dataSource={data}
       renderItem={(item, index) => (
         <SwipeAction
+          key={item.id} 
           rightActions={
             type === 'unreviewed'
               ? getUnreviewedActions(item)
@@ -176,11 +166,22 @@ export const CheckInList: React.FC<CheckInListProps> = ({
                   {item.date} {item.time}
                 </span>
               </div>
-              {type === 'reviewed' && item.status === 'rejected' ? (
-                <span className="text-gray-500 font-semibold">未通过</span>
-              ) : (
-                item.starred && <StarOutlined className="text-orange-400" />
-              )}
+              <div className="flex items-center space-x-2">
+                {type === 'reviewed' && item.status === 'rejected' ? (
+                  <span className="text-gray-500 font-semibold">未通过</span>
+                ) : (
+                  <>
+                    {/* 收藏/精华按钮 */}
+                    <StarButton
+                    className={` ${item.starred ? 'text-yellow-500' : 'text-gray-400'}`}
+                      punchId={item.id}
+                      initialStarred={item.starred}
+                      onStarChange={onStarChange}
+                      size="small"
+                    />
+                  </>
+                )}
+              </div>
             </div>
           </List.Item>
         </SwipeAction>

@@ -43,7 +43,7 @@ const ActivityDetailPage: React.FC = () => {
    * 处理返回按钮点击
    */
   const handleGoBack = useCallback(() => {
-    navigate('/user/activities');
+    navigate(-1);
   }, [navigate]);
 
   /**

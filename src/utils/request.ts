@@ -90,9 +90,19 @@ class RequestService {
           data: response.data,
         });
 
-        // 检查业务状态码
+        // 检查业务状态码 - 更新为新的响应格式
         if (response.data && typeof response.data === 'object') {
-          if (response.data.success === false || (response.data.code && response.data.code !== 200)) {
+          // 新的响应格式：{"code":200,"msg":"Success","data":...,"timestamp":...}
+          if (response.data.code && response.data.code !== 200) {
+            const error: ApiError = {
+              code: response.data.code,
+              message: response.data.msg || '请求失败',
+              details: response.data,
+            };
+            return Promise.reject(error);
+          }
+          // 兼容旧格式
+          if (response.data.success === false) {
             const error: ApiError = {
               code: response.data.code || -1,
               message: response.data.msg || '请求失败',
@@ -233,11 +243,11 @@ class RequestService {
   }
 
   /**
-   * 通用请求方法
+   * 通用请求方法 - 返回完整的响应结构
    */
-  async request<T = any>(
+  async requestFull<T = any>(
     config: AxiosRequestConfig & RequestConfig
-  ): Promise<T> {
+  ): Promise<ApiResponse<T>> {
     const {
       showLoading = false,
       showError = true,
@@ -252,7 +262,8 @@ class RequestService {
       }
 
       const response = await this.instance.request<ApiResponse<T>>(axiosConfig);
-      return response.data.data;
+      // 返回完整的响应结构，包含 code、msg、data、timestamp 等
+      return response.data;
     } catch (error) {
       if (showError && error instanceof Object && 'message' in error) {
         message.error(error.message as string);
@@ -261,7 +272,7 @@ class RequestService {
       // 重试机制
       if (retries > 0 && this.shouldRetry(error)) {
         console.log(`Retrying request... (${retries} attempts left)`);
-        return this.request({ ...config, retries: retries - 1 });
+        return this.requestFull({ ...config, retries: retries - 1 });
       }
 
       throw error;
@@ -270,6 +281,16 @@ class RequestService {
         console.log('Loading finished');
       }
     }
+  }
+
+  /**
+   * 通用请求方法 - 兼容性方法，只返回 data 部分
+   */
+  async request<T = any>(
+    config: AxiosRequestConfig & RequestConfig
+  ): Promise<T> {
+    const response = await this.requestFull<T>(config);
+    return response.data;
   }
 
   /**
@@ -287,7 +308,7 @@ class RequestService {
   }
 
   /**
-   * GET 请求
+   * GET 请求 - 兼容性方法，只返回 data 部分
    */
   get<T = any>(
     url: string,
@@ -303,7 +324,7 @@ class RequestService {
   }
 
   /**
-   * POST 请求
+   * POST 请求 - 兼容性方法，只返回 data 部分
    */
   post<T = any>(
     url: string,
@@ -319,7 +340,7 @@ class RequestService {
   }
 
   /**
-   * PUT 请求
+   * PUT 请求 - 兼容性方法，只返回 data 部分
    */
   put<T = any>(
     url: string,
@@ -335,7 +356,7 @@ class RequestService {
   }
 
   /**
-   * DELETE 请求
+   * DELETE 请求 - 兼容性方法，只返回 data 部分
    */
   delete<T = any>(
     url: string,
@@ -351,7 +372,7 @@ class RequestService {
   }
 
   /**
-   * PATCH 请求
+   * PATCH 请求 - 兼容性方法，只返回 data 部分
    */
   patch<T = any>(
     url: string,
@@ -366,8 +387,90 @@ class RequestService {
     });
   }
 
+  // ==================== 完整响应方法 (返回完整响应结构) ====================
+
   /**
-   * 文件上传
+   * GET 请求 - 返回完整响应结构
+   */
+  getFull<T = any>(
+    url: string,
+    params?: any,
+    config?: RequestConfig
+  ): Promise<ApiResponse<T>> {
+    return this.requestFull<T>({
+      method: 'GET',
+      url,
+      params,
+      ...config,
+    });
+  }
+
+  /**
+   * POST 请求 - 返回完整响应结构
+   */
+  postFull<T = any>(
+    url: string,
+    data?: any,
+    config?: RequestConfig
+  ): Promise<ApiResponse<T>> {
+    return this.requestFull<T>({
+      method: 'POST',
+      url,
+      data,
+      ...config,
+    });
+  }
+
+  /**
+   * PUT 请求 - 返回完整响应结构
+   */
+  putFull<T = any>(
+    url: string,
+    data?: any,
+    config?: RequestConfig
+  ): Promise<ApiResponse<T>> {
+    return this.requestFull<T>({
+      method: 'PUT',
+      url,
+      data,
+      ...config,
+    });
+  }
+
+  /**
+   * DELETE 请求 - 返回完整响应结构
+   */
+  deleteFull<T = any>(
+    url: string,
+    params?: any,
+    config?: RequestConfig
+  ): Promise<ApiResponse<T>> {
+    return this.requestFull<T>({
+      method: 'DELETE',
+      url,
+      params,
+      ...config,
+    });
+  }
+
+  /**
+   * PATCH 请求 - 返回完整响应结构
+   */
+  patchFull<T = any>(
+    url: string,
+    data?: any,
+    config?: RequestConfig
+  ): Promise<ApiResponse<T>> {
+    return this.requestFull<T>({
+      method: 'PATCH',
+      url,
+      data,
+      ...config,
+    });
+  }
+
+  /**
+   * 文件上传 - 兼容性方法，只返回 data 部分
    */
   upload<T = any>(
     url: string,
@@ -379,6 +482,37 @@ class RequestService {
     formData.append('file', file);
 
     return this.request<T>({
+      method: 'POST',
+      url,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const percent = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          onProgress(percent);
+        }
+      },
+      ...config,
+    });
+  }
+
+  /**
+   * 文件上传 - 返回完整响应结构
+   */
+  uploadFull<T = any>(
+    url: string,
+    file: File,
+    onProgress?: (percent: number) => void,
+    config?: RequestConfig
+  ): Promise<ApiResponse<T>> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.requestFull<T>({
       method: 'POST',
       url,
       data: formData,
