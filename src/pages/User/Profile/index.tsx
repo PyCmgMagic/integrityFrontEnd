@@ -135,7 +135,7 @@ const ProfilePage: React.FC = () => {
                           <h3 className="text-lg font-medium text-gray-900 mb-2">暂无打卡记录</h3>
                           <p className="text-gray-500 mb-4">您还没有任何打卡记录，快去参与活动开始打卡吧！</p>
                           <button 
-                            onClick={() => window.location.href = '/activities'}
+                            onClick={() => window.location.href = '/user/home'}
                             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                           >
                             去参与活动

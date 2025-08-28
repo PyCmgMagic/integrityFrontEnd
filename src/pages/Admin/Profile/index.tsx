@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Typography, Avatar, Tabs, List, Button, message, Empty, Spin, Space } from 'antd';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
-import { EditOutlined, CalendarOutlined, StarOutlined, DownloadOutlined, PlusOutlined, LogoutOutlined } from '@ant-design/icons';
-import type { TabsProps } from 'antd';
+import { EditOutlined, CalendarOutlined, StarOutlined, DownloadOutlined, LogoutOutlined } from '@ant-design/icons';
+
 
 // 导入组件
 import { 
   EditProfileModal, 
-  CreateActivityModal, 
   ExportDataModal
 } from '../../../components';
+import CheckInDetailModal from './components/CheckInDetailModal';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { API } from '../../../services/api';
-import type { ActivityData } from '../../../types/types';
+import type { ActivityData, StarListData } from '../../../types/types';
 
-import type { UserProfile, CheckInData, ActivityHistoryData } from '../../../types/types';
+import type { UserProfile, CheckInData, ActivityHistoryData, StarItem, StarListResponse } from '../../../types/types';
+import type { ApiResponse } from '../../../types/api';
 
-// 收藏的打卡信息类型
+// 收藏的打卡信息类型（保持兼容现有UI）
 interface FavoriteData {
   id: number;
   title: string;
@@ -40,11 +41,8 @@ const activityHistoryData: ActivityHistoryData[] = [
     { id: 3, type: 'join', title: '报名了 "学期总结分享会"', date: '12-15' },
 ];
 
-// 收藏的打卡信息初始数据
-const initialFavoriteData: FavoriteData[] = [
-  { id: 1, title: '每日单词打卡', description: '每天学习20个新单词，提高英语词汇量', date: '2023-12-20' },
-  { id: 2, title: '晨跑打卡', description: '每天早晨6点跑步3公里，保持健康生活方式', date: '2023-12-18' },
-];
+// 收藏的打卡信息初始数据（现在从API获取，保留空数组作为初始状态）
+const initialFavoriteData: FavoriteData[] = [];
 
 const ProfilePage: React.FC = () => {
   // 从认证store获取用户信息
@@ -55,6 +53,43 @@ const ProfilePage: React.FC = () => {
   const [isExportDataModalVisible, setIsExportDataModalVisible] = useState<boolean>(false);
   const [checkInData, setCheckInData] = useState<CheckInData[]>(initialCheckInData);
   const [favoriteData, setFavoriteData] = useState<FavoriteData[]>(initialFavoriteData);
+  const [favoriteLoading, setFavoriteLoading] = useState<boolean>(false);
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState<boolean>(false);
+  const [selectedPunchId, setSelectedPunchId] = useState<number>(0);
+
+  /**
+   * 获取收藏列表数据
+   */
+  const fetchFavoriteData = async () => {
+    try {
+      setFavoriteLoading(true);
+      const response: ApiResponse<StarListData> = await API.Star.getStarList({
+        page: 1,
+        page_size: 50, // 获取更多数据
+      });
+      console.log(response)
+      console.log(response.data)
+      if (response.code === 200 && response.data.stars) {
+        // 将API返回的数据转换为UI需要的格式
+        const transformedData: FavoriteData[] = response.data.stars.map((item: StarItem) => ({
+          id: item.punch.ID,
+          title: `打卡记录 #${item.punch.ID}`,
+          description: item.punch.content || '暂无内容',
+          date: new Date(item.created_at).toLocaleDateString('zh-CN'),
+        }));
+        
+        setFavoriteData(transformedData);
+      } else {
+        console.error('获取收藏列表失败:', response.msg);
+        Toast.show({ content: response.msg || '获取收藏列表失败', position: 'bottom' });
+      }
+    } catch (error) {
+      console.error('获取收藏列表失败:', error);
+      Toast.show({ content: '获取收藏列表失败', position: 'bottom' });
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
 
   /**
    * 获取用户个人信息
@@ -102,10 +137,11 @@ const ProfilePage: React.FC = () => {
   };
 
   /**
-   * 组件挂载时获取用户信息
+   * 组件挂载时获取用户信息和收藏列表
    */
   useEffect(() => {
     fetchUserProfile();
+    fetchFavoriteData();
   }, []);
 
   const showEditModal = () => setIsEditModalVisible(true);
@@ -187,10 +223,37 @@ const ProfilePage: React.FC = () => {
       });
   };
 
+  /**
+   * 处理点击收藏记录，显示打卡详情
+   */
+  const handleFavoriteClick = (punchId: number) => {
+    setSelectedPunchId(punchId);
+    setIsDetailModalVisible(true);
+  };
+
+  /**
+   * 关闭打卡详情模态窗口
+   */
+  const handleDetailModalClose = () => {
+    setIsDetailModalVisible(false);
+    setSelectedPunchId(0);
+  };
+
   // 取消收藏的处理函数
-  const handleRemoveFavorite = (id: number) => {
-    setFavoriteData(prevData => prevData.filter(item => item.id !== id));
-    message.success('已取消收藏');
+  const handleRemoveFavorite = async (id: number) => {
+    try {
+      const response = await API.Star.cancelStar(id);
+      if (response.code === 200) {
+        // 从本地状态中移除该项
+        setFavoriteData(prevData => prevData.filter(item => item.id !== id));
+        Toast.show({ content: '已取消收藏', position: 'bottom' });
+      } else {
+        Toast.show({ content: response.msg || '取消收藏失败', position: 'bottom' });
+      }
+    } catch (error) {
+      console.error('取消收藏失败:', error);
+      Toast.show({ content: '取消收藏失败，请重试', position: 'bottom' });
+    }
   };
 
   const rightActions = (id: number) => [
@@ -351,42 +414,55 @@ const ProfilePage: React.FC = () => {
                   label: '我的收藏',
                   children: (
                     <div className="p-4 pt-0">
-                      {favoriteData.length > 0 ? (
-                        <List
-                          dataSource={favoriteData}
-                          renderItem={(item) => (
-                            <List.Item key={item.id} className="border-0 px-0 py-2">
-                              <div className="w-full bg-yellow-50 rounded-xl p-4 transition-all hover:bg-yellow-100 hover:shadow-md">
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <StarOutlined className="text-yellow-500 mr-4 text-xl" />
-                                    <div>
-                                      <Text strong className="text-gray-800">{item.title}</Text>
-                                      <div className="mt-1">
-                                        <Text type="secondary">{item.description}</Text>
+                      <Spin spinning={favoriteLoading}>
+                        {favoriteData.length > 0 ? (
+                          <List
+                            dataSource={favoriteData}
+                            renderItem={(item) => (
+                              <List.Item key={item.id} className="border-0 px-0 py-2">
+                                <div 
+                                  className="w-full bg-yellow-50 rounded-xl p-4 transition-all hover:bg-yellow-100 hover:shadow-md cursor-pointer"
+                                  onClick={() => handleFavoriteClick(item.id)}
+                                >
+                                  <div className="flex justify-between items-center">
+                                    <div className="flex items-center flex-1">
+                                      <StarOutlined className="text-yellow-500 mr-4 text-xl" />
+                                      <div className="flex-1">
+                                        <Text strong className="text-gray-800">{item.title}</Text>
+                                        <div className="mt-1">
+                                          <Text 
+                                            className="line-clamp-2" 
+                                            type="secondary"
+                                          >
+                                            {item.description}
+                                          </Text>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                  <div className="flex flex-col items-end">
-                                    <Text type="secondary">{item.date}</Text>
-                                    <Button 
-                                      type="text" 
-                                      danger 
-                                      size="small" 
-                                      className="mt-2"
-                                      onClick={() => handleRemoveFavorite(item.id)}
-                                    >
-                                      取消收藏
-                                    </Button>
+                                    <div className="flex flex-col items-end">
+                                      <Text type="secondary">{item.date}</Text>
+                                      <Button 
+                                        type="text" 
+                                        danger 
+                                        size="small" 
+                                        className="mt-2"
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // 阻止事件冒泡
+                                          handleRemoveFavorite(item.id);
+                                        }}
+                                      >
+                                        取消收藏
+                                      </Button>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </List.Item>
-                          )}
-                        />
-                      ) : (
-                        <Empty description="暂无收藏" />
-                      )}
+                              </List.Item>
+                            )}
+                          />
+                        ) : (
+                          <Empty description={favoriteLoading ? "加载中..." : "暂无收藏"} />
+                        )}
+                      </Spin>
                     </div>
                   ),
                 },
@@ -411,6 +487,13 @@ const ProfilePage: React.FC = () => {
         visible={isExportDataModalVisible}
         onCancel={hideExportDataModal}
         onExport={handleExportData}
+      />
+
+      {/* 打卡详情模态框 */}
+      <CheckInDetailModal
+        visible={isDetailModalVisible}
+        onClose={handleDetailModalClose}
+        punchId={selectedPunchId}
       />
     </>
   );

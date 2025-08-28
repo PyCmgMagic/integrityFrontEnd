@@ -66,7 +66,6 @@ export const useCheckInNavigation = (
     // 这里只是一个占位符
     console.warn('removeCurrentItem should be overridden by parent component');
   };
-
   return {
     currentIndex,
     currentItem,

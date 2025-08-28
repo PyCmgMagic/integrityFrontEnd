@@ -350,13 +350,6 @@ export class CheckInAPI {
   }
 
   /**
-   * 获取打卡详情
-   */
-  static async getCheckInDetail(id: number): Promise<CheckInData> {
-    return request.get<CheckInData>(`/checkins/${id}`);
-  }
-
-  /**
    * 更新打卡记录
    */
   static async updateCheckIn(
@@ -704,10 +697,7 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
    * @param id - 打卡记录ID
    * @returns 打卡详细信息
    */
-  static async getPunchDetail(id: number): Promise<{
-    code: number;
-    msg: string;
-    data: {
+  static async getPunchDetail(id: number): Promise<ApiResponse<{
       imgs: string[];
       punch: {
         ID: number;
@@ -720,13 +710,9 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
         status: number;
       };
       stared: boolean;
-    };
     timestamp: number;
-  }> {
+  }>> {
     return request.getFull<{
-      code: number;
-      msg: string;
-      data: {
         imgs: string[];
         punch: {
           ID: number;
@@ -739,7 +725,6 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
           status: number;
         };
         stared: boolean;
-      };
       timestamp: number;
     }>(`/punch/get/${id}`, {}, {
       showLoading: true,
@@ -868,7 +853,7 @@ export class StarAPI {
    * @param params.page_size 每页数量，默认为10
    * @returns 收藏列表响应
    */
-  static async getStarList(params?: { page?: number; page_size?: number }): Promise<import('../types/types').StarListResponse> {
+  static async getStarList(params?: { page?: number; page_size?: number }): Promise<ApiResponse<import('../types/types').StarListData>> {
     const { page = 1, page_size = 10 } = params || {};
 
     return request.getFull<import('../types/types').StarListData>('/star/list', {

@@ -237,6 +237,7 @@ export interface PendingPunchItem {
   };
   imgs: string[];
   nick_name: string;
+  stared: boolean;
 }
 
 export interface PendingListResponse {

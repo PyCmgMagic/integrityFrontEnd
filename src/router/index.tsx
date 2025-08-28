@@ -32,9 +32,7 @@ const Favorites = lazy(() => import('../pages/Admin/Favorites/index'));
 const ExportData = lazy(() => import('../pages/Admin/ExportData/index'));
 const AdminProfile = lazy(() => import('../pages/Admin/Profile/index'));
 const ActivityTest = lazy(() => import('../pages/Admin/ActivityTest'));
-const StarTest = lazy(() => import('../pages/Admin/ColumnManage/StarTest'));
 const CheckInDetail = lazy(() => import('../pages/Admin/ColumnManage/CheckInDetail'));
-const PunchDetailTest = lazy(() => import('../pages/Admin/ColumnManage/PunchDetailTest'));
 
 // 加载组件
 // const LoadingComponent = () => (
@@ -236,14 +234,7 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
-      {
-        path: 'punch-test',
-        element: (
-          <Suspense fallback={<LoadingComponent />}>
-            <PunchDetailTest />
-          </Suspense>
-        ),
-      },
+  
       {
         path: 'review/:id',
         element: (
@@ -273,14 +264,6 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingComponent />}>
             <ActivityTest />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'test/star',
-        element: (
-          <Suspense fallback={<LoadingComponent />}>
-            <StarTest />
           </Suspense>
         ),
       },

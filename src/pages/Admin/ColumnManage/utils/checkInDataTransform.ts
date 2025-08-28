@@ -7,7 +7,8 @@ export interface CheckInItem {
   title: string;
   text: string;
   images: string[];
-  starred: boolean;
+  starred?: boolean;// 兼容旧API
+  stared?: boolean; 
   username: string;
   time: string;
   punchId: number;
@@ -56,7 +57,7 @@ export const transformPendingData = (data: PendingPunchItem[]): CheckInItem[] =>
       // 清理图片URL：移除空格、反引号等特殊字符
       return img.trim().replace(/[`'"\s]/g, '');
     }).filter(img => img.length > 0), // 过滤掉空字符串
-    starred: false,
+    starred: item.stared,
     username: item.nick_name
   }));
 };

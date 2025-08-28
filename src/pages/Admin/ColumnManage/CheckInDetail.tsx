@@ -158,7 +158,6 @@ const CheckInDetail: React.FC = () => {
     try {
       setLoading(true);
       const response = await API.Column.getPendingList(finalColumnId);
-      console.log('获取待审核列表:', response);
       
       // 处理直接返回数组的情况
       if (Array.isArray(response)) {
