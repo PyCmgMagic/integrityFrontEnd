@@ -17,3 +17,5 @@ export type { NavItem } from './BottomNavigation/BottomNavigation';
 export { default as EditProfileModal } from './EditProfileModal';
 export { default as CreateActivityModal } from './CreateActivityModal';
 export { default as ExportDataModal } from './ExportDataModal';
+export { default as ExcelExportComponent } from './ExcelExportComponent';
+export type { ExcelExportComponentProps, ActivityData, CheckInRecord } from './ExcelExportComponent';

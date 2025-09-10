@@ -7,6 +7,7 @@ import { ActivityAPI } from '../../../services/api';
 import { transformActivityFromAPI } from '../../../utils/dataTransform';
 import useInfiniteScroll from '../../../hooks/useInfiniteScroll';
 import styles from './Home.module.css';
+import useViewportHeight from '../../../hooks/useViewportHeight';
 
 const { Search } = Input;
 
@@ -20,7 +21,7 @@ const UserHomePage = () => {
   const { user ,logout} = useAuthStore();
   const [searchTerm, setSearchTerm] = useState(''); // 输入框的值
   const [actualSearchTerm, setActualSearchTerm] = useState(''); // 实际用于搜索的值
-
+  const viewportHeight = useViewportHeight(); // 获取当前视口高度
   // 使用无限滚动Hook
   const {
     data: allActivities,
@@ -153,13 +154,25 @@ const UserHomePage = () => {
             </Dropdown>
           </div>
           <div className="bg-white/20 rounded-2xl p-4 backdrop-blur-sm">
-            <div className="flex items-center justify-between text-sm">
-              <span>今日已打卡</span>
-              <span className="font-bold">3/5</span>
-            </div>
-            <div className="w-full bg-white/20 rounded-full h-2 mt-2">
-              <div className="bg-white h-2 rounded-full" style={{ width: '60%' }}></div>
-            </div>
+            <div className="flex items-center justify-between text-sm mb-1">
+               <div className="flex items-center gap-1">
+                 <span className="text-lg">🌅</span>
+                 <span className="text-white/70">00:00</span>
+               </div>
+               <span className="text-white/70">{new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>
+               <div className="flex items-center gap-1">
+                 <span className="text-white/70">24:00</span>
+                 <span className="text-lg">🌙</span>
+               </div>
+             </div>
+            <div className="mt-2 bg-white/20 rounded-full h-2 overflow-hidden relative">
+               <div 
+                  className="bg-white h-full rounded-full transition-all duration-1000 ease-in-out" 
+                  style={{ width: `${(new Date().getHours() * 60 + new Date().getMinutes()) / 1440 * 100}%` }}
+                ></div>
+             
+               <div className="absolute top-0 right-0 w-1 h-full bg-white/60 rounded-full transform translate-x-0.5"></div>
+             </div>
           </div>
         </div>
       </div>
@@ -178,7 +191,9 @@ const UserHomePage = () => {
       </div>
 
       {/* 活动列表 */}
-      <div className="mb-4">
+      <div className="mb-4"
+            style={{ minHeight: `${Math.max(viewportHeight * 0.6, 60)}px` }}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-800">精彩活动</h2>
           <span className="text-gray-500 text-sm">查看全部</span>
@@ -262,7 +277,9 @@ const UserHomePage = () => {
             )}
           </div>
         ) : (
-          <div className="text-center py-12">
+          <div className="text-center py-12" 
+            style={{ minHeight: `${Math.max(viewportHeight * 0.6, 60)}px` }}
+          >
             <Empty 
               description={
                 <div>

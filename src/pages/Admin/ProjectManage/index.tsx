@@ -250,7 +250,7 @@ const ProjectDetailPage = () => {
       <header className="bg-gradient-to-br from-orange-400 to-red-500 text-white p-6 shadow-lg rounded-b-3xl">
         {/* 顶部导航栏 */}
         <div className="flex items-center justify-between">
-          <Button type="text" shape="circle" icon={<LeftOutlined />} className="text-white hover:bg-white/20" onClick={() => navigate(-1)} />
+          <Button type="text" shape="circle" icon={<LeftOutlined />} className="text-white hover:bg-white/20" onClick={() => navigate(`/admin/activity/${activityId}`)} />
           <h1 className="text-xl font-bold">{projectDetail.name}</h1>
           <Button 
             type="text" 

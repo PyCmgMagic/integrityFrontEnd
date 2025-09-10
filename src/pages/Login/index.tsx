@@ -90,12 +90,10 @@ const LoginPage = () => {
           {/* 切换按钮下移到输入框上方 */}
           <Space  size="middle" align="center" style={{ display: 'flex', justifyContent: 'space-between' }} >
           <button className="ant-btn ant-btn-primary" onClick={async () => {
-            handleLogin('2', '123456@qq.com');
+            handleLogin('1', '123456@qq.com');
           }}>测试用用户登录</button>
           <button className="ant-btn ant-btn-primary" onClick={async () => {
-            setUsername('1');
-            setPassword('123456@qq.com');
-            handleLogin('1', '123456@qq.com');
+            handleLogin('2', '123456@qq.com');
           }}>测试用管理员登录</button>
          </Space>
           <div className={styles.roleSwitcher}>

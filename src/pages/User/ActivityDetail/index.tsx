@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Spin } from 'antd';
+import { type UserStats } from './types';
 
 // 导入组件
 import {
@@ -16,8 +17,6 @@ import {
 import {
   useActivityDetail,
   useUserStats,
-  useScoreRecords,
-  useRankingData
 } from './hooks';
 /**
  * ActivityDetailPage组件 - 活动详情页面
@@ -31,12 +30,11 @@ const ActivityDetailPage: React.FC = () => {
   const [isIntroVisible, setIntroVisible] = useState(false);
   const [isScoresVisible, setScoresVisible] = useState(false);
   const [isRankingVisible, setRankingVisible] = useState(false);
-
+//数据状态管理
+  
   // 使用自定义hooks获取数据
   const { activityData, loading } = useActivityDetail(id);
-  const userStats = useUserStats();
-  const scoreRecords = useScoreRecords();
-  const rankingData = useRankingData();
+  const { userStats, loading: userStatsLoading } = useUserStats(Number(id));
 
 
   /**
@@ -53,8 +51,8 @@ const ActivityDetailPage: React.FC = () => {
     navigate(`/user/activity/${id}/project/${projectId}`);
   }, [navigate]);
 
-  // 加载状态
-  if (loading) {
+  // 加载状态 - 等待活动数据和用户统计数据都加载完成
+  if (loading || userStatsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Spin size="large" />
@@ -108,18 +106,18 @@ const ActivityDetailPage: React.FC = () => {
         onClose={() => setIntroVisible(false)}
       />
       
-      <ScoresModal 
+      {/* <ScoresModal 
         visible={isScoresVisible}
-        totalScore={userStats.totalScore}
-        scoreRecords={scoreRecords}
+        totalScore={userStats.total_score}
+        scoreRecords={userStats.total_score}
         onClose={() => setScoresVisible(false)}
-      />
+      /> */}
       
-      <RankingModal 
+      {/* <RankingModal 
         visible={isRankingVisible}
         rankingData={rankingData}
         onClose={() => setRankingVisible(false)}
-      />
+      /> */}
     </div>
   );
 };

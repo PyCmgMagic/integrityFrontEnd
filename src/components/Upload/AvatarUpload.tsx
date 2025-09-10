@@ -68,10 +68,10 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       {value ? (
         <Avatar src={value} size={size} />
       ) : (
-        <div>
+        <div> 
           <UploadOutlined 
             style={{ 
-              fontSize: 24, 
+              fontSize: 24,  
               color: uploading ? '#1890ff' : '#999' 
             }} 
           />

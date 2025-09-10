@@ -6,7 +6,7 @@ import EditColumnModal from '../ProjectManage/EditColumnModal';
 import { API } from '../../../services/api';
 
 // 导入重构后的模块
-import {  transformPendingDataWithStarStatus, calculateAuditStats } from './utils/dataTransform';
+import {  transformPendingDataWithStarStatus, transformReviewedDataList, calculateAuditStats } from './utils/dataTransform';
 import { useReviewActions } from './hooks/useReviewActions';
 import { useStarStatusLoader } from './hooks/useStarStatusLoader';
 import { CheckInList } from './components/CheckInList';
@@ -108,6 +108,54 @@ const ColumnManage: React.FC = () => {
       }
     }
   }, [columnId, loadStarStatusMap]);
+
+  /**
+   * 获取已审核列表数据
+   */
+  const fetchReviewedListStable = useCallback(async (): Promise<void> => {
+    if (!columnId) {
+      Toast.show({ content: '缺少专栏ID参数', position: 'bottom' });
+      return;
+    }
+    
+    // 生成请求ID
+    const requestId = ++currentRequestRef.current;
+    
+    setLoading(true);
+    try {
+      const response = await API.Column.getReviewedList(parseInt(columnId));
+      
+      // 检查是否是最新的请求
+      if (requestId !== currentRequestRef.current) {
+        return; // 忽略过期的请求
+      }
+      
+      // 处理API返回的完整响应结构
+      if (response && response.code === 200 && Array.isArray(response.data)) {
+        if (response.data.length > 0) {
+          const transformedData = transformReviewedDataList(response.data);
+          console.log('已审核数据:', transformedData);
+          setReviewedData(transformedData);
+        } else {
+          setReviewedData([]);
+        }
+      } else {
+        setReviewedData([]);
+      }
+    } catch (error) {
+      // 检查是否是最新的请求
+      if (requestId !== currentRequestRef.current) {
+        return;
+      }
+      console.error('获取已审核列表失败:', error);
+      Toast.show({ content: '获取已审核列表失败，请稍后重试', position: 'bottom' });
+    } finally {
+      // 只有最新请求才更新loading状态
+      if (requestId === currentRequestRef.current) {
+        setLoading(false);
+      }
+    }
+  }, [columnId]);
   
 
   
@@ -117,6 +165,17 @@ const ColumnManage: React.FC = () => {
   useEffect(() => {
     fetchPendingListStable();
   }, [fetchPendingListStable]);
+
+  /**
+   * 标签页切换时获取对应数据
+   */
+  useEffect(() => {
+    if (activeTab === 'reviewed') {
+      fetchReviewedListStable();
+    } else {
+      fetchPendingListStable();
+    }
+  }, [activeTab, fetchPendingListStable, fetchReviewedListStable]);
   
   const handleEditColumnFinish = (values: ColumnInfo): void => {
     console.log('Received values from edit form: ', values);

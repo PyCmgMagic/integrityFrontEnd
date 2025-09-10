@@ -270,7 +270,7 @@ class RequestService {
       }
 
       // 重试机制
-      if (retries > 0 && this.shouldRetry(error)) {
+      if (retries > 0 && retries <= MAX_RETRIES && this.shouldRetry(error)) {
         console.log(`Retrying request... (${retries} attempts left)`);
         return this.requestFull({ ...config, retries: retries - 1 });
       }

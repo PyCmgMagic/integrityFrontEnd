@@ -2,7 +2,7 @@ import {  useEffect } from 'react';
 import { message } from 'antd';
 import { ActivityAPI } from '../../../../services/api';
 import { useRequest } from '../../../../hooks/useRequest';
-import type {  UserStats, ScoreRecord, RankingItem } from '../types';
+import type { Activity, UserStats, ScoreRecord, RankingItem } from '../types';
 
 /**
  * useActivityDetail Hook - 活动详情页面数据管理
@@ -48,18 +48,57 @@ export const useActivityDetail = (activityId: string | undefined) => {
 
 /**
  * useUserStats Hook - 用户统计数据管理
- * 管理用户统计相关数据（模拟数据，后续可接入真实API）
+ * 管理用户统计相关数据
  */
-export const useUserStats = (): UserStats => {
-  // 模拟用户统计数据（后续可以从API获取）
-  const userStats: UserStats = {
-    totalScore: 23,
-    maxStreak: 7,
-    rank: 21,
-    todayProgress: { completed: 3, total: 5 }
+export const useUserStats = (activityID: number) => {
+  // 使用useRequest hook获取用户统计数据
+  const { data: userStats, loading, run: fetchUserStats } = useRequest(
+    (id: number) => ActivityAPI.getActivityStaticDetail(id),
+    {
+      manual: true,
+      onSuccess: (res) => {
+        if (res.code !== 200) {
+          message.error('获取用户统计数据失败：' + res.msg);
+        }
+      },
+      onError: (error) => {
+        message.error('获取用户统计数据失败：' + error.message);
+      }
+    }
+  );
+
+  /**
+   * 获取用户统计数据
+   */
+  const loadUserStats = () => {
+    if (activityID && !isNaN(activityID)) {
+      fetchUserStats(activityID);
+    }
   };
 
-  return userStats;
+  // 当activityID变化时获取数据
+  useEffect(() => {
+    loadUserStats();
+  }, [activityID]);
+
+  // 返回处理后的数据，如果请求成功则返回data，否则返回默认值
+  const processedUserStats: UserStats = userStats?.code === 200 
+    ? userStats.data 
+    : {
+        rank: 0, 
+        today_punched_user_count: 0, 
+        total_score: 0, 
+        activity_id: 0, 
+        current_streak: 0, 
+        max_streak: 0, 
+        total_user_count: 0
+      };
+
+  return {
+    userStats: processedUserStats,
+    loading,
+    refetch: loadUserStats
+  };
 };
 
 /**

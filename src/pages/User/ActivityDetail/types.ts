@@ -44,19 +44,13 @@ export interface ActivityDetailResponse {
  * 用户统计数据接口
  */
 export interface UserStats {
-  /** 累计得分 */
-  totalScore: number;
-  /** 最长连签天数 */
-  maxStreak: number;
-  /** 排名 */
-  rank: number;
-  /** 今日打卡进度 */
-  todayProgress: {
-    /** 已完成数量 */
-    completed: number;
-    /** 总数量 */
-    total: number;
-  };
+  rank: number,
+  today_punched_user_count: number,
+  total_score: number,
+  activity_id: number,
+  current: number,
+  max: number,
+  total: number
 }
 
 /**

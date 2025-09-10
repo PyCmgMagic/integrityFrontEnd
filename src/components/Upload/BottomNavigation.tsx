@@ -16,32 +16,6 @@ interface BottomNavigationProps {
   className?: string;    // 自定义样式类名
 }
 
-/**
- * 底部导航栏组件
- * 
- * @example
- * ```tsx
- * import { HomeOutlined, UserOutlined } from '@ant-design/icons';
- * import BottomNavigation, { type NavItem } from './BottomNavigation';
- * 
- * const navItems: NavItem[] = [
- *   {
- *     path: '/home',
- *     icon: <HomeOutlined />,
- *     label: '首页',
- *     activePattern: '/home'
- *   },
- *   {
- *     path: '/profile',
- *     icon: <UserOutlined />,
- *     label: '个人',
- *     activePattern: '/profile'
- *   }
- * ];
- * 
- * <BottomNavigation items={navItems} />
- * ```
- */
 const BottomNavigation = ({ items, className = '' }: BottomNavigationProps) => {
   const location = useLocation();
   const navigate = useNavigate();

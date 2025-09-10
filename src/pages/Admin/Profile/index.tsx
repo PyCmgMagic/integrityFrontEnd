@@ -1,21 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Typography, Avatar, Tabs, List, Button, message, Empty, Spin, Space } from 'antd';
-import { Dialog, SwipeAction, Toast } from 'antd-mobile';
+import { Card, Typography, Avatar, List, Button, message, Empty, Spin, Space } from 'antd';
+import { Dialog, SwipeAction, Toast, Tabs } from 'antd-mobile';
 import { EditOutlined, CalendarOutlined, StarOutlined, DownloadOutlined, LogoutOutlined } from '@ant-design/icons';
+
+// 添加全局样式来禁用浏览器左滑返回
+const globalStyles = `
+  body {
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
+  }
+  
+  .adm-tabs {
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
+  }
+  
+  .adm-tabs-content {
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
+  }
+`;
+
+// 注入样式
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = globalStyles;
+  document.head.appendChild(styleElement);
+}
 
 
 // 导入组件
 import { 
-  EditProfileModal, 
-  ExportDataModal
+  EditProfileModal,
+  ExcelExportComponent
 } from '../../../components';
+import type { ActivityData, CheckInRecord } from '../../../components';
 import CheckInDetailModal from './components/CheckInDetailModal';
+// 导入用户端个人中心组件
+import { CheckInTab, ActivityHistoryTab } from '../../User/Profile/components';
+import { useCheckInData, useActivityHistory } from '../../User/Profile/hooks';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { API } from '../../../services/api';
-import type { ActivityData, StarListData } from '../../../types/types';
+import type {  StarListData } from '../../../types/types';
 
-import type { UserProfile, CheckInData, ActivityHistoryData, StarItem, StarListResponse } from '../../../types/types';
-import type { ApiResponse } from '../../../types/api';
+import type { UserProfile, CheckInData, ActivityHistoryData, StarItem  } from '../../../types/types';
+import type { ApiResponse, ParticipationActivityItem } from '../../../types/api';
 
 // 收藏的打卡信息类型（保持兼容现有UI）
 interface FavoriteData {
@@ -35,13 +64,9 @@ const initialCheckInData: CheckInData[] = [
   { id: 4, title: '寒假打卡-“瑞蛇衔知”，勤学善知-单词打卡', time: '第11次打卡', date: '1.17' },
 ];
 
-const activityHistoryData: ActivityHistoryData[] = [
-    { id: 1, type: 'join', title: '参加了 "编程马拉松" 活动', date: '12-25' },
-    { id: 2, type: 'post', title: '在 "校园摄影展" 中发布了新照片', date: '12-20' },
-    { id: 3, type: 'join', title: '报名了 "学期总结分享会"', date: '12-15' },
-];
 
-// 收藏的打卡信息初始数据（现在从API获取，保留空数组作为初始状态）
+
+// 收藏的打卡信息初始数据
 const initialFavoriteData: FavoriteData[] = [];
 
 const ProfilePage: React.FC = () => {
@@ -50,12 +75,141 @@ const ProfilePage: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
-  const [isExportDataModalVisible, setIsExportDataModalVisible] = useState<boolean>(false);
+
   const [checkInData, setCheckInData] = useState<CheckInData[]>(initialCheckInData);
+  const [myActivities, setMyActivities] = useState<any[]>([]);
+  const [myActivitiesLoading, setMyActivitiesLoading] = useState<boolean>(false);
+  const [myActivitiesError, setMyActivitiesError] = useState<string>('');
   const [favoriteData, setFavoriteData] = useState<FavoriteData[]>(initialFavoriteData);
   const [favoriteLoading, setFavoriteLoading] = useState<boolean>(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState<boolean>(false);
   const [selectedPunchId, setSelectedPunchId] = useState<number>(0);
+
+  // 使用用户端个人中心的hooks
+  const { checkInData: userCheckInData, loading: checkInLoading, error: checkInError, deleteCheckIn, refreshData } = useCheckInData();
+  const { activityHistoryData, activityHistoryLoading } = useActivityHistory();
+
+  /**
+   * 格式化日期显示
+   * @param dateString ISO日期字符串
+   * @returns 格式化后的日期字符串 (MM-DD)
+   */
+  const formatDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${month}-${day}`;
+    } catch (error) {
+      console.error('日期格式化失败:', error);
+      return '未知';
+    }
+  };
+
+  /**
+   * 将ParticipationActivityItem数组转换为ActivityData格式
+   * @param activities 活动历史数据数组
+   * @returns 转换后的ActivityData对象
+   */
+  const transformToActivityData = (activities: ParticipationActivityItem[]): ActivityData => {
+    if (!activities || activities.length === 0) {
+      return {
+        id: 'empty',
+        title: '暂无活动数据',
+        checkInRecords: []
+      };
+    }
+
+    // 将所有活动的打卡记录合并到一个ActivityData对象中
+    const allCheckInRecords: CheckInRecord[] = [];
+    
+    activities.forEach(activity => {
+      // 这里需要根据实际的打卡记录数据结构来填充
+      // 目前先创建一个示例记录
+      const record: CheckInRecord = {
+        id: activity.ID,
+        userName: activity.user?.username || '未知用户',
+        checkInTime: formatDateFromNumber(activity.start_date),
+        score: 100, // 默认分数
+        categoryName: activity.name
+      };
+      allCheckInRecords.push(record);
+    });
+
+    return {
+      id: 'combined-activities',
+      title: '活动打卡记录汇总',
+      checkInRecords: allCheckInRecords
+    };
+  };
+
+  /**
+   * 格式化数字日期为字符串
+   * @param dateNumber 数字格式日期（如20250103）
+   * @returns 格式化后的日期字符串
+   */
+  const formatDateFromNumber = (dateNumber: number): string => {
+    const dateStr = dateNumber.toString();
+    const year = dateStr.substring(0, 4);
+    const month = dateStr.substring(4, 6);
+    const day = dateStr.substring(6, 8);
+    return `${year}-${month}-${day}`;
+  };
+
+  /**
+   * 获取我创建的活动数据
+   */
+  const fetchMyActivities = async () => {
+    try {
+      setMyActivitiesLoading(true);
+      setMyActivitiesError('');
+      
+      // 检查用户是否已登录
+      if (!authUser || !authUser.id) {
+        const errorMsg = '请先登录后再查看我创建的活动';
+        setMyActivitiesError(errorMsg);
+        console.warn('用户未登录，无法获取我创建的活动');
+        Toast.show({ content: errorMsg, position: 'bottom' });
+        return;
+      }
+      
+      console.log('开始获取我创建的活动，用户信息:', authUser);
+      const response = await API.Activity.getMyActivities();
+      console.log('我创建的活动API响应:', response);
+      
+      if (response.code === 200 && response.data) {
+        setMyActivities(response.data);
+        setMyActivitiesError('');
+        console.log('成功获取我创建的活动:', response.data.length, '个活动');
+      } else {
+        const errorMsg = response.msg || '获取我创建的活动失败';
+        setMyActivitiesError(errorMsg);
+        console.error('获取我创建的活动失败 - 服务器响应:', response);
+        Toast.show({ content: errorMsg, position: 'bottom' });
+      }
+    } catch (error: any) {
+      let errorMsg = '获取我创建的活动失败';
+      
+      // 根据错误类型提供更具体的错误信息
+      if (error.code === 400) {
+        errorMsg = '认证失败，请重新登录';
+      } else if (error.code === 401) {
+        errorMsg = '登录已过期，请重新登录';
+      } else if (error.code === 403) {
+        errorMsg = '没有权限访问此功能';
+      } else if (error.code === 404) {
+        errorMsg = 'API接口不存在';
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      setMyActivitiesError(errorMsg);
+      console.error('获取我创建的活动失败 - 详细错误:', error);
+      Toast.show({ content: errorMsg, position: 'bottom' });
+    } finally {
+      setMyActivitiesLoading(false);
+    }
+  };
 
   /**
    * 获取收藏列表数据
@@ -137,10 +291,11 @@ const ProfilePage: React.FC = () => {
   };
 
   /**
-   * 组件挂载时获取用户信息和收藏列表
+   * 组件挂载时获取用户信息、我创建的活动和收藏列表
    */
   useEffect(() => {
     fetchUserProfile();
+    fetchMyActivities();
     fetchFavoriteData();
   }, []);
 
@@ -202,26 +357,7 @@ const ProfilePage: React.FC = () => {
   };
 
 
-  // 显示导出数据模态框
-  const showExportDataModal = () => {
-    setIsExportDataModalVisible(true);
-  };
 
-  // 隐藏导出数据模态框
-  const hideExportDataModal = () => {
-    setIsExportDataModalVisible(false);
-  };
-
-  // 处理导出数据
-  const handleExportData = (exportOptions: any) => {
-    // 模拟导出过程
-    message.loading('正在导出数据...', 1.5)
-      .then(() => {
-        console.log('导出选项:', exportOptions);
-        message.success('活动数据已导出');
-        setIsExportDataModalVisible(false);
-      });
-  };
 
   /**
    * 处理点击收藏记录，显示打卡详情
@@ -256,24 +392,6 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const rightActions = (id: number) => [
-    {
-      key: 'delete',
-      text: '删除',
-      color: 'danger' as const, // antd-mobile 需要一个常量类型
-      onClick: async () => {
-        const result = await Dialog.confirm({
-          content: '确定要删除这条打卡记录吗？',
-          confirmText: '确认',
-          cancelText: '取消',
-        });
-        if (result) {
-          setCheckInData(prevData => prevData.filter(item => item.id !== id));
-          Toast.show({ content: '删除成功', position: 'bottom' });
-        }
-      },
-    },
-  ];
 
   // 如果正在加载，显示加载状态
   if (loading) {
@@ -340,134 +458,260 @@ const ProfilePage: React.FC = () => {
           </Card>
           
           {/* 打卡与活动历史 */}
-          <Card className="rounded-2xl border-0 bg-white">
+          <Card 
+            className="rounded-2xl border-0 bg-white"
+            style={{
+              touchAction: 'pan-y', // 只允许垂直滑动
+              overscrollBehaviorX: 'none', // 禁用水平过度滚动
+            }}
+          >
             <Tabs 
-              defaultActiveKey="1" 
-              centered 
-              size="large"
-              items={[
-                {
-                  key: '1',
-                  label: '我创建的活动',
-                  children: (
-                    <div className="p-4 pt-0">
-                      {checkInData.map((item, index) => (
-                        <SwipeAction
-                          key={item.id}
-                          style={{ ['--adm-swipe-action-actions-border-radius' as string]: '0.75rem' }}
-                          rightActions={rightActions(item.id)}
-                          className={index === checkInData.length - 1 ? '' : 'mb-3'}
+              defaultActiveKey="0"
+              style={{
+                '--adm-color-primary': '#1890ff',
+                '--adm-tabs-tab-line-color': '#1890ff',
+              } as React.CSSProperties}
+            >
+              <Tabs.Tab title="我创建的活动" key="0">
+                <div className="p-2 pt-0">
+                  {myActivitiesLoading ? (
+                    <div className="flex justify-center items-center py-8">
+                      <Spin size="large">
+                        <div className="p-8 text-center text-gray-600">加载我创建的活动中...</div>
+                      </Spin>
+                    </div>
+                  ) : myActivitiesError ? (
+                    <div className="text-center py-12">
+                      <div className="mb-4">
+                        <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">加载失败</h3>
+                      <p className="text-gray-500 mb-4">{myActivitiesError}</p>
+                      {myActivitiesError.includes('登录') && (
+                        <div className="text-sm text-red-600 mb-4 p-3 bg-red-50 rounded-lg">
+                          提示：请检查您的登录状态，如果问题持续存在，请重新登录
+                        </div>
+                      )}
+                      <div className="space-x-4">
+                        <button 
+                          onClick={fetchMyActivities}
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
-                          <div className="w-full bg-blue-50 rounded-xl p-4 transition-all hover:bg-blue-100 hover:shadow-md">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center">
-                                <div>
-                                    <Text strong className="text-gray-800">{item.title}</Text>
-                                    <div className="flex justify-between items-center mt-1">
-                                      <p className="text-gray-500 text-sm m-0">{item.time}</p> 
-                                      <Text type="secondary" className="font-semibold ml-4">{item.date}</Text>
-                                    </div>
+                          重试
+                        </button>
+                        {myActivitiesError.includes('登录') && (
+                          <button 
+                            onClick={() => {
+                              logout();
+                              window.location.href = '/login';
+                            }}
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            重新登录
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : myActivities.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="mb-4">
+                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">暂无创建的活动</h3>
+                       <p className="text-gray-500 mb-4">您还没有创建任何活动，快去创建第一个活动吧！</p>
+                       <div className="space-x-4">
+                         <button 
+                           onClick={fetchMyActivities}
+                           className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                         >
+                           刷新
+                         </button>
+                         <button 
+                           onClick={() => window.location.href = '/admin/home'}
+                           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                         >
+                           去创建活动
+                         </button>
+                       </div>
+                    </div>
+                  ) : (
+                    myActivities.map((activity, index) => (
+                      <SwipeAction
+                        key={activity.ID}
+                        style={{ ['--adm-swipe-action-actions-border-radius' as string]: '0.75rem' }}
+                        rightActions={[
+                          {
+                            key: 'delete',
+                            text: '删除',
+                            color: 'danger' as const,
+                            onClick: async () => {
+                              const result = await Dialog.confirm({
+                                content: '确定要删除这个活动吗？',
+                                confirmText: '确认',
+                                cancelText: '取消',
+                              });
+                              if (result) {
+                                try {
+                                  const response = await API.Activity.deleteActivity(activity.ID);
+                                   if (response.code === 200) {
+                                     // 重新获取我创建的活动列表
+                                     await fetchMyActivities();
+                                     Toast.show({ content: '删除成功', position: 'bottom' });
+                                   } else {
+                                     Toast.show({ content: response.msg || '删除失败', position: 'bottom' });
+                                   }
+                                } catch (error) {
+                                  console.error('删除活动失败:', error);
+                                  Toast.show({ content: '删除失败，请重试', position: 'bottom' });
+                                }
+                              }
+                            },
+                          },
+                        ]}
+                        className={index === myActivities.length - 1 ? '' : 'mb-3'}
+                      >
+                        <div className="w-full bg-blue-50 rounded-xl p-4 transition-all hover:bg-blue-100 hover:shadow-md">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <div>
+                                <Text strong className="text-gray-800">{activity.name}</Text>
+                                <div className="flex justify-between items-center mt-1">
+                                  <p className="text-gray-500 text-sm m-0">{activity.description || '暂无描述'}</p> 
+                                  <Text type="secondary" className="font-semibold ml-4">
+                                    {activity.start_date ? formatDateFromNumber(activity.start_date) : '未设置'}
+                                  </Text>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </SwipeAction>
-                      ))}
+                        </div>
+                      </SwipeAction>
+                    ))
+                  )}
+                </div>
+              </Tabs.Tab>
+              
+              <Tabs.Tab title="最近打卡记录" key="1">
+                <>
+                  {checkInLoading ? (
+                    <div className="flex justify-center items-center py-8">
+                      <Spin size="large">
+                        <div className="p-8 text-center text-gray-600">加载打卡记录中...</div>
+                      </Spin>
                     </div>
-                  ),
-                },
-                {
-                  key: '2',
-                  label: '导出活动数据',
-                  children: (
-                    <div className="p-4 pt-0">
-                      <Button 
-                        type="primary" 
-                        icon={<DownloadOutlined />} 
-                        className="mb-4 bg-green-500 hover:bg-green-600" 
-                        onClick={showExportDataModal}
+                  ) : checkInError ? (
+                    <div className="text-center py-8">
+                      <Text type="danger">加载失败: {checkInError}</Text>
+                      <div className="mt-4">
+                        <button 
+                          onClick={refreshData}
+                          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        >
+                          重新加载
+                        </button>
+                      </div>
+                    </div>
+                  ) : userCheckInData.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="mb-4">
+                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">暂无打卡记录</h3>
+                      <p className="text-gray-500 mb-4">您还没有任何打卡记录，快去参与活动开始打卡吧！</p>
+                      <button 
+                        onClick={() => window.location.href = '/admin/home'}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
-                        导出数据
-                      </Button>
-                      <List
-                        className="mt-2"
-                        dataSource={activityHistoryData}
-                        renderItem={(item) => (
-                         <List.Item key={item.id} className="border-0 px-0 py-2">
-                          <div className="w-full bg-gray-50 rounded-xl p-4 transition-all hover:bg-gray-100 hover:shadow-md">
-                            <div className="flex justify-between items-center">
-                               <div className="flex items-center">
-                                  <CalendarOutlined className="text-purple-500 mr-4 text-xl" />
-                                  <Text className="text-gray-700">{item.title}</Text>
-                               </div>
-                               <Text type="secondary">{item.date}</Text>
-                            </div>
-                          </div>
-                        </List.Item>
-                      )}
-                      />
+                        去管理活动
+                      </button>
                     </div>
-                  ),
-                },
-                {
-                  key: '3',
-                  label: '我的收藏',
-                  children: (
-                    <div className="p-4 pt-0">
-                      <Spin spinning={favoriteLoading}>
-                        {favoriteData.length > 0 ? (
-                          <List
-                            dataSource={favoriteData}
-                            renderItem={(item) => (
-                              <List.Item key={item.id} className="border-0 px-0 py-2">
-                                <div 
-                                  className="w-full bg-yellow-50 rounded-xl p-4 transition-all hover:bg-yellow-100 hover:shadow-md cursor-pointer"
-                                  onClick={() => handleFavoriteClick(item.id)}
-                                >
-                                  <div className="flex justify-between items-center">
-                                    <div className="flex items-center flex-1">
-                                      <StarOutlined className="text-yellow-500 mr-4 text-xl" />
-                                      <div className="flex-1">
-                                        <Text strong className="text-gray-800">{item.title}</Text>
-                                        <div className="mt-1">
-                                          <Text 
-                                            className="line-clamp-2" 
-                                            type="secondary"
-                                          >
-                                            {item.description}
-                                          </Text>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-col items-end">
-                                      <Text type="secondary">{item.date}</Text>
-                                      <Button 
-                                        type="text" 
-                                        danger 
-                                        size="small" 
-                                        className="mt-2"
-                                        onClick={(e) => {
-                                          e.stopPropagation(); // 阻止事件冒泡
-                                          handleRemoveFavorite(item.id);
-                                        }}
+                  ) : (
+                    <CheckInTab 
+                      checkInData={userCheckInData}
+                      onDelete={deleteCheckIn}
+                      formatDate={formatDate}
+                      onRefresh={refreshData}
+                    />
+                  )}
+                </>
+              </Tabs.Tab>
+              
+              <Tabs.Tab title="参加活动历史" key="2">
+                <ActivityHistoryTab 
+                  activityHistory={activityHistoryData}
+                  loading={activityHistoryLoading}
+                  formatDate={formatDate}
+                />
+              </Tabs.Tab>
+              
+              <Tabs.Tab title="导出活动数据" key="3">
+                <div className="p-4 pt-0">
+                  <ExcelExportComponent 
+                    activityData={transformToActivityData(activityHistoryData)}
+                  />
+                </div>
+              </Tabs.Tab>
+              
+              <Tabs.Tab title="我的收藏" key="4">
+                <div className="p-4 pt-0">
+                  <Spin spinning={favoriteLoading}>
+                    {favoriteData.length > 0 ? (
+                      <List
+                        dataSource={favoriteData}
+                        renderItem={(item) => (
+                          <List.Item key={item.id} className="border-0 px-0 py-2">
+                            <div 
+                              className="w-full bg-yellow-50 rounded-xl p-4 transition-all hover:bg-yellow-100 hover:shadow-md cursor-pointer"
+                              onClick={() => handleFavoriteClick(item.id)}
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="flex items-center flex-1">
+                                  <StarOutlined className="text-yellow-500 mr-4 text-xl" />
+                                  <div className="flex-1">
+                                    <Text strong className="text-gray-800">{item.title}</Text>
+                                    <div className="mt-1">
+                                      <Text 
+                                        className="line-clamp-2" 
+                                        type="secondary"
                                       >
-                                        取消收藏
-                                      </Button>
+                                        {item.description}
+                                      </Text>
                                     </div>
                                   </div>
                                 </div>
-                              </List.Item>
-                            )}
-                          />
-                        ) : (
-                          <Empty description={favoriteLoading ? "加载中..." : "暂无收藏"} />
+                                <div className="flex flex-col items-end">
+                                  <Text type="secondary">{item.date}</Text>
+                                  <Button 
+                                    type="text" 
+                                    danger 
+                                    size="small" 
+                                    className="mt-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // 阻止事件冒泡
+                                      handleRemoveFavorite(item.id);
+                                    }}
+                                  >
+                                    取消收藏
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </List.Item>
                         )}
-                      </Spin>
-                    </div>
-                  ),
-                },
-              ]}
-            />
+                      />
+                    ) : (
+                      <Empty description={favoriteLoading ? "加载中..." : "暂无收藏"} />
+                    )}
+                  </Spin>
+                </div>
+              </Tabs.Tab>
+            </Tabs>
           </Card>
         </div>
       </div>
@@ -482,12 +726,7 @@ const ProfilePage: React.FC = () => {
 
 
 
-      {/* 导出数据模态框 */}
-      <ExportDataModal
-        visible={isExportDataModalVisible}
-        onCancel={hideExportDataModal}
-        onExport={handleExportData}
-      />
+
 
       {/* 打卡详情模态框 */}
       <CheckInDetailModal

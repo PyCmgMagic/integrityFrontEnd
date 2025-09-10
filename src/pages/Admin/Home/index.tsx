@@ -7,6 +7,7 @@ import { ActivityAPI } from '../../../services/api';
 import { transformActivityFromAPI } from '../../../utils/dataTransform';
 import CreateActivityModal from '../../../components/CreateActivityModal';
 import useInfiniteScroll from '../../../hooks/useInfiniteScroll';
+import useViewportHeight from '../../../hooks/useViewportHeight';
 import styles from './Home.module.css';
 import 'antd-mobile/es/global'; // 引入 antd-mobile 的全局样式
 const { Search } = Input;
@@ -20,6 +21,7 @@ const AdminHomePage = () => {
   const [searchTerm, setSearchTerm] = useState(''); // 输入框的值
   const [actualSearchTerm, setActualSearchTerm] = useState(''); // 实际用于搜索的值
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const viewportHeight = useViewportHeight(); // 获取当前视口高度
 
   // 使用无限滚动Hook
   const {
@@ -186,7 +188,9 @@ const AdminHomePage = () => {
       </div>
 
       {/* 活动列表 */}
-      <div className="mb-4">
+      <div className="mb-4" 
+            style={{ minHeight: `${Math.max(viewportHeight * 0.6, 60)}px` }}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-800">精彩活动</h2>
         </div>
@@ -268,8 +272,12 @@ const AdminHomePage = () => {
             )}
           </div>
         ) : (
-          <div className="text-center py-12">
+          <div 
+            className="flex items-center justify-center text-center"
+            style={{ minHeight: `${Math.max(viewportHeight * 0.6, 60)}px` }}
+          >
             <Empty
+              className='h-full w-full'
               description={
                 <div>
                   <p className="text-gray-500 mb-2">暂无活动</p>

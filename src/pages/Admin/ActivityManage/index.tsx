@@ -91,6 +91,7 @@ const ActivityDetailPage = () => {
       console.log('📡 调用API获取活动详情, activityId:', numericId);
       
       const response = await ActivityAPI.getActivityDetail(numericId);
+      const staticResponse = await ActivityAPI.getActivityStaticDetail(numericId);
       if(response.activity.owner_id !==  currentUser?.state.user.id ){
         navigate(`/user/activity/${numericId}`);
         return;
@@ -101,7 +102,7 @@ const ActivityDetailPage = () => {
         console.log('🚫 组件已卸载或请求被取消，忽略响应');
         return;
       }
-      
+      if(staticResponse.code)
       console.log('✅ 成功获取活动详情:', response);
       setActivityData(response);
       
@@ -147,7 +148,7 @@ const ActivityDetailPage = () => {
 
   // 简化的 useEffect，只在 id 变化时触发
   useEffect(() => {
-    console.log('🚀 useEffect 触发，当前 id:', id);
+    console.log('🚀 useEffect 触发，当前id:', id);
     if (!id) {
       console.warn('⚠️ ID 参数未就绪，等待路由加载...');
       // 给路由参数一些时间来加载

@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Input, Empty, Spin, Modal, message, Button } from 'antd';
-import { SearchOutlined, CalendarOutlined, UserOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Card, Input, Empty, Spin } from 'antd';
+import { SearchOutlined, CalendarOutlined } from '@ant-design/icons';
 import { SwipeAction, Dialog, Toast } from 'antd-mobile';
-import { useAppStore, useAuthStore, type Activity } from '../../../store';
-import { ActivityAPI } from '../../../services/api';
-import { transformActivityFromAPI } from '../../../utils/dataTransform';
+import { API } from '../../../services/api';
+import { formatDateFromNumber } from '../../../utils/dataTransform';
 import CreateActivityModal from '../../../components/CreateActivityModal';
 import useInfiniteScroll from '../../../hooks/useInfiniteScroll';
+import useViewportHeight from '../../../hooks/useViewportHeight';
 import styles from '../Home/Home.module.css';
 import 'antd-mobile/es/global'; // 引入 antd-mobile 的全局样式
 
@@ -15,10 +15,10 @@ const { Search } = Input;
 
 const ReviewManagePage = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState(''); // 输入框的值
   const [actualSearchTerm, setActualSearchTerm] = useState(''); // 实际用于搜索的值
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const viewportHeight = useViewportHeight(); // 获取当前视口高度
 
   // 使用无限滚动Hook
   const {
@@ -37,14 +37,28 @@ const ReviewManagePage = () => {
         params.name = actualSearchTerm.trim();
       }
       
-      const response = await ActivityAPI.getActivityList(params);
-      // 转换API响应数据为前端格式
-      const transformedActivities = response.activitys.map(transformActivityFromAPI);
-      return {
-        ...response,
-        activitys: transformedActivities,
-        pageSize: response.page_size 
-      };
+      const response = await API.Activity.getMyActivities();
+       // 转换API响应数据为前端格式
+       const transformedActivities = response.data.map((activity: any) => ({
+         id: activity.ID,
+         name: activity.name,
+         description: activity.description,
+          startTime: formatDateFromNumber(activity.start_date),
+          endTime: formatDateFromNumber(activity.end_date),
+         avatar: activity.avatar,
+         ownerId: activity.owner_id,
+         createdAt: activity.created_at,
+         updatedAt: activity.updated_at
+       }));
+       return {
+          code: response.code,
+          msg: response.msg,
+          timestamp: response.timestamp,
+          activitys: transformedActivities,
+          total: response.data.length,
+          page: 1,
+          pageSize: response.data.length
+        };
     },
     {
       pageSize: 20,
@@ -92,7 +106,7 @@ const ReviewManagePage = () => {
     
     if (result) {
       try {
-        await ActivityAPI.deleteActivity(parseInt(activityId));
+        await API.Activity.deleteActivity(parseInt(activityId));
         
         // 刷新活动列表
         refresh();
@@ -149,7 +163,9 @@ const ReviewManagePage = () => {
       </div>
 
       {/* 活动列表 */}
-      <div className="mb-4">
+      <div className="mb-4"
+            style={{ minHeight: `${Math.max(viewportHeight * 0.9, 80)}px` }}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-800">我的活动</h2>
         </div>
@@ -175,7 +191,7 @@ const ReviewManagePage = () => {
                     className={`${styles.activityCard} modern-card ${gradientClass}`}
                     cover={
                       <div className="relative h-42 overflow-hidden" > 
-                        <img alt={activity.name} src={activity.cover} className="w-full h-full object-cover" />
+                        <img alt={activity.name} src={activity.avatar} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                         <div className="absolute bottom-3 left-4 text-white">
                           <h3 className="font-bold text-lg mb-1">{activity.name}</h3>
@@ -187,7 +203,7 @@ const ReviewManagePage = () => {
                     <div className="flex items-center justify-between" >
                       <div className="flex items-center text-sm">
                         <CalendarOutlined className="mr-2" />
-                        <span>{activity.startTime} ~ {activity.endTime}</span>
+                        <span>{activity.startTime} - {activity.endTime}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -227,7 +243,10 @@ const ReviewManagePage = () => {
             )}
           </div>
         ) : (
-          <div className="text-center py-12">
+          <div 
+            className="flex items-center justify-center text-center"
+            style={{ minHeight: `${Math.max(viewportHeight*0.8, 80)}px` }}
+          >
             <Empty 
               description={
                 <div>

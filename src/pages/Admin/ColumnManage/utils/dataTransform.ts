@@ -86,6 +86,67 @@ export const transformPendingDataWithStarStatus = (
 };
 
 /**
+ * 已审核打卡项接口定义（包含stared字段）
+ */
+export interface ReviewedPunchItem {
+  punch: {
+    ID: number;
+    created_at: string;
+    updated_at: string;
+    deleted_at: null;
+    column_id: number;
+    user_id: string;
+    content: string;
+    status: number;
+  };
+  imgs: string[];
+  nick_name: string;
+  stared: boolean;
+}
+
+/**
+ * 将后端返回的ReviewedPunchItem转换为前端CheckInItem格式
+ * @param item - 后端返回的已审核打卡项
+ * @returns 转换后的打卡项
+ */
+export const transformReviewedData = (item: ReviewedPunchItem): CheckInItem => {
+  const createdAt = new Date(item.punch.created_at);
+  const date = createdAt.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+  const time = createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  
+  // 清理图片URL中的空格和反引号
+  const cleanImages = (item.imgs || []).map(url => 
+    url.trim().replace(/`/g, '')
+  );
+  
+  // 根据status字段确定审核状态
+  const getStatus = (status: number): 'approved' | 'rejected' => {
+    return status === 1 ? 'approved' : 'rejected';
+  };
+  
+  return {
+    id: item.punch.ID,
+    username: item.nick_name,
+    title: `${item.nick_name}的打卡`,
+    date: date,
+    time: time,
+    content: item.punch.content,
+    images: cleanImages,
+    starred: item.stared, // 使用后端返回的stared字段
+    status: getStatus(item.punch.status)
+  };
+};
+
+/**
+ * 批量转换已审核数据
+ * @param items - 后端返回的已审核打卡项列表
+ * @returns 转换后的打卡项列表
+ */
+export const transformReviewedDataList = (items: ReviewedPunchItem[]): CheckInItem[] => {
+  return items.map(item => transformReviewedData(item));
+};
+
+/**
  * 计算审核统计信息
  * @param reviewedCount - 已审核数量
  * @param unreviewedCount - 未审核数量

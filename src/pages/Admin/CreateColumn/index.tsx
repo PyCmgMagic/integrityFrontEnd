@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Plus, Calendar, Clock } from 'lucide-react';
 import { CoverUpload } from '../../../components';
+import { useAppStore } from '../../../store/useAppStore';
+import { useParams } from 'react-router-dom';
 
 export interface CreateColumnProps {
   onBack?: () => void;
@@ -29,6 +31,12 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
   totalColumns = 1,
   loading = false
 }) => {
+  const { getColumnData } = useAppStore();
+  const params = useParams();
+  
+  // 从URL参数中获取当前步骤
+  const currentStep = params.columnIndex ? parseInt(params.columnIndex, 10) : columnIndex;
+  
   const [columnData, setColumnData] = useState<ColumnData>({
     name: '',
     description: '',
@@ -40,6 +48,14 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
     dailyCheckinLimit: 1,
     pointsPerCheckin: 1
   });
+
+  // 组件挂载时恢复之前保存的数据
+  useEffect(() => {
+    const savedData = getColumnData(currentStep);
+    if (savedData) {
+      setColumnData(savedData);
+    }
+  }, [currentStep, getColumnData]);
 
   /**
    * 处理输入字段变化
@@ -90,7 +106,7 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
       {/* Form Content */}
       <div className="flex-1 px-4 py-6 space-y-6">
         {/* 栏目名称 */}
-        <div>
+        <div>  
           <label className="block text-sm font-medium text-gray-700 mb-2">
             栏目名称
           </label>

@@ -21,8 +21,8 @@ import type {
   ApiResponse,
 } from '../types/api';
 import type { UserProfile, ActivityData, CheckInData, PunchRecordsData, MyPunchListResponse } from '../types/types';
-import CreateNewProject from '../pages/Admin/CreateProject';
-import { data } from 'react-router-dom';
+
+import type { UserStats } from '../pages/User/ActivityDetail/types';
 
 /**
  * 认证相关 API
@@ -176,7 +176,12 @@ export class ActivityAPI {
   static async getActivityDetail(id: number): Promise<ActivityDetailResponse> {
     return request.get<ActivityDetailResponse>(`/activity/get/${id}`);
   }
-
+  /**
+   * 获取活动统计详情
+   */
+  static async getActivityStaticDetail(id: number): Promise<ApiResponse<UserStats>> {
+    return request.getFull<UserStats>(`/stats/activity/${id}/brief`);
+  }
   /**
    * 创建活动
    */
@@ -203,8 +208,8 @@ export class ActivityAPI {
   /**
    * 删除活动
    */
-  static async deleteActivity(id: number): Promise<void> {
-    return request.delete<void>(`/activity/delete/${id}`, undefined, {
+  static async deleteActivity(id: number): Promise<ApiResponse<void>> {
+    return request.deleteFull<void>(`/activity/delete/${id}`, undefined, {
       showLoading: true,
       showError: true,
     });
@@ -235,6 +240,43 @@ export class ActivityAPI {
    */
   static async leaveActivity(id: number): Promise<void> {
     return request.post<void>(`/activities/${id}/leave`, undefined, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+
+  /**
+   * 获取我创建的活动列表 - 使用完整GET方法
+   */
+  static async getMyActivities(): Promise<{
+    code: number;
+    msg: string;
+    data: Array<{
+      ID: number;
+      created_at: string;
+      updated_at: string;
+      deleted_at: null;
+      name: string;
+      description: string;
+      owner_id: string;
+      start_date: number;
+      end_date: number;
+      avatar: string;
+    }>;
+    timestamp: number;
+  }> {
+    return request.getFull<Array<{
+      ID: number;
+      created_at: string;
+      updated_at: string;
+      deleted_at: null;
+      name: string;
+      description: string;
+      owner_id: string;
+      start_date: number;
+      end_date: number;
+      avatar: string;
+    }>>('/activity/mine', undefined, {
       showLoading: true,
       showError: true,
     });
@@ -666,6 +708,46 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
       }>;
       timestamp: number;
     }>(`/punch/pending-list?column_id=${columnId}`, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+
+  /**
+   * 获取已审核列表
+   */
+  static async getReviewedList(columnId: number): Promise<ApiResponse<Array<{
+    punch: {
+      ID: number;
+      created_at: string;
+      updated_at: string;
+      deleted_at: null;
+      column_id: number;
+      user_id: string;
+      content: string;
+      status: number;
+    };
+    imgs: string[];
+    nick_name: string;
+    stared: boolean;
+  }>>> {
+    return request.getFull<Array<{
+      punch: {
+        ID: number;
+        created_at: string;
+        updated_at: string;
+        deleted_at: null;
+        column_id: number;
+        user_id: string;
+        content: string;
+        status: number;
+      };
+      imgs: string[];
+      nick_name: string;
+      stared: boolean;
+    }>>('/punch/reviewed', {
+      column_id: columnId
+    }, {
       showLoading: true,
       showError: true,
     });

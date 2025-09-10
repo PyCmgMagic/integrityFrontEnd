@@ -11,14 +11,15 @@ const SuccessPage: React.FC = () => {
   // 跳转到新创建的项目详情页
   const handleViewProject = () => {
     if (projectId && activityId) {
-      navigate(`/admin/activity/${activityId}/project/${projectId}`);
-
+      // 使用replace避免用户通过浏览器返回按钮回到成功页面
+      navigate(`/admin/activity/${activityId}/project/${projectId}`, { replace: true });
     }
   };
 
   // 返回管理员首页
   const handleGoToHome = () => {
-    navigate('/admin/home');
+    // 使用replace避免用户通过浏览器返回按钮回到成功页面
+    navigate('/admin/home', { replace: true });
   };
 
   return (
