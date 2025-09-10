@@ -263,7 +263,7 @@ export class ActivityAPI {
       end_date: number;
       avatar: string;
     }>;
-    timestamp: number;
+    timestamp?: number;
   }> {
     return request.getFull<Array<{
       ID: number;

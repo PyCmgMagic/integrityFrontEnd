@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
 import { API } from '../services/api';
-import type { CheckInData, PunchRecordsData } from '../types/types';
+import type { CheckInData } from '../types/types';
 import { transformPunchRecordsToCheckInData } from '../utils/dataTransform';
 /**
  * 打卡记录管理Hook
@@ -18,20 +18,28 @@ export const usePunchRecords = (columnId: number) => {
   const [punchedToday, setPunchedToday] = useState(false);
   const [columnInfo, setColumnInfo] = useState<{
       ID: number;
-      CreatedAt: string;
-      UpdatedAt: string;
-      DeletedAt: null;
       name: string;
       description: string;
+      avatar: string;
+      daily_punch_limit: number;
+      point_earned: number;
+      end_time: string;
+      start_time: string;
+      start_date: number;
+      today_punch_count: number;
       owner_id: string;
       project_id: number;
   }>({
     ID: 0,
-    CreatedAt: '',
-    UpdatedAt: '',
-    DeletedAt: null,
     name: '',
     description: '',
+    avatar: '',
+    daily_punch_limit: 0,
+    point_earned: 0,
+    end_time: '',
+    start_time: '',
+    start_date: 0,
+    today_punch_count: 0,
     owner_id: '',
     project_id: 0
   });
@@ -57,12 +65,9 @@ export const usePunchRecords = (columnId: number) => {
       const data = await API.Column.getPunchRecords(columnId);
       const today_punch_count = await API.Column.getTodayTotalPunchRecords(columnId);
       const columnInfo = await API.Column.getColumnInfo(columnId)
-      setColumnInfo(columnInfo)
-      console.log("111",data);
-      
+      setColumnInfo(columnInfo.data)
       // 转换数据格式
       const transformedRecords = transformPunchRecordsToCheckInData(data.records);
-      
       setPunchRecords(transformedRecords);
       setMyCount(data.my_count);
       setUserCount(today_punch_count.today_punch_count);

@@ -28,7 +28,6 @@ const UserHomePage = () => {
     loading,
     loadingMore,
     hasMore,
-    refresh,
     loadMore
   } = useInfiniteScroll(
     async ({ page, page_size }) => {

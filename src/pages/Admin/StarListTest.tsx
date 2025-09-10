@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Card, Button, Typography, Space, Input, message, Spin, List, Tag } from 'antd';
-import { StarFilled, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { StarFilled,  SearchOutlined } from '@ant-design/icons';
 import { API } from '../../services/api';
 import type { StarItem, StarListResponse } from '../../types/types';
 
 const { Title, Text, Paragraph } = Typography;
-const { Search } = Input;
 
 /**
  * 收藏列表API测试页面

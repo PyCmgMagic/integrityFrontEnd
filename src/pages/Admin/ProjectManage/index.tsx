@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Progress, message, Spin, Alert } from 'antd';
-import { LeftOutlined, InfoCircleOutlined, BookOutlined, ExperimentOutlined, EditOutlined } from '@ant-design/icons';
+import { Modal, Button, List, Avatar,  message, Spin, Alert } from 'antd';
+import { LeftOutlined,  EditOutlined } from '@ant-design/icons';
 import EditProjectModal from './EditProjectModal';
 import moment from 'moment';
 import EditColumnModal from './EditColumnModal';

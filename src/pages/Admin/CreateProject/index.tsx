@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Plus, Calendar } from 'lucide-react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { ChevronLeft,  } from 'lucide-react';
+import {  useNavigate, useParams } from 'react-router-dom';
 import { ProjectAPI } from '../../../services/api';
 import { message } from 'antd';
 import { CoverUpload } from '../../../components';
@@ -20,7 +20,7 @@ interface ProjectData {
   categoryCount: number;
 }
 
-const CreateNewProject: React.FC<CreateProjectProps> = ({ onBack }) => {
+const CreateNewProject: React.FC<CreateProjectProps> = () => {
   const [projectData, setProjectData] = useState<ProjectData>({
     name: '',
     description: '',

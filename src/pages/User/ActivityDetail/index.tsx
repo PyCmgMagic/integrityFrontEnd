@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Spin } from 'antd';
-import { type UserStats } from './types';
+// import { type UserStats } from './types';
 
 // 导入组件
 import {
@@ -9,8 +9,8 @@ import {
   StatsCards,
   ProjectList,
   ActivityIntroModal,
-  ScoresModal,
-  RankingModal
+  // ScoresModal,
+  // RankingModal
 } from './components';
 
 // 导入hooks
@@ -28,8 +28,8 @@ const ActivityDetailPage: React.FC = () => {
   
   // 弹窗状态管理
   const [isIntroVisible, setIntroVisible] = useState(false);
-  const [isScoresVisible, setScoresVisible] = useState(false);
-  const [isRankingVisible, setRankingVisible] = useState(false);
+  // const [isScoresVisible, setScoresVisible] = useState(false);
+  // const [isRankingVisible, setRankingVisible] = useState(false);
 //数据状态管理
   
   // 使用自定义hooks获取数据
@@ -89,8 +89,10 @@ const ActivityDetailPage: React.FC = () => {
       {/* 统计卡片组件 */}
       <StatsCards 
         userStats={userStats}
-        onScoresClick={() => setScoresVisible(true)}
-        onRankingClick={() => setRankingVisible(true)}
+        // onScoresClick={() => setScoresVisible(true)}
+        // onRankingClick={() => setRankingVisible(true)}
+        onScoresClick={() => {}}
+        onRankingClick={() => {}}
       />
 
       {/* 项目列表组件 */}
@@ -111,8 +113,8 @@ const ActivityDetailPage: React.FC = () => {
         totalScore={userStats.total_score}
         scoreRecords={userStats.total_score}
         onClose={() => setScoresVisible(false)}
-      /> */}
-      
+      />
+       */}
       {/* <RankingModal 
         visible={isRankingVisible}
         rankingData={rankingData}

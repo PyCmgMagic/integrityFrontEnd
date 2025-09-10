@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Toast, Dialog } from 'antd-mobile';
 import { API } from '../../../../services/api';
 import { useStarManagement } from './useStarManagement';

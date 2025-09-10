@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Upload, message, Modal, Image, Progress } from 'antd';
-import { PlusOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
+import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
 import type { RcFile } from 'antd/es/upload';
 import { uploadImageToCloud, compressImage } from '../../utils/imageUpload';
@@ -67,17 +67,25 @@ const ImageUpload = ({
   };
 
   /**
-   * 自定义上传请求，使用图床API
+   * 处理图片上传
+   * @param file 上传的文件
+   * @returns false 阻止默认上传行为
    */
-  const customRequest = async ({ 
-    file, 
-    onSuccess, 
-    onError 
-  }: {
-    file: RcFile;
-    onSuccess?: (response: any) => void;
-    onError?: (error: any) => void;
-  }) => {
+  const handleUpload = async (file: RcFile): Promise<boolean> => {
+    // 验证文件类型
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('只能上传图片文件！');
+      return false;
+    }
+
+    // 验证文件大小
+    const isLt10M = file.size / 1024 / 1024 < 10;
+    if (!isLt10M) {
+      message.error('图片大小不能超过 10MB！');
+      return false;
+    }
+
     try {
       setUploading(true);
       setUploadProgress(0);
@@ -94,38 +102,34 @@ const ImageUpload = ({
         setUploadProgress(percent);
       });
 
-      // 调用成功回调
-      onSuccess?.({
-        url: imageUrl,
+      // 添加到文件列表
+      const newFile: UploadFile = {
+        uid: Date.now().toString(),
         name: file.name,
-      });
+        status: 'done',
+        url: imageUrl,
+      };
+      
+      const newFileList = [...fileList, newFile];
+      setFileList(newFileList);
+      
+      // 通知父组件
+      const newUrls = newFileList.map(f => f.url!).filter(Boolean);
+      onChange?.(newUrls);
       
       message.success('图片上传成功！');
     } catch (error) {
       console.error('图片上传失败:', error);
-      onError?.(error);
       message.error(error instanceof Error ? error.message : '图片上传失败！');
     } finally {
       setUploading(false);
       setUploadProgress(0);
     }
+    
+    return false; // 阻止默认上传行为
   };
 
-  const beforeUpload = (file: File) => {
-    const isImage = file.type.startsWith('image/');
-    if (!isImage) {
-      message.error('只能上传图片文件！');
-      return false;
-    }
 
-    const isLt10M = file.size / 1024 / 1024 < 10;
-    if (!isLt10M) {
-      message.error('图片大小不能超过 10MB！');
-      return false;
-    }
-
-    return true;
-  };
 
   const uploadButton = (
     <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 transition-colors">
@@ -151,13 +155,12 @@ const ImageUpload = ({
   return (
     <div className={className}>
       <Upload
-        customRequest={customRequest}
         listType="picture-card"
         fileList={fileList}
         onPreview={handlePreview}
         onChange={handleChange}
         onRemove={handleRemove}
-        beforeUpload={beforeUpload}
+        beforeUpload={handleUpload}
         disabled={disabled || uploading}
         className="image-upload-grid"
       >

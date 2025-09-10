@@ -11,7 +11,7 @@ import { useSwipeable } from 'react-swipeable';
 import { API } from '../../../services/api';
 
 // 导入重构后的模块
-import { transformPendingData, transformPunchDetail, type CheckInItem, type PunchDetailResponse } from './utils/checkInDataTransform';
+import { transformPendingData, transformPunchDetail, type CheckInItem } from './utils/checkInDataTransform';
 import { useCheckInReview } from './hooks/useCheckInReview';
 import { useCheckInNavigation } from './hooks/useCheckInNavigation';
 import CheckInDetailHeader from './components/CheckInDetailHeader';
@@ -49,8 +49,7 @@ const CheckInDetail: React.FC = () => {
   const [currentPunchIndex, setCurrentPunchIndex] = useState<number>(0);
 
   // 使用自定义 hooks
-  const { currentIndex, currentItem, goToPrevious, goToNext } = useCheckInNavigation(items, currentPunchIndex, navigate);
-  
+  const { currentIndex, currentItem, goToPrevious, goToNext } = useCheckInNavigation(items, currentPunchIndex);
   /**
    * 从列表中移除当前项并处理导航
    */
@@ -77,7 +76,7 @@ const CheckInDetail: React.FC = () => {
     );
   }, []);
 
-  const { handleApprove, handleReject, toggleStar, isStarred, isStarLoading } = useCheckInReview({
+  const { handleApprove, handleReject, toggleStar,  isStarLoading } = useCheckInReview({
     currentItem,
     onItemRemoved: removeCurrentItem,
     onStarChange: handleStarChange
@@ -89,7 +88,7 @@ const CheckInDetail: React.FC = () => {
   const fetchPunchDetail = useCallback(async (targetPunchId: number) => {
     try {
       setLoading(true);
-      const response = await API.CheckIn.getPunchDetail(targetPunchId);
+      const response = await API.Column.getPunchDetail(targetPunchId);
       console.log('获取打卡详情:', response);
       
       if (response && response.data) {
@@ -116,7 +115,7 @@ const CheckInDetail: React.FC = () => {
   const fetchMultiplePunchDetails = useCallback(async (targetPunchIds: number[], currentId: number) => {
     try {
       setLoading(true);
-      const promises = targetPunchIds.map(id => API.CheckIn.getPunchDetail(id));
+      const promises = targetPunchIds.map(id => API.Column.getPunchDetail(id));
       const responses = await Promise.all(promises);
       
       const transformedItems: CheckInItem[] = [];

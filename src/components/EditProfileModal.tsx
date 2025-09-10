@@ -35,7 +35,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onCancel, 
           ...currentUser,
           ...values,
           // 使用上传后的头像URL，如果没有则保留旧头像或设置默认值
-          avatar: avatarUrl || '/assets/默认头像.png', 
+          avatar: avatarUrl || '/assets/默认头像.png',
+          // 将Dayjs对象转换为字符串格式
+          dob: values.dob ? (typeof values.dob === 'string' ? values.dob : values.dob.format('YYYY-MM-DD')) : null,
         };
         onSave(updatedData);
       })

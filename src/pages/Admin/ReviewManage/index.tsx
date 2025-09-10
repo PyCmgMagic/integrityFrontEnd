@@ -26,7 +26,6 @@ const ReviewManagePage = () => {
     loading,
     loadingMore,
     hasMore,
-    containerRef,
     refresh,
     loadMore
   } = useInfiniteScroll(

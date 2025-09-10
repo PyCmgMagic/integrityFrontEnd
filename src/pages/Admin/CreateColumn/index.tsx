@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Plus, Calendar, Clock } from 'lucide-react';
+import {  Calendar, Clock } from 'lucide-react';
 import { CoverUpload } from '../../../components';
 import { useAppStore } from '../../../store/useAppStore';
 import { useParams } from 'react-router-dom';
@@ -28,7 +28,6 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
   onBack,
   onNext,
   columnIndex = 1,
-  totalColumns = 1,
   loading = false
 }) => {
   const { getColumnData } = useAppStore();

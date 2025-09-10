@@ -6,13 +6,12 @@ import EditColumnModal from '../ProjectManage/EditColumnModal';
 import { API } from '../../../services/api';
 
 // 导入重构后的模块
-import {  transformPendingDataWithStarStatus, transformReviewedDataList, calculateAuditStats } from './utils/dataTransform';
+import {  transformPendingDataWithStarStatus, transformReviewedDataList } from './utils/dataTransform';
 import { useReviewActions } from './hooks/useReviewActions';
 import { useStarStatusLoader } from './hooks/useStarStatusLoader';
 import { CheckInList } from './components/CheckInList';
-import { AuditStatsDisplay } from './components/AuditStatsDisplay';
 import { ReviewTabs, type ReviewTabType } from './components/ReviewTabs';
-import type { CheckInItem, ColumnInfo, AuditStats } from './utils/dataTransform';
+import type { CheckInItem, ColumnInfo } from './utils/dataTransform';
 import { Toast } from 'antd-mobile';
 
 // 接口和工具函数已移至独立模块
@@ -49,7 +48,7 @@ const ColumnManage: React.FC = () => {
   const currentRequestRef = useRef<number>(0);
 
   // 使用收藏状态加载器
-  const { loadStarStatus, loadStarStatusMap } = useStarStatusLoader();
+  const { loadStarStatusMap } = useStarStatusLoader();
   
   /**
    * 获取待审核列表数据 - 使用useCallback避免重复创建
@@ -157,8 +156,6 @@ const ColumnManage: React.FC = () => {
     }
   }, [columnId]);
   
-
-  
   /**
    * 组件挂载时获取数据
    */
@@ -184,8 +181,6 @@ const ColumnManage: React.FC = () => {
 
 
 
-  // 计算审核统计信息
-  const auditStats: AuditStats = calculateAuditStats(reviewedData.length, unreviewedData.length);
 
   // 使用审核操作hook
   const { handleReview } = useReviewActions({
@@ -237,7 +232,6 @@ const ColumnManage: React.FC = () => {
         </div>
 
         {/* 审核统计信息 */}
-        <AuditStatsDisplay stats={auditStats} />
 
         {/* 审核标签页 */}
         <ReviewTabs

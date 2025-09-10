@@ -90,13 +90,15 @@ interface AppState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   
-  // 栏目创建相关 Actions
+  // 栏目创建相关方法
   saveColumnData: (stepIndex: number, data: ColumnCreationData) => void;
   getColumnData: (stepIndex: number) => ColumnCreationData | null;
   markColumnAsCreated: (stepIndex: number) => void;
   isColumnCreated: (stepIndex: number) => boolean;
   clearColumnCreationData: () => void;
   setIsCreatingColumn: (isCreating: boolean) => void;
+  getAllColumnData: () => Record<number, ColumnCreationData>;
+  isAllColumnDataSaved: (totalSteps: number) => boolean;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({

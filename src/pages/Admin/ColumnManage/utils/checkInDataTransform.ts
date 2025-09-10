@@ -33,7 +33,7 @@ export interface PunchDetailResponse {
     };
     stared: boolean;
   };
-  timestamp: number;
+  timestamp?: number;
 }
 
 /**

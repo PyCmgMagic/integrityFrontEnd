@@ -39,8 +39,7 @@ interface UseReviewActionsParams {
  * @returns 审核操作相关的方法和状态
  */
 export const useReviewActions = ({
-  unreviewedData,
-  reviewedData,
+
   setUnreviewedData,
   setReviewedData
 }: UseReviewActionsParams): UseReviewActionsReturn => {

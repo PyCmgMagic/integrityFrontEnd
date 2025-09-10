@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Typography, Avatar, List, Button, message, Empty, Spin, Space } from 'antd';
+import { Card, Typography, Avatar, List, Button,  Empty, Spin, Space } from 'antd';
 import { Dialog, SwipeAction, Toast, Tabs } from 'antd-mobile';
-import { EditOutlined, CalendarOutlined, StarOutlined, DownloadOutlined, LogoutOutlined } from '@ant-design/icons';
+import { EditOutlined,StarOutlined,  LogoutOutlined } from '@ant-design/icons';
 
 // 添加全局样式来禁用浏览器左滑返回
 const globalStyles = `
@@ -43,7 +43,7 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { API } from '../../../services/api';
 import type {  StarListData } from '../../../types/types';
 
-import type { UserProfile, CheckInData, ActivityHistoryData, StarItem  } from '../../../types/types';
+import type { UserProfile, StarItem  } from '../../../types/types';
 import type { ApiResponse, ParticipationActivityItem } from '../../../types/api';
 
 // 收藏的打卡信息类型（保持兼容现有UI）
@@ -56,13 +56,6 @@ interface FavoriteData {
 
 const { Title, Text } = Typography;
 
-// 为初始数据应用类型
-const initialCheckInData: CheckInData[] = [
-  { id: 1, title: '寒假打卡-“瑞蛇衔知”，勤学善知-自习打卡', time: '第14次打卡', date: '1.19' },
-  { id: 2, title: '寒假打卡-“瑞蛇衔知”，勤学善知-单词打卡', time: '第13次打卡', date: '1.18' },
-  { id: 3, title: '寒假打卡-“瑞蛇衔知”，勤学善知-自习打卡', time: '第12次打卡', date: '1.18' },
-  { id: 4, title: '寒假打卡-“瑞蛇衔知”，勤学善知-单词打卡', time: '第11次打卡', date: '1.17' },
-];
 
 
 
@@ -76,7 +69,7 @@ const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
 
-  const [checkInData, setCheckInData] = useState<CheckInData[]>(initialCheckInData);
+  // const [checkInData, setCheckInData] = useState<CheckInData[]>(initialCheckInData);
   const [myActivities, setMyActivities] = useState<any[]>([]);
   const [myActivitiesLoading, setMyActivitiesLoading] = useState<boolean>(false);
   const [myActivitiesError, setMyActivitiesError] = useState<string>('');
@@ -127,8 +120,8 @@ const ProfilePage: React.FC = () => {
       // 这里需要根据实际的打卡记录数据结构来填充
       // 目前先创建一个示例记录
       const record: CheckInRecord = {
-        id: activity.ID,
-        userName: activity.user?.username || '未知用户',
+        id: activity.ID+"",
+        userName: activity.user?.nick_name || '未知用户',
         checkInTime: formatDateFromNumber(activity.start_date),
         score: 100, // 默认分数
         categoryName: activity.name

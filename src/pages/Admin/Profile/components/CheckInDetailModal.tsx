@@ -80,6 +80,7 @@ const CheckInDetailModal: React.FC<CheckInDetailModalProps> = ({
    */
   const handleStarChange = (punchId: number, starred: boolean) => {
     setIsStarred(starred);
+    punchId = punchId + 1 - 1;
     if (punchDetail) {
       setPunchDetail({
         ...punchDetail,

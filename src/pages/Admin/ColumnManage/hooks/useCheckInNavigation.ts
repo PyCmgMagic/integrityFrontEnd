@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Toast } from 'antd-mobile';
-import type { NavigateFunction } from 'react-router-dom';
 import type { CheckInItem } from '../utils/checkInDataTransform';
 
 interface UseCheckInNavigationReturn {
@@ -21,7 +20,6 @@ interface UseCheckInNavigationReturn {
 export const useCheckInNavigation = (
   items: CheckInItem[],
   initialIndex: number,
-  navigate: NavigateFunction
 ): UseCheckInNavigationReturn => {
   const [currentIndex, setCurrentIndex] = useState<number>(initialIndex);
 

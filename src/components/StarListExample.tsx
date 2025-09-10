@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Card, List, Button, Typography, Space, Tag } from 'antd';
+import { Card, List, Button, Typography, Tag } from 'antd';
 import { StarFilled, ReloadOutlined } from '@ant-design/icons';
 import { useStarList } from '../hooks/useStarList';
 import type { StarItem } from '../types/types';
@@ -106,7 +106,6 @@ const StarListExample: React.FC = () => {
                 <div className="flex items-center space-x-1">
                   <Tag 
                     color={getStatusColor(item.punch.status)} 
-                    size="small"
                   >
                     {item.punch.status === 0 ? '待审' : 
                      item.punch.status === 1 ? '通过' : '拒绝'}

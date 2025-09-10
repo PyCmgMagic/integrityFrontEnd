@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { List } from 'antd';
-import { CheckOutlined, CloseOutlined, StarOutlined, DeleteOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 import type { CheckInItem } from '../utils/dataTransform';
 import { StarButton } from './StarButton';
@@ -112,6 +112,11 @@ console.log("000",data);
    * @param index - 项目索引
    */
   const handleItemClick = (item: CheckInItem, index: number): void => {
+    // 已审核列表禁用点击功能
+    if (type === 'reviewed') {
+      return;
+    }
+    
     navigate(
       `/admin/activity/${activityId}/project/${projectId}/column/${columnId}/review/${item.id}`,
       {

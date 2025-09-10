@@ -2,7 +2,7 @@ import {  useEffect } from 'react';
 import { message } from 'antd';
 import { ActivityAPI } from '../../../../services/api';
 import { useRequest } from '../../../../hooks/useRequest';
-import type { Activity, UserStats, ScoreRecord, RankingItem } from '../types';
+import type {  UserStats, ScoreRecord, RankingItem } from '../types';
 
 /**
  * useActivityDetail Hook - 活动详情页面数据管理
@@ -89,9 +89,9 @@ export const useUserStats = (activityID: number) => {
         today_punched_user_count: 0, 
         total_score: 0, 
         activity_id: 0, 
-        current_streak: 0, 
-        max_streak: 0, 
-        total_user_count: 0
+        current: 0, 
+        max: 0, 
+        total: 0
       };
 
   return {

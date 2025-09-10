@@ -115,7 +115,7 @@ interface EditActivityModalProps {
   initialData?: any;
 }
 
-const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose, onSuccess, onCancel, activityId, initialData }) => {
+const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose, onSuccess,  activityId, initialData }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);

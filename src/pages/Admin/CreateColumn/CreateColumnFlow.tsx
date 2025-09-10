@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { message } from 'antd';
 import CreateColumn from './index'; // 确保路径正确
-import type { ColumnData } from './index'; // 假设你导出了这个类型
 import { API } from '../../../services/api';
 import { useAppStore } from '../../../store/useAppStore';
 
@@ -25,7 +24,6 @@ const CreateColumnFlow: React.FC = () => {
   // 使用全局状态管理栏目创建数据
   const {
     saveColumnData,
-    getColumnData,
     getAllColumnData,
     isAllColumnDataSaved,
     clearColumnCreationData,
@@ -62,7 +60,7 @@ const CreateColumnFlow: React.FC = () => {
         const apiData = {
           name: columnData.name,
           description: columnData.description,
-          project_id: parseInt(projectId, 10),
+          project_id: projectId ? parseInt(projectId, 10) : 0,
           start_date: formatDateToNumber(columnData.startDate),
           end_date: formatDateToNumber(columnData.endDate),
           avatar: columnData.coverImage || '',
@@ -127,10 +125,10 @@ const CreateColumnFlow: React.FC = () => {
       try {
         // 获取所有栏目数据
         const allColumnData = getAllColumnData();
-        console.log('开始批量创建栏目，总数:', allColumnData.length);
+        console.log('开始批量创建栏目，总数:', Object.keys(allColumnData).length);
         
         // 批量创建所有栏目
-        const { createdColumns, failedColumns } = await createAllColumns(allColumnData);
+        const { createdColumns, failedColumns } = await createAllColumns(Object.values(allColumnData));
         
         if (failedColumns.length === 0) {
           // 所有栏目创建成功

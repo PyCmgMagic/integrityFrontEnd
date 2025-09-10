@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Icon } from './Icon';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 
 interface LoginScreenProps {
