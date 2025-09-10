@@ -369,7 +369,15 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
           label={<span className="font-semibold text-gray-700">每日可打卡次数</span>}
           rules={[
             { required: true, message: '请输入每日可打卡次数' },
-            { type: 'number', min: 1, max: 100, message: '请输入1-100之间的数字' }
+            {
+              validator: (_, value) => {
+                const num = Number(value);
+                if (isNaN(num) || num < 1 || num > 100) {
+                  return Promise.reject(new Error('请输入1-100之间的数字'));
+                }
+                return Promise.resolve();
+              }
+            }
           ]}
           initialValue={1}
         >
@@ -381,7 +389,15 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
           label={<span className="font-semibold text-gray-700">每次打卡获得积分</span>}
           rules={[
             { required: true, message: '请输入每次打卡获得积分' },
-            { type: 'number', min: 1, max: 1000, message: '请输入1-1000之间的数字' }
+            {
+              validator: (_, value) => {
+                const num = Number(value);
+                if (isNaN(num) || num < 1 || num > 100) {
+                  return Promise.reject(new Error('请输入1-100之间的数字'));
+                }
+                return Promise.resolve();
+              }
+            }
           ]}
           initialValue={1}
         >
