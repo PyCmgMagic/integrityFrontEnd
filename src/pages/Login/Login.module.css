@@ -236,4 +236,43 @@
 
 .footerLink:hover {
   color: white;
-} 
+}
+
+/* 移动端适配 - 解决虚拟键盘弹起时的布局问题 */
+@media (max-width: 768px) {
+  .screenContainer {
+    height: 100dvh; /* 使用动态视口高度 */
+    min-height: 100vh;
+  }
+  
+  .content {
+    height: auto;
+    min-height: 100%;
+    padding: 40px 24px 20px 24px;
+    justify-content: flex-start;
+  }
+  
+  .logoContainer {
+    margin-top: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .formContainer {
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .footer {
+    margin-top: auto;
+    margin-bottom: 10px;
+  }
+}
+
+/* 针对iOS Safari的特殊处理 */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    .screenContainer {
+      height: -webkit-fill-available;
+    }
+  }
+}

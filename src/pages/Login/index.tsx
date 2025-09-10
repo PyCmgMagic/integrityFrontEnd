@@ -146,7 +146,20 @@ const LoginPage = () => {
 
         <div className={styles.footer}>
           <button className={styles.footerLink}>注册账号</button>
-          <button className={styles.footerLink}>需要帮助？</button>
+          <button 
+            className={styles.footerLink}
+            onClick={() => {
+              message.info({
+                content: '请联系山东大学学生在线技术开发工作站',
+                duration: 3,
+                style: {
+                  marginTop: '20vh',
+                },
+              });
+            }}
+          >
+            需要帮助？
+          </button>
         </div>
       </div>
     </div>
