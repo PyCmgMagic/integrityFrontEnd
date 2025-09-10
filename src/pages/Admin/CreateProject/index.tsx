@@ -93,10 +93,12 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
       message.success('项目创建成功！');
 
       // 导航到第一个栏目的创建页面
+      // 使用replace避免在浏览器历史中堆积创建页面
       navigate(
         `/admin/create/activity/${activityId}/project/${projectId}/column/1`,
         {
-          state: { totalCategories: projectData.categoryCount }
+          state: { totalCategories: projectData.categoryCount },
+          replace: true
         }
       );
     } catch (error) {

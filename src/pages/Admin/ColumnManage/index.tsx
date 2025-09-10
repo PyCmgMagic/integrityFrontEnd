@@ -156,12 +156,7 @@ const ColumnManage: React.FC = () => {
     }
   }, [columnId]);
   
-  /**
-   * 组件挂载时获取数据
-   */
-  useEffect(() => {
-    fetchPendingListStable();
-  }, [fetchPendingListStable]);
+  
 
   /**
    * 标签页切换时获取对应数据
@@ -210,7 +205,7 @@ const ColumnManage: React.FC = () => {
   }, []);
 
   // 列表渲染和滑动操作逻辑已移至CheckInList组件
-
+ 
 
   return (
     <div className="bg-slate-50 min-h-screen font-sans">

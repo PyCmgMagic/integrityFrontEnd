@@ -207,17 +207,17 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
             <div className="flex items-center space-x-2">
               <input
                 type="number"
-                min="1"
+                min="0"
                 max="10"
                 value={columnData.dailyCheckinLimit}
-                onChange={(e) => handleInputChange('dailyCheckinLimit', parseInt(e.target.value) || 1)}
+                onChange={(e) => handleInputChange('dailyCheckinLimit', Number(e.target.value))}
                 className="w-16 px-2 py-1 text-center text-lg font-medium text-blue-500 bg-gray-50 border border-gray-200 rounded focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
               />
               <span className="text-sm text-gray-600">次</span>
             </div>
           </div>
         </div>
-
+ 
         {/* 每日打卡获得 */}
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center justify-between">
@@ -225,9 +225,9 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
             <div className="flex items-center space-x-2">
               <input
                 type="number"
-                min="1"
+                min="0"
                 value={columnData.pointsPerCheckin}
-                onChange={(e) => handleInputChange('pointsPerCheckin', parseInt(e.target.value) || 1)}
+                onChange={(e) => handleInputChange('pointsPerCheckin', Number(e.target.value))}
                 className="w-16 px-2 py-1 text-center text-lg font-medium text-blue-500 bg-gray-50 border border-gray-200 rounded focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
               />
               <span className="text-sm text-gray-600">分</span>

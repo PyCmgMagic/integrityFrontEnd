@@ -135,7 +135,8 @@ const CreateColumnFlow: React.FC = () => {
           message.success(`所有 ${createdColumns.length} 个栏目创建成功！`);
           console.log('所有栏目创建完毕！');
           
-          // 导航到成功页面
+          // 导航到成功页面，使用replace清理创建流程的历史记录
+          // 这样确保用户从成功页面返回时不会回到创建页面
           navigate(`/admin/create/activity/${activityId}/project/${projectId}/success`, { replace: true });
         } else {
           // 部分栏目创建失败

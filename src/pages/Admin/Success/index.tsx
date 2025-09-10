@@ -8,15 +8,23 @@ const SuccessPage: React.FC = () => {
   const navigate = useNavigate();
   const { activityId, projectId  } = useParams<{ projectId: string, activityId: string }>();
 
-  // 跳转到新创建的项目详情页
+  /**
+   * 跳转到新创建的项目详情页
+   * 使用普通导航而不是replace，确保用户可以正常返回
+   */
   const handleViewProject = () => {
     if (projectId && activityId) {
-      // 使用replace避免用户通过浏览器返回按钮回到成功页面
-      navigate(`/admin/activity/${activityId}/project/${projectId}`, { replace: true });
+      // 清除浏览器历史记录中的创建流程页面，直接导航到项目详情页
+      // 这样用户从项目详情页返回时会回到管理员首页而不是创建页面
+      window.history.replaceState(null, '', '/admin/home');
+      navigate(`/admin/activity/${activityId}/project/${projectId}`);
     }
   };
 
-  // 返回管理员首页
+  /**
+   * 返回管理员首页
+   * 清理浏览器历史记录，确保用户不会返回到创建流程页面
+   */
   const handleGoToHome = () => {
     // 使用replace避免用户通过浏览器返回按钮回到成功页面
     navigate('/admin/home', { replace: true });
