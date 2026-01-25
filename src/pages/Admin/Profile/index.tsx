@@ -33,9 +33,7 @@ if (typeof document !== 'undefined') {
 // 导入组件
 import { 
   EditProfileModal,
-  ExcelExportComponent
 } from '../../../components';
-import type { ActivityData, CheckInRecord } from '../../../components';
 import CheckInDetailModal from './components/CheckInDetailModal';
 // 导入用户端个人中心组件
 import { CheckInTab, ActivityHistoryTab } from '../../User/Profile/components';
@@ -45,7 +43,7 @@ import { API } from '../../../services/api';
 import type {  StarListData } from '../../../types/types';
 
 import type { UserProfile, StarItem  } from '../../../types/types';
-import type { ApiResponse, ParticipationActivityItem } from '../../../types/api';
+import type { ApiResponse } from '../../../types/api';
 
 // 收藏的打卡信息类型（保持兼容现有UI）
 interface FavoriteData {
@@ -101,42 +99,42 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  /**
-   * 将ParticipationActivityItem数组转换为ActivityData格式
-   * @param activities 活动历史数据数组
-   * @returns 转换后的ActivityData对象
-   */
-  const transformToActivityData = (activities: ParticipationActivityItem[]): ActivityData => {
-    if (!activities || activities.length === 0) {
-      return {
-        id: 'empty',
-        title: '暂无活动数据',
-        checkInRecords: []
-      };
-    }
+  // /**
+  //  * 将ParticipationActivityItem数组转换为ActivityData格式
+  //  * @param activities 活动历史数据数组
+  //  * @returns 转换后的ActivityData对象
+  //  */
+  // const transformToActivityData = (activities: ParticipationActivityItem[]): ActivityData => {
+  //   if (!activities || activities.length === 0) {
+  //     return {
+  //       id: 'empty',
+  //       title: '暂无活动数据',
+  //       checkInRecords: []
+  //     };
+  //   }
 
-    // 将所有活动的打卡记录合并到一个ActivityData对象中
-    const allCheckInRecords: CheckInRecord[] = [];
+  //   // 将所有活动的打卡记录合并到一个ActivityData对象中
+  //   const allCheckInRecords: CheckInRecord[] = [];
     
-    activities.forEach(activity => {
-      // 这里需要根据实际的打卡记录数据结构来填充
-      // 目前先创建一个示例记录
-      const record: CheckInRecord = {
-        id: activity.ID+"",
-        userName: activity.user?.nick_name || '未知用户',
-        checkInTime: formatDateFromNumber(activity.start_date),
-        score: 100, // 默认分数
-        categoryName: activity.name
-      };
-      allCheckInRecords.push(record);
-    });
+  //   activities.forEach(activity => {
+  //     // 这里需要根据实际的打卡记录数据结构来填充
+  //     // 目前先创建一个示例记录
+  //     const record: CheckInRecord = {
+  //       id: activity.ID+"",
+  //       userName: activity.user?.nick_name || '未知用户',
+  //       checkInTime: formatDateFromNumber(activity.start_date),
+  //       score: 100, // 默认分数
+  //       categoryName: activity.name
+  //     };
+  //     allCheckInRecords.push(record);
+  //   });
 
-    return {
-      id: 'combined-activities',
-      title: '活动打卡记录汇总',
-      checkInRecords: allCheckInRecords
-    };
-  };
+  //   return {
+  //     id: 'combined-activities',
+  //     title: '活动打卡记录汇总',
+  //     checkInRecords: allCheckInRecords
+  //   };
+  // };
 
   /**
    * 格式化数字日期为字符串
@@ -670,15 +668,6 @@ const ProfilePage: React.FC = () => {
                   formatDate={formatDate}
                 />
               </Tabs.Tab>
-              
-              <Tabs.Tab title="导出活动数据" key="3">
-                <div className="p-4 pt-0">
-                  <ExcelExportComponent 
-                    activityData={transformToActivityData(activityHistoryData)}
-                  />
-                </div>
-              </Tabs.Tab>
-              
               <Tabs.Tab title="我的收藏" key="4">
                 <div className="p-4 pt-0">
                   <Spin spinning={favoriteLoading}>

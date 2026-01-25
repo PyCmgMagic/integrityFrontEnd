@@ -541,7 +541,7 @@ class RequestService {
     this.pendingRequests.clear();
   }
 
-  /**
+/**
    * 取消特定请求
    */
   cancelRequest(config: AxiosRequestConfig): void {
@@ -550,6 +550,57 @@ class RequestService {
     if (controller) {
       controller.abort();
       this.pendingRequests.delete(requestKey);
+    }
+  }
+
+  /**
+   * 文件下载方法
+   */
+  async download(
+    url: string,
+    filename?: string,
+    config?: RequestConfig
+  ): Promise<void> {
+    try {
+      const response = await this.instance.request({
+        method: 'GET',
+        url,
+        responseType: 'blob',
+        ...config,
+      });
+
+      // 获取文件名（优先使用传入的filename，其次从响应头获取，最后使用默认值）
+      let finalFilename = filename;
+      if (!finalFilename) {
+        const contentDisposition = response.headers['content-disposition'];
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (filenameMatch && filenameMatch[1]) {
+            finalFilename = filenameMatch[1].replace(/['"]/g, '');
+          }
+        }
+      }
+      
+      // 如果还是没有文件名，使用时间戳
+      if (!finalFilename) {
+        finalFilename = `export_${Date.now()}`;
+      }
+
+      // 创建下载链接
+      const blob = new Blob([response.data]);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = finalFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      console.log(`✅ File downloaded: ${finalFilename}`);
+    } catch (error) {
+      console.error('❌ Download failed:', error);
+      throw error;
     }
   }
 }

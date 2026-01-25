@@ -51,9 +51,11 @@ const RankingModal: React.FC<RankingModalProps> = ({
     }
   };
 
+
+
   /**
-   * 渲染排名奖牌或数字
-   */
+    * 渲染排名奖牌或数字
+    */
   const renderRank = (rank: number) => {
     if (rank === 1) return <TrophyOutlined style={{ color: '#ffd700', fontSize: '20px' }} />;
     if (rank === 2) return <TrophyOutlined style={{ color: '#c0c0c0', fontSize: '20px' }} />;

@@ -1,7 +1,7 @@
 import  { useState, useEffect, useCallback, useRef } from 'react'; // 添加 useRef
 import { useNavigate, useParams } from 'react-router-dom';
 import { Modal, Button, List, Avatar, Space, message, Spin } from 'antd';
-import { LeftOutlined, BookOutlined, ExperimentOutlined, EditOutlined } from '@ant-design/icons';
+import { LeftOutlined, BookOutlined, ExperimentOutlined, EditOutlined, DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 // 导入外部的编辑弹窗组件
@@ -40,6 +40,7 @@ const ActivityDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [activityData, setActivityData] = useState<ActivityDetailResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   // 组件卸载时的清理
   useEffect(() => {
@@ -240,6 +241,24 @@ const ActivityDetailPage = () => {
     fetchActivityDetail(); // 重新获取活动数据
   };
 
+  /**
+   * 处理导出排行榜
+   */
+  const handleExportRanking = async () => {
+    if (!id) return;
+    
+    setExporting(true);
+    try {
+      await ActivityAPI.exportActivityRanking(Number(id));
+      message.success('排行榜导出成功!');
+    } catch (error: any) {
+      console.error('导出排行榜失败:', error);
+      message.error(error.message || '导出排行榜失败，请重试');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const rightActions = (projectId: number) => [
     {
       key: 'delete',
@@ -336,8 +355,15 @@ const ActivityDetailPage = () => {
         </div>
         <div className='flex items-center justify-between mt-6'>
           <Space className='flex items-between'>
-              <Button size='small' className="px-1 py-1 text-sm h-auto bg-white text-red-500 font-light border-none hover:bg-white/90">导出排行榜</Button>
-              <Button size='small' className="px-1 py-1 text-sm h-auto bg-white text-red-500 font-light border-none hover:bg-white/90">额外加分</Button>
+              <Button 
+                size='small' 
+                icon={<DownloadOutlined />}
+                loading={exporting}
+                onClick={handleExportRanking}
+                className="px-2 py-1 text-sm h-auto bg-white text-red-500 font-light border-none hover:bg-white/90"
+              >
+                导出排行榜
+              </Button>
           </Space>
             <div className="text-center mt-3">
                 <p className="text-sm opacity-80">活动时间</p>

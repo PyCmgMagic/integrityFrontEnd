@@ -183,7 +183,7 @@ export class ActivityAPI {
   static async getActivityStaticDetail(id: number): Promise<ApiResponse<UserStats>> {
     return request.getFull<UserStats>(`/stats/activity/${id}/brief`);
   }
-  /**
+/**
    * 获取活动排行榜
    */
   static async getActivityRank(id: number, params: { page?: number; page_size?: number; force?: boolean } = {}): Promise<import('../pages/User/ActivityDetail/types').RankingListResponse> {
@@ -200,6 +200,17 @@ export class ActivityAPI {
       // 确保 timestamp 始终有值
       timestamp: response.timestamp ?? Date.now()
     };
+  }
+
+  /**
+   * 导出活动排行榜
+   */
+  static async exportActivityRanking(id: number, filename?: string): Promise<void> {
+    const defaultFilename = filename || `活动排行榜_${id}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    return request.download(`/stats/activity/${id}/export`, defaultFilename, {
+      showLoading: true,
+      showError: true,
+    });
   }
   /**
    * 创建活动
