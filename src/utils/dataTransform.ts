@@ -128,6 +128,7 @@ export function transformPunchRecordToCheckInData(punchRecord: PunchRecord): Che
     date: updatedAt.format('YYYY-MM-DD'),
     content: punchRecord.content || '',
     imgs: punchRecord.imgs || [],
+    status:punchRecord.status,
     gradient: '',
   };
 }

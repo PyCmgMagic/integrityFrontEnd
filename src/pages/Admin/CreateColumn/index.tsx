@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {  Calendar, Clock } from 'lucide-react';
-import { CoverUpload } from '../../../components';
 import { useAppStore } from '../../../store/useAppStore';
 import { useParams } from 'react-router-dom';
+import { message } from 'antd';
 
 export interface CreateColumnProps {
   onBack?: () => void;
@@ -10,6 +10,8 @@ export interface CreateColumnProps {
   columnIndex?: number;
   totalColumns?: number;
   loading?: boolean;
+  projectStartDate?: string;
+  projectEndDate?: string;
 }
 
 export interface ColumnData {
@@ -28,7 +30,9 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
   onBack,
   onNext,
   columnIndex = 1,
-  loading = false
+  loading = false,
+  projectStartDate,
+  projectEndDate
 }) => {
   const { getColumnData } = useAppStore();
   const params = useParams();
@@ -39,11 +43,10 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
   const [columnData, setColumnData] = useState<ColumnData>({
     name: '',
     description: '',
-    startDate: '',
-    endDate: '',
-    start_time: '',
-    end_time: '',
-    coverImage: undefined,
+    startDate: projectStartDate || '',
+    endDate: projectEndDate || '',
+    start_time: '00:00',
+    end_time: '23:59',
     dailyCheckinLimit: 1,
     pointsPerCheckin: 1
   });
@@ -68,18 +71,21 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
     }));
   };
 
-  /**
-   * 处理封面变化
-   * @param imageUrl - 上传后的图片 URL
-   */
-  const handleCoverChange = (imageUrl: string) => {
-    setColumnData(prev => ({
-      ...prev,
-      coverImage: imageUrl
-    }));
-  };
-
   const handleNext = () => {
+    // 验证日期范围是否在项目范围内
+    if (projectStartDate && columnData.startDate < projectStartDate) {
+      message.error(`栏目开始日期不能早于项目开始日期 (${projectStartDate})`);
+      return;
+    }
+    if (projectEndDate && columnData.endDate > projectEndDate) {
+      message.error(`栏目结束日期不能晚于项目结束日期 (${projectEndDate})`);
+      return;
+    }
+    if (columnData.endDate < columnData.startDate) {
+      message.error('栏目结束日期不能早于开始日期');
+      return;
+    }
+
     if (onNext) {
       onNext(columnData);
     }
@@ -186,18 +192,6 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
               />
             </div>
           </div>
-        </div>
-
-        {/* 设置活动封面 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            设置活动封面
-          </label>
-          <CoverUpload
-            value={columnData.coverImage}
-            onChange={handleCoverChange}
-            placeholder="添加封面"
-          />
         </div>
 
         {/* 限制每日打卡 */}

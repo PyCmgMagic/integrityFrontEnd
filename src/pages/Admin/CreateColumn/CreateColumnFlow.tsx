@@ -20,6 +20,8 @@ const CreateColumnFlow: React.FC = () => {
   // 从上一个页面（项目创建页）的 state 中获取总数
   // 如果用户直接访问此URL，state可能为空，需要提供一个备用值或重定向
   const totalSteps = location.state?.totalCategories || 1;
+  const projectStartDate = location.state?.projectStartDate;
+  const projectEndDate = location.state?.projectEndDate;
   
   // 使用全局状态管理栏目创建数据
   const {
@@ -63,7 +65,7 @@ const CreateColumnFlow: React.FC = () => {
           project_id: projectId ? parseInt(projectId, 10) : 0,
           start_date: formatDateToNumber(columnData.startDate),
           end_date: formatDateToNumber(columnData.endDate),
-          avatar: columnData.coverImage || '',
+          avatar: '',
           daily_punch_limit: columnData.dailyCheckinLimit,
           point_earned: columnData.pointsPerCheckin,
           start_time: columnData.start_time,
@@ -100,8 +102,12 @@ const CreateColumnFlow: React.FC = () => {
       navigate(
         `/admin/create/activity/${activityId}/project/${projectId}/column/${currentStep + 1}`,
         {
-          // 再次传递总数，以防用户刷新页面
-          state: { totalCategories: totalSteps },
+          // 再次传递总数和日期，以防用户刷新页面
+          state: { 
+            totalCategories: totalSteps,
+            projectStartDate,
+            projectEndDate
+          },
           // 使用replace避免在浏览器历史中堆积创建页面
           replace: true
         }
@@ -163,7 +169,11 @@ const CreateColumnFlow: React.FC = () => {
       navigate(
         `/admin/create/activity/${activityId}/project/${projectId}/column/${currentStep - 1}`,
         {
-          state: { totalCategories: totalSteps }
+          state: { 
+            totalCategories: totalSteps,
+            projectStartDate,
+            projectEndDate
+          }
         }
       );
     } else {
@@ -174,12 +184,14 @@ const CreateColumnFlow: React.FC = () => {
 
   return (
     <CreateColumn
-        key={currentStep} 
+      key={currentStep} 
       onBack={handleBack}
       onNext={handleNext}
       columnIndex={currentStep}
       totalColumns={totalSteps}
       loading={loading}
+      projectStartDate={projectStartDate}
+      projectEndDate={projectEndDate}
     />
   );
 };

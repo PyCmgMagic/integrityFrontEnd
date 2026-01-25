@@ -123,11 +123,19 @@ export const useScoreRecords = (): ScoreRecord[] => {
  */
 export const useRankingData = (): RankingItem[] => {
   // 模拟排行榜数据
-  const rankingData: RankingItem[] = Array.from({ length: 30 }, (_, i) => ({
+  const rankingData: RankingItem[] = Array.from({ length: 10 }, (_, i) => ({
     rank: i + 1,
-    name: `用户${String.fromCharCode(65 + (i % 26))}${i + 1}`,
     score: 100 - i * 2,
-    avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${i}`
+    user: {
+      user_id: i + 1,
+      student_id: (i + 1).toString(),
+      role_id: 1,
+      nick_name: `用户${String.fromCharCode(65 + (i % 26))}${i + 1}`,
+      avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${i}`,
+      college: '某某学院',
+      major: '某某专业',
+      grade: '2024'
+    }
   }));
 
   return rankingData;

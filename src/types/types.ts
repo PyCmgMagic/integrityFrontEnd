@@ -29,6 +29,7 @@ export interface CheckInData {
   column_id?: number;
   content: string;
   imgs:string[];
+  status?: number;
   gradient?: string;
 }
 
@@ -66,7 +67,7 @@ export interface PunchRecord {
   updated_at: string;
   deleted_at: string | null;
   column_id: number;
-  user_id: string;
+  user_id: number;
   content: string;
   status: number;
   imgs: string[];
@@ -121,7 +122,7 @@ export interface StarItem {
     updated_at: string;
     deleted_at: string | null;
     column_id: number;
-    user_id: string;
+    user_id: number;
     content: string;
     status: number;
   };
@@ -129,7 +130,7 @@ export interface StarItem {
 
 // 收藏列表响应的数据结构
 export interface StarListData {
-  user_id: string;
+  user_id: number;
   page_size: number;
   page: number;
   stars: StarItem[];

@@ -28,13 +28,14 @@ const ColumnManage: React.FC = () => {
   const [reviewedData, setReviewedData] = useState<CheckInItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [columnInfo, setColumnInfo] = useState<ColumnInfo>({
-    ID: 0,
+    id: 0,
     name: '',
     description: '',
     avatar: '',
     daily_punch_limit: 0,
     point_earned: 0,
     end_time: '',
+    end_date:0,
     start_time: '',
     start_date: 0,
     today_punch_count: 0,
@@ -74,23 +75,19 @@ const ColumnManage: React.FC = () => {
         return; // 忽略过期的请求
       }
       
-      // 处理直接返回数组的情况
-      if (Array.isArray(response)) {
-        if (response.length > 0) {
-          // 提取所有打卡记录ID
-          const punchIds = response.map(item => item.punch.ID);
-          // 批量获取收藏状态
-          const starStatusMap = await loadStarStatusMap(punchIds);
-          // 使用优化的转换方法，一次性应用收藏状态
-          console.log(starStatusMap);
-          
-          const transformedData = transformPendingDataWithStarStatus(response, starStatusMap);
-          console.log('transformedData:', transformedData);
-          setUnreviewedData(transformedData);
-        } else {
-          setUnreviewedData([]);
-        }
-      }  else {
+      const punches = response.punches || [];
+      if (punches.length > 0) {
+        // 提取所有打卡记录ID
+        const punchIds = punches.map(item => item.punch.ID);
+        // 批量获取收藏状态
+        const starStatusMap = await loadStarStatusMap(punchIds);
+        // 使用优化的转换方法，一次性应用收藏状态
+        console.log(starStatusMap);
+        
+        const transformedData = transformPendingDataWithStarStatus(punches, starStatusMap);
+        console.log('transformedData:', transformedData);
+        setUnreviewedData(transformedData);
+      } else {
         setUnreviewedData([]);
       }
     } catch (error) {
@@ -130,9 +127,10 @@ const ColumnManage: React.FC = () => {
       }
       
       // 处理API返回的完整响应结构
-      if (response && response.code === 200 && Array.isArray(response.data)) {
-        if (response.data.length > 0) {
-          const transformedData = transformReviewedDataList(response.data);
+      if (response && response.code === 200 && response.data && Array.isArray(response.data.punches)) {
+        const punches = response.data.punches;
+        if (punches.length > 0) {
+          const transformedData = transformReviewedDataList(punches);
           console.log('已审核数据:', transformedData);
           setReviewedData(transformedData);
         } else {
@@ -261,6 +259,8 @@ const ColumnManage: React.FC = () => {
         onClose={() => setEditColumnVisible(false)}
         onFinish={handleEditColumnFinish} 
         projectId={parsedProjectId}
+        projectStartDate={columnInfo.start_date}
+        projectEndDate={columnInfo.end_date}
         initialData={columnInfo}
       />
     </div>

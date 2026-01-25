@@ -7,7 +7,6 @@ import ChenkInData from './ChenkInData';
 import CheckIn from '../../../components/CheckIn';
 import { usePunchRecords } from '../../../hooks/usePunchRecords';
 import type { CheckInData } from '../Profile/types';
-// 模拟用户信息，可以从 context 或 props 获取
 
 /**
  * 美化后的活动详情页面
@@ -75,6 +74,15 @@ const ColumnPage = () => {
    * @param recordId 记录ID
    */
   const handleDeleteRecord = async (recordId: number) => {
+    const targetRecord = punchRecords?.find((record) => record.id === recordId);
+    if (targetRecord?.status !== 0) {
+      Toast.show({
+        content: '已审核或未通过的打卡不允许删除',
+        position: 'bottom',
+      });
+      return;
+    }
+
     const result = await Dialog.confirm({
       content: '确定要删除这条打卡记录吗？',
       confirmText: '确认',
@@ -86,14 +94,6 @@ const ColumnPage = () => {
     }
   };
 
-  // --- 模拟数据（后续可以从API获取） ---
-  const column = {
-    name: '单词打卡',
-    time: '每日',
-    description: '这是一个鼓励每日阅读的打卡项目，旨在帮助用户养成良好的阅读习惯。',
-    checkRequirement: '每日完成100个单词的背诵，并提交打卡截图。'
-  };
-
 // 将API获取的打卡记录转换为组件需要的格式
 const formattedPunchRecords:CheckInData[] = (punchRecords || []).map((record, index) => ({
   id: record.id,
@@ -103,6 +103,7 @@ const formattedPunchRecords:CheckInData[] = (punchRecords || []).map((record, in
   time: record.time,
   imgs: record.imgs,
   content: record.content,
+  status: record.status,
   column_id:currentColumnId
 }));
 
@@ -112,13 +113,15 @@ const formattedPunchRecords:CheckInData[] = (punchRecords || []).map((record, in
         {/* 顶部导航栏 */}
         <div className="flex items-center justify-between">
           <Button type="text" shape="circle" icon={<LeftOutlined />} className="text-white hover:bg-white/20" onClick={() => navigate(-1)} />
-          <h1 className="text-xl font-bold">{column.name}</h1>
+          <h1 className="text-xl font-bold">{columnInfo.name}</h1>
           <Button type="text" shape="circle"  className="text-white hover:bg-white/20" />
         </div>
         {/* 打卡列时间显示*/}
         <div className="text-center mt-3">
             <p className="text-sm opacity-80">打卡时间</p>
-            <p className="font-semibold tracking-wider">{column.time}</p>
+            <p className="font-semibold tracking-wider">
+              {columnInfo.start_time || '未知'} - {columnInfo.end_time || '未知'}
+            </p>
         </div>
       </header>
       {/* 主内容区域 */}

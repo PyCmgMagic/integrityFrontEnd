@@ -229,9 +229,9 @@ export interface PendingPunchItem {
     ID: number;
     created_at: string;
     updated_at: string;
-    deleted_at: null;
+    deleted_at: string;
     column_id: number;
-    user_id: string;
+    user_id: number;
     content: string;
     status: number;
   };
@@ -240,10 +240,15 @@ export interface PendingPunchItem {
   stared: boolean;
 }
 
+export interface PunchListData {
+  total: number;
+  punches: PendingPunchItem[];
+}
+
 export interface PendingListResponse {
   code: number;
   msg: string;
-  data: PendingPunchItem[];
+  data: PunchListData;
   timestamp: number;
 }
 

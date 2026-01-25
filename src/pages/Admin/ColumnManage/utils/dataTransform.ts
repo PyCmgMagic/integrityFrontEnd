@@ -19,13 +19,14 @@ export interface CheckInItem {
  * 专栏信息接口定义
  */
 export interface ColumnInfo {
-    ID: number,
+    id: number,
     name: string,
     description: string,
     avatar: string,
     daily_punch_limit: number,
     point_earned: number,
     end_time: string,
+    end_date:number,
     start_time: string,
     start_date: number,
     today_punch_count: number,
@@ -93,9 +94,9 @@ export interface ReviewedPunchItem {
     ID: number;
     created_at: string;
     updated_at: string;
-    deleted_at: null;
+    deleted_at: string;
     column_id: number;
-    user_id: string;
+    user_id: number;
     content: string;
     status: number;
   };

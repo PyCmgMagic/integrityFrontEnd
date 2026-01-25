@@ -3,7 +3,6 @@ import { ChevronLeft,  } from 'lucide-react';
 import {  useNavigate, useParams } from 'react-router-dom';
 import { ProjectAPI } from '../../../services/api';
 import { message } from 'antd';
-import { CoverUpload } from '../../../components';
 
 
 interface CreateProjectProps {
@@ -40,16 +39,6 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
       [field]: value
     }));
   };
-
-/**
-   * 处理封面变化
-   * @param imageUrl - 上传后的图片 URL
-   */
-  const handleCoverChange = (imageUrl: string) => {
-    setProjectData(prev => ({ ...prev, coverImage: imageUrl }));
-  };
-
-
 
   /**
    * 将日期字符串转换为数字格式 (YYYYMMDD)
@@ -97,7 +86,11 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
       navigate(
         `/admin/create/activity/${activityId}/project/${projectId}/column/1`,
         {
-          state: { totalCategories: projectData.categoryCount },
+          state: { 
+            totalCategories: projectData.categoryCount,
+            projectStartDate: projectData.startDate,
+            projectEndDate: projectData.endDate
+          },
           replace: true
         }
       );
@@ -185,18 +178,6 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
               />
             </div>
           </div>
-        </div>
-
-        {/* 设置活动封面 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            设置活动封面
-          </label>
-          <CoverUpload
-            value={projectData.coverImage}
-            onChange={handleCoverChange}
-            placeholder="添加封面"
-          />
         </div>
 
         {/* 栏目数量设置 */}

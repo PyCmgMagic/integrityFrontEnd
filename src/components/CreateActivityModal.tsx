@@ -11,16 +11,16 @@ const { TextArea } = Input;
 // 导入活动类型定义
 
 /**
- * 移动端友好的日期时间选择器组件
+ * 移动端友好的日期选择器组件
  */
-interface MobileDateTimePickerProps {
+interface MobileDatePickerProps {
   value?: Dayjs;
   onChange?: (date: Dayjs | null) => void;
   placeholder?: string;
   minDate?: Dayjs;
 }
 
-const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({ 
+const MobileDatePicker: React.FC<MobileDatePickerProps> = ({ 
   value, 
   onChange, 
   placeholder = "请选择日期",
@@ -28,30 +28,28 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
 }) => {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [tempDate, setTempDate] = useState<string>('');
-  const [tempTime, setTempTime] = useState<string>('');
 
   useEffect(() => {
     if (value) {
       setTempDate(value.format('YYYY-MM-DD'));
-      setTempTime(value.format('HH:mm'));
     }
   }, [value]);
 
   const handleConfirm = () => {
-    if (tempDate && tempTime) {
-      const combinedDateTime = dayjs(`${tempDate} ${tempTime}`);
-      if (minDate && combinedDateTime.isBefore(minDate)) {
-        message.error('选择的时间不能早于开始时间');
+    if (tempDate) {
+      const selectedDate = dayjs(tempDate);
+      if (minDate && selectedDate.isBefore(minDate, 'day')) {
+        message.error('选择的日期不能早于开始日期');
         return;
       }
-      onChange?.(combinedDateTime);
+      onChange?.(selectedDate);
       setPickerVisible(false);
     } else {
-      message.error('请选择完整的日期和时间');
+      message.error('请选择日期');
     }
   };
 
-  const displayValue = value ? value.format('YYYY-MM-DD HH:mm') : '';
+  const displayValue = value ? value.format('YYYY-MM-DD') : '';
 
   return (
     <>
@@ -66,7 +64,7 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
       </div>
 
       <Drawer
-        title="选择日期时间"
+        title="选择日期"
         placement="bottom"
         open={pickerVisible}
         onClose={() => setPickerVisible(false)}
@@ -86,15 +84,6 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
               value={tempDate}
               min={minDate ? minDate.format('YYYY-MM-DD') : undefined}
               onChange={(e) => setTempDate(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg text-lg"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">选择时间</label>
-            <input
-              type="time"
-              value={tempTime}
-              onChange={(e) => setTempTime(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg text-lg"
             />
           </div>
@@ -155,8 +144,8 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
         return;
       }
       
-      if (endTime.isBefore(startTime)) {
-        message.error('结束时间不能早于开始时间');
+      if (endTime.isBefore(startTime, 'day')) {
+        message.error('结束日期不能早于开始日期');
         setLoading(false);
         return;
       }
@@ -230,7 +219,7 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
           <div className="space-y-3">
             <div>
               <div className="text-sm text-gray-600 mb-2">请选择开始时间</div>
-              <MobileDateTimePicker
+              <MobileDatePicker
                 value={startTime || undefined}
                 onChange={setStartTime}
                 placeholder="请选择开始时间"
@@ -243,7 +232,7 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
              
             <div> 
               <div className="text-sm text-gray-600 mb-2">请选择结束时间</div>
-              <MobileDateTimePicker
+              <MobileDatePicker
                 value={endTime || undefined}
                 onChange={setEndTime}
                 placeholder="请选择结束时间"

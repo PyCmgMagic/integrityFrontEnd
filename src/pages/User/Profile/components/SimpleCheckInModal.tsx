@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Image, Typography, Button, Input,  message, Space } from 'antd';
-import { ClockCircleOutlined, CalendarOutlined, EditOutlined, SaveOutlined, CloseOutlined,} from '@ant-design/icons';
+import { Modal, Image, Typography, Button, Input,  message, Space, Tag } from 'antd';
+import { ClockCircleOutlined, CalendarOutlined, EditOutlined, SaveOutlined, CloseOutlined, CheckCircleOutlined, CloseCircleOutlined as CloseCircleFilled, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { CheckInData } from '../../../../types/types';
 import { API } from '../../../../services/api';
 import ImageUpload from '../../../../components/Upload/ImageUpload';
@@ -16,6 +16,40 @@ interface SimpleCheckInModalProps {
   onUpdate?: (updatedData: CheckInData) => void;
   onRefresh?: () => void; // 新增：用于触发父组件重新获取数据
 }
+
+/**
+ * 获取状态标签配置
+ * @param status 状态值：0-待审核，1-已通过，2-未通过
+ * @returns 状态配置对象
+ */
+const getStatusTagConfig = (status?: number) => {
+  switch (status) {
+    case 0:
+      return {
+        text: '待审核',
+        color: 'warning',
+        icon: <ExclamationCircleOutlined />
+      };
+    case 1:
+      return {
+        text: '已通过',
+        color: 'success',
+        icon: <CheckCircleOutlined />
+      };
+    case 2:
+      return {
+        text: '未通过',
+        color: 'error',
+        icon: <CloseCircleFilled />
+      };
+    default:
+      return {
+        text: '未知',
+        color: 'default',
+        icon: <ExclamationCircleOutlined />
+      };
+  }
+};
 
 /**
  * 简单的打卡详情弹窗组件
@@ -148,14 +182,17 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
           <span>打卡详情</span>
           <Space>
             {!isEditing ? (
-              <Button 
-                type="primary" 
-                icon={<EditOutlined />} 
-                onClick={() => setIsEditing(true)}
-                size="small"
-              >
-                编辑
-              </Button>
+              // 只有待审核状态 (status === 0) 允许编辑
+              checkInData.status === 0 && (
+                <Button 
+                  type="primary" 
+                  icon={<EditOutlined />} 
+                  onClick={() => setIsEditing(true)}
+                  size="small"
+                >
+                  编辑
+                </Button>
+              )
             ) : (
               <>
                 <Button 
@@ -188,7 +225,7 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
             <Title level={3} className="mb-2 text-gray-800">
               {checkInData.title}
             </Title>
-            <div className="flex justify-center items-center gap-4 text-gray-500">
+            <div className="flex justify-center items-center gap-4 text-gray-500 mb-3">
               <div className="flex items-center gap-1">
                 <ClockCircleOutlined />
                 <Text type="secondary">{checkInData.time}</Text>
@@ -198,6 +235,21 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
                 <Text type="secondary">{formatDisplayDate(checkInData.date)}</Text>
               </div>
             </div>
+            {/* 状态标签 */}
+            {checkInData.status !== undefined && (() => {
+              const statusConfig = getStatusTagConfig(checkInData.status);
+              return (
+                <div className="flex justify-center">
+                  <Tag 
+                    color={statusConfig.color} 
+                    icon={statusConfig.icon}
+                    className="px-4 py-1 text-base font-medium"
+                  >
+                    {statusConfig.text}
+                  </Tag>
+                </div>
+              );
+            })()}
           </div>
 
           {/* 打卡内容 */}

@@ -1,6 +1,7 @@
 
+
 import { useState } from 'react';
-import {  BookOutlined,  } from '@ant-design/icons';
+import {  BookOutlined, ClockCircleOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined  } from '@ant-design/icons';
 import { SwipeAction ,Dialog, Toast } from 'antd-mobile';
 import SimpleCheckInModal from '../../../pages/User/Profile/components/SimpleCheckInModal';
 import type { CheckInData } from '../../../types/types';
@@ -14,6 +15,48 @@ interface ChenkInDataProps {
   onUpdate?: (updatedData: CheckInData) => void;
   onRefresh?: () => void; // 新增：用于触发数据刷新
 }
+
+/**
+ * 获取状态标签配置
+ * @param status 状态值：0-待审核，1-已通过，2-未通过
+ * @returns 状态配置对象
+ */
+const getStatusConfig = (status?: number) => {
+  switch (status) {
+    case 0:
+      return {
+        text: '待审核',
+        color: 'text-yellow-600',
+        bgColor: 'bg-yellow-50',
+        borderColor: 'border-yellow-200',
+        icon: <ExclamationCircleOutlined className="text-yellow-600" />
+      };
+    case 1:
+      return {
+        text: '已通过',
+        color: 'text-green-600',
+        bgColor: 'bg-green-50',
+        borderColor: 'border-green-200',
+        icon: <CheckCircleOutlined className="text-green-600" />
+      };
+    case 2:
+      return {
+        text: '未通过',
+        color: 'text-red-600',
+        bgColor: 'bg-red-50',
+        borderColor: 'border-red-200',
+        icon: <CloseCircleOutlined className="text-red-600" />
+      };
+    default:
+      return {
+        text: '未知',
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+        borderColor: 'border-gray-200',
+        icon: <ClockCircleOutlined className="text-gray-600" />
+      };
+  }
+};
 
 /**
  * 打卡数据展示组件
@@ -48,6 +91,7 @@ const ChenkInData = ({
       time: checkInRecord.time || '',
       imgs: checkInRecord.imgs || [],
       column_id: checkInRecord.column_id || 0,
+      status: checkInRecord.status,
     };
 
     setSelectedCheckIn(checkInData);
@@ -126,24 +170,40 @@ const ChenkInData = ({
               <p className="text-gray-400 text-sm">完成你的第一次打卡吧！↓</p>
             </div>
           ) : (
-            columns.map((column) => (
-               <SwipeAction
-                key={column.id}
-                rightActions={rightActions(column.id)}
-              >
-              <div 
-                key={column.id} 
-                className={`bg-gradient-to-r ${column.gradient} p-5 shadow-lg flex items-center justify-between cursor-pointer hover:opacity-90 transition-opacity`}
-                onClick={() => handleCheckInClick(column)}
-              >
-                <div className="flex items-center">
-                  <div>  
-                    <h2 className="text-xl font-bold text-white">{column.title}</h2>
-                  </div>
-                </div> 
-              </div> 
-          </SwipeAction>
-            ))
+            columns.map((column) => {
+              const statusConfig = getStatusConfig(column.status);
+              return (
+                <SwipeAction
+                  key={column.id}
+                  rightActions={rightActions(column.id)}
+                >
+                  <div 
+                    className={`bg-gradient-to-r ${column.gradient} p-5 shadow-lg cursor-pointer hover:opacity-90 transition-opacity`}
+                    onClick={() => handleCheckInClick(column)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">  
+                        <h2 className="text-xl font-bold text-white mb-2">{column.title}</h2>
+                        <div className="flex items-center gap-3 text-white/90 text-sm">
+                          {/* 打卡时间 */}
+                          <div className="flex items-center gap-1">
+                            <ClockCircleOutlined />
+                            <span>{column.date} {column.time}</span>
+                          </div>
+                        </div>
+                      </div>
+                      {/* 状态标签 */}
+                      <div className={`${statusConfig.bgColor} ${statusConfig.borderColor} border-2 rounded-lg px-3 py-1.5 flex items-center gap-2 shadow-sm`}>
+                        {statusConfig.icon}
+                        <span className={`${statusConfig.color} font-semibold text-sm`}>
+                          {statusConfig.text}
+                        </span>
+                      </div>
+                    </div> 
+                  </div> 
+                </SwipeAction>
+              );
+            })
           )}
         </div>
  

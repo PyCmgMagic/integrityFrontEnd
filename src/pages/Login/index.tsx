@@ -145,8 +145,8 @@ const LoginPage = () => {
         </div>
 
         <div className={styles.footer}>
-          <button className={styles.footerLink}>注册账号</button>
-          <button 
+          <button className={styles.footerLink}>学生在线，精彩无限</button>
+          {/* <button 
             className={styles.footerLink}
             onClick={() => {
               message.info({
@@ -159,7 +159,7 @@ const LoginPage = () => {
             }}
           >
             需要帮助？
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

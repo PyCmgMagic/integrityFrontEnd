@@ -3,7 +3,6 @@ import { Modal, Form, Input, Button, message, Drawer, Space } from 'antd';
 import { CalendarOutlined } from '@ant-design/icons';
 import dayjs, { type Dayjs } from 'dayjs';
 import { API } from '../../../services/api';
-import { CoverUpload } from '../../../components';
 
 const { TextArea } = Input;
 
@@ -124,20 +123,21 @@ interface EditColumnModalProps {
   onFinish?: (values: any) => void;
   initialData?: any;
   projectId: number; // 项目ID，用于创建栏目
+  projectStartDate:number;
+  projectEndDate:number;
 }
 
-const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onFinish, initialData, projectId }) => {
+const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onFinish, initialData, projectId, projectStartDate, projectEndDate }) => {
 
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string>('');
 
   // 日期范围状态
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
   // 每日打卡时间段状态
-  const [dailyStartTime, setDailyStartTime] = useState<string>('');
-  const [dailyEndTime, setDailyEndTime] = useState<string>('');
+  const [dailyStartTime, setDailyStartTime] = useState<string>('00:00');
+  const [dailyEndTime, setDailyEndTime] = useState<string>('23:59');
 
   // 当弹窗打开或初始数据变化时，同步表单数据
   useEffect(() => {
@@ -145,11 +145,6 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
       if (initialData) {
         // 设置表单所有字段的值
         form.setFieldsValue({ ...initialData });
-
-        if (initialData.avatar) {
-          setImageUrl(initialData.avatar);
-        }
-
         // 设置日期状态（从start_date和end_date数字格式转换）
         if (initialData.start_date) {
           const startDateStr = initialData.start_date.toString();
@@ -172,23 +167,26 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
       } else {
         // 如果是新建栏目，则清空所有状态
         form.resetFields();
-        setImageUrl('');
         setStartDate(null);
         setEndDate(null);
-        setDailyStartTime('');
-        setDailyEndTime('');
+        
+        // 如果有项目的开始和结束日期，则预填写
+        if (projectStartDate) {
+          const startDateStr = projectStartDate.toString();
+          const formattedStartDate = `${startDateStr.slice(0, 4)}-${startDateStr.slice(4, 6)}-${startDateStr.slice(6, 8)}`;
+          setStartDate(dayjs(formattedStartDate));
+        }
+        if (projectEndDate) {
+          const endDateStr = projectEndDate.toString();
+          const formattedEndDate = `${endDateStr.slice(0, 4)}-${endDateStr.slice(4, 6)}-${endDateStr.slice(6, 8)}`;
+          setEndDate(dayjs(formattedEndDate));
+        }
+
+        setDailyStartTime('00:00');
+        setDailyEndTime('23:59');
       }
     }
   }, [initialData, visible, form]);
-
-  /**
-   * 处理封面图片变化
-   * @param url - 新的图片URL
-   */
-  const handleCoverChange = (url: string) => {
-    setImageUrl(url);
-    form.setFieldsValue({ avatar: url });
-  };
 
   const handleFormSubmit = async (values: any) => {
     // 验证日期范围
@@ -202,6 +200,22 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
       return;
     }
 
+    // 验证日期是否在项目范围内
+    if (projectStartDate) {
+      const pStart = dayjs(projectStartDate.toString(), 'YYYYMMDD');
+      if (startDate.isBefore(pStart, 'day')) {
+        message.error(`栏目开始日期不能早于项目开始日期 (${pStart.format('YYYY-MM-DD')})`);
+        return;
+      }
+    }
+    if (projectEndDate) {
+      const pEnd = dayjs(projectEndDate.toString(), 'YYYYMMDD');
+      if (endDate.isAfter(pEnd, 'day')) {
+        message.error(`栏目结束日期不能晚于项目结束日期 (${pEnd.format('YYYY-MM-DD')})`);
+        return;
+      }
+    }
+
     // 验证每日打卡时间
     if (!dailyStartTime || !dailyEndTime) {
       message.error('请选择完整的每日打卡时间段');
@@ -210,11 +224,6 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
 
     if (dailyEndTime <= dailyStartTime) {
       message.error('每日打卡结束时间必须晚于开始时间');
-      return;
-    }
-
-    if (!imageUrl) {
-      message.error('请上传栏目封面');
       return;
     }
 
@@ -230,7 +239,7 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         end_date: parseInt(endDate.format('YYYYMMDD')), // 转换为数字格式
         start_time: dailyStartTime, // 每日打卡开始时间
         end_time: dailyEndTime, // 每日打卡结束时间
-        avatar: imageUrl, // 使用avatar字段名
+        avatar: '', // 不再需要上传封面
         daily_punch_limit: parseInt(values.daily_punch_limit), // 每日可打卡次数
         point_earned: parseInt(values.point_earned), // 每次打卡获得积分
       };
@@ -249,7 +258,6 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
       if (onFinish) {
         onFinish({
           ...values,
-          cover: imageUrl,
           start_date: parseInt(startDate.format('YYYYMMDD')),
           end_date: parseInt(endDate.format('YYYYMMDD')),
           start_time: dailyStartTime,
@@ -349,19 +357,6 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
               />
             </div>
           </div>
-        </Form.Item>
-
-        <Form.Item
-          name="avatar"
-          label={<span className="font-semibold text-gray-700">设置栏目封面</span>}
-          rules={[{ required: true, message: '请上传栏目封面' }]}
-        >
-          <CoverUpload
-            value={imageUrl}
-            onChange={handleCoverChange}
-            placeholder="上传栏目封面"
-            height="h-40"
-          />
         </Form.Item>
 
         <Form.Item

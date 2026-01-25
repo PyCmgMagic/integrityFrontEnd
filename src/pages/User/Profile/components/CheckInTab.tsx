@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Typography } from 'antd';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
+import { ClockCircleOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { CheckInData } from '../../../../types/types';
 import SimpleCheckInModal from './SimpleCheckInModal';
 
@@ -13,6 +14,48 @@ interface CheckInTabProps {
   onUpdate?: (updatedData: CheckInData) => void;
   onRefresh?: () => void; // 新增：用于触发数据刷新
 }
+
+/**
+ * 获取状态标签配置
+ * @param status 状态值：0-待审核，1-已通过，2-未通过
+ * @returns 状态配置对象
+ */
+const getStatusConfig = (status?: number) => {
+  switch (status) {
+    case 0:
+      return {
+        text: '待审核',
+        color: 'text-yellow-600',
+        bgColor: 'bg-yellow-50',
+        borderColor: 'border-yellow-300',
+        icon: <ExclamationCircleOutlined className="text-yellow-600" />
+      };
+    case 1:
+      return {
+        text: '已通过',
+        color: 'text-green-600',
+        bgColor: 'bg-green-50',
+        borderColor: 'border-green-300',
+        icon: <CheckCircleOutlined className="text-green-600" />
+      };
+    case 2:
+      return {
+        text: '未通过',
+        color: 'text-red-600',
+        bgColor: 'bg-red-50',
+        borderColor: 'border-red-300',
+        icon: <CloseCircleOutlined className="text-red-600" />
+      };
+    default:
+      return {
+        text: '未知',
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+        borderColor: 'border-gray-300',
+        icon: <ClockCircleOutlined className="text-gray-600" />
+      };
+  }
+};
 
 /**
  * 打卡记录标签页组件
@@ -86,31 +129,42 @@ const CheckInTab: React.FC<CheckInTabProps> = ({ checkInData, onDelete, formatDa
   return (
     <>
       <div className="p-0 pt-0">
-        {checkInData.map((item, index) => (
-          <SwipeAction
-            key={item.id}
-            style={{ ['--adm-swipe-action-actions-border-radius' as string]: '0.75rem' }}
-            rightActions={createRightActions(item.id)}
-            className={index === checkInData.length - 1 ? '' : 'mb-3'}
-          >
-            <div 
-              className="w-full bg-blue-50 rounded-xl p-4 transition-all hover:bg-blue-100 hover:shadow-md cursor-pointer"
-              onClick={() => handleCheckInClick(item)}
+        {checkInData.map((item, index) => {
+          const statusConfig = getStatusConfig(item.status);
+          return (
+            <SwipeAction
+              key={item.id}
+              style={{ ['--adm-swipe-action-actions-border-radius' as string]: '0.75rem' }}
+              rightActions={createRightActions(item.id)}
+              className={index === checkInData.length - 1 ? '' : 'mb-3'}
             >
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div>
-                    <Text strong className="text-gray-800">{item.title}</Text>
-                    <div className="flex justify-between items-center mt-1">
-                      <p className="text-gray-500 text-sm m-0">{item.time}</p>
-                      <Text type="secondary" className="font-semibold ml-4">{formatDate(item.date)}</Text>
+              <div 
+                className="w-full bg-blue-50 rounded-xl p-4 transition-all hover:bg-blue-100 hover:shadow-md cursor-pointer"
+                onClick={() => handleCheckInClick(item)}
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex-1">
+                    <Text strong className="text-gray-800 text-base">{item.title}</Text>
+                    <div className="flex items-center gap-3 mt-2">
+                      {/* 打卡日期和时间 */}
+                      <div className="flex items-center gap-1 text-gray-500 text-sm">
+                        <ClockCircleOutlined />
+                        <span>{formatDate(item.date)} {item.time}</span>
+                      </div>
                     </div>
+                  </div>
+                  {/* 状态标签 */}
+                  <div className={`${statusConfig.bgColor} ${statusConfig.borderColor} border rounded-lg px-2.5 py-1 flex items-center gap-1.5 ml-3 flex-shrink-0`}>
+                    {statusConfig.icon}
+                    <span className={`${statusConfig.color} font-medium text-xs whitespace-nowrap`}>
+                      {statusConfig.text}
+                    </span>
                   </div>
                 </div>
               </div>
-            </div>
-          </SwipeAction>
-        ))}
+            </SwipeAction>
+          );
+        })}
       </div>
       
       {/* 打卡详情弹窗 */}

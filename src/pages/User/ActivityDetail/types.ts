@@ -66,15 +66,29 @@ export interface ScoreRecord {
 }
 
 /**
- * 排行榜数据接口
+ * 排行榜数据项接口
  */
 export interface RankingItem {
-  /** 排名 */
   rank: number;
-  /** 用户名 */
-  name: string;
-  /** 得分 */
   score: number;
-  /** 头像URL */
-  avatar: string;
+  user: {
+    user_id: number;
+    student_id: string;
+    role_id: number;
+    nick_name: string;
+    avatar: string;
+    college: string;
+    major: string;
+    grade: string;
+  };
+}
+
+/**
+ * 排行榜API响应接口
+ */
+export interface RankingListResponse {
+  code: number;
+  msg: string;
+  data: RankingItem[];
+  timestamp: number;
 }

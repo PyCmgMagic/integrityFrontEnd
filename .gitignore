@@ -32,3 +32,4 @@ docs
 *.njsproj
 *.sln
 *.sw?
+dist.zip

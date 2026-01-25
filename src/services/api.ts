@@ -19,6 +19,7 @@ import type {
   ProjectDetail,
   ParticipationHistoryResponse,
   ApiResponse,
+  PunchListData,
 } from '../types/api';
 import type { UserProfile, ActivityData, CheckInData, PunchRecordsData, MyPunchListResponse } from '../types/types';
 
@@ -181,6 +182,24 @@ export class ActivityAPI {
    */
   static async getActivityStaticDetail(id: number): Promise<ApiResponse<UserStats>> {
     return request.getFull<UserStats>(`/stats/activity/${id}/brief`);
+  }
+  /**
+   * 获取活动排行榜
+   */
+  static async getActivityRank(id: number, params: { page?: number; page_size?: number; force?: boolean } = {}): Promise<import('../pages/User/ActivityDetail/types').RankingListResponse> {
+    const { page = 1, page_size = 20, force = false } = params;
+    const safePage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
+    const safePageSize = Number.isFinite(page_size) ? Math.max(1, Math.floor(page_size)) : 20;
+    const response = await request.postFull<import('../pages/User/ActivityDetail/types').RankingItem[]>(`/stats/activity/${id}/rank`, {
+      page: safePage,
+      page_size: safePageSize,
+      force
+    });
+    return {
+      ...response,
+      // 确保 timestamp 始终有值
+      timestamp: response.timestamp ?? Date.now()
+    };
   }
   /**
    * 创建活动
@@ -459,6 +478,9 @@ export class FileAPI {
   static async uploadFiles(
     files: UploadFile[]
   ): Promise<{ url: string; filename: string }[]> {
+    if (files.length === 0) {
+      return [];
+    }
     const uploadPromises = files.map((fileItem) =>
       this.uploadFile(fileItem.file, fileItem.onProgress)
     );
@@ -577,7 +599,7 @@ export class ColumnAPI {
  * 获取栏目信息
  */
 static async getColumnInfo(id: number): Promise<ApiResponse<{
-  ID: number;
+  id: number;
   name: string;
   description: string;
   avatar: string; // 栏目封面
@@ -586,12 +608,14 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
   end_time: string; // 结束时间
   start_time: string; // 开始时间
   start_date: number; // 开始日期
+  end_date: number; // 结束日期
   today_punch_count: number; // 今日打卡次数
   owner_id: string;
   project_id: number;
+  punched_today: boolean;
 }>> {
   return request.getFull<{
-  ID: number;
+  id: number;
   name: string;
   description: string;
   avatar: string; // 栏目封面
@@ -600,9 +624,11 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
   end_time: string; // 结束时间
   start_time: string; // 开始时间
   start_date: number; // 开始日期
+  end_date: number; // 结束日期
   today_punch_count: number; // 今日打卡次数
   owner_id: string;
   project_id: number;
+  punched_today: boolean;
   }>(`/column/get/${id}`, {
     showLoading: true,
     showError: true,
@@ -670,44 +696,10 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
   /**
    * 获取待审核列表
    */
-  static async getPendingList(columnId: number): Promise<{
-    code: number;
-    msg: string;
-    data: Array<{
-      punch: {
-        ID: number;
-        created_at: string;
-        updated_at: string;
-        deleted_at: null;
-        column_id: number;
-        user_id: string;
-        content: string;
-        status: number;
-      };
-      imgs: string[];
-      nick_name: string;
-    }>;
-    timestamp: number;
-  }> {
-    return request.get<{
-      code: number;
-      msg: string;
-      data: Array<{
-        punch: {
-          ID: number;
-          created_at: string;
-          updated_at: string;
-          deleted_at: null;
-          column_id: number;
-          user_id: string;
-          content: string;
-          status: number;
-        };
-        imgs: string[];
-        nick_name: string;
-      }>;
-      timestamp: number;
-    }>(`/punch/pending-list?column_id=${columnId}`, {
+  static async getPendingList(columnId: number): Promise<PunchListData> {
+    return request.get<PunchListData>('/punch/pending-list', {
+      column_id: columnId
+    }, {
       showLoading: true,
       showError: true,
     });
@@ -716,36 +708,8 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
   /**
    * 获取已审核列表
    */
-  static async getReviewedList(columnId: number): Promise<ApiResponse<Array<{
-    punch: {
-      ID: number;
-      created_at: string;
-      updated_at: string;
-      deleted_at: null;
-      column_id: number;
-      user_id: string;
-      content: string;
-      status: number;
-    };
-    imgs: string[];
-    nick_name: string;
-    stared: boolean;
-  }>>> {
-    return request.getFull<Array<{
-      punch: {
-        ID: number;
-        created_at: string;
-        updated_at: string;
-        deleted_at: null;
-        column_id: number;
-        user_id: string;
-        content: string;
-        status: number;
-      };
-      imgs: string[];
-      nick_name: string;
-      stared: boolean;
-    }>>('/punch/reviewed', {
+  static async getReviewedList(columnId: number): Promise<ApiResponse<PunchListData>> {
+    return request.getFull<PunchListData>('/punch/reviewed', {
       column_id: columnId
     }, {
       showLoading: true,

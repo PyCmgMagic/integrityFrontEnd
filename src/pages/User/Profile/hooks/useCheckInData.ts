@@ -14,24 +14,25 @@ const transformPunchData = (punchItems: PunchItem[] | [] | undefined): CheckInDa
     return [];
   }
   
-  return punchItems.map((item, index) => {
+  return punchItems.map((item) => {
     // 拼接 title：activity_name - project_name - column_name
     const title = `${item.activity_name} - ${item.project_name} - ${item.column_name}`;
     
-    // 格式化日期
-    const date = new Date(item.punch.created_at);
-    const formattedDate = `${date.getMonth() + 1}.${date.getDate()}`;
+    // 格式化日期时间
+    const dateObj = new Date(item.punch.created_at);
+    const formattedDate = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+    const formattedTime = dateObj.toTimeString().split(' ')[0].substring(0, 5); // HH:mm
     
-    // 生成时间描述
-    const time = `第${punchItems.length - index}次打卡`;
     return {
       id: item.punch.ID,
       title,
-      time,
+      time: formattedTime,
       date: formattedDate,
       content: item.punch.content,
-      project_id: item.punch.column_id,
-      imgs:item.imgs
+      status: item.punch.status,
+      project_id: item.project_id,
+      column_id: item.punch.column_id,
+      imgs: item.imgs
     };
   });
 };

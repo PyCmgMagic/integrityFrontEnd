@@ -44,7 +44,7 @@ const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
   }
 
   return (
-    <div className="p-4 pt-0 space-y-4">
+    <div className="p-4 pt-0 space-y-5">
       {activityHistory.map((item, index) => {
         const gradientClasses = [
           'gradient-card-purple',
@@ -57,33 +57,41 @@ const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
         return (
           <Card
             key={item.ID}
-            className={`modern-card ${gradientClass} rounded-2xl shadow-lg border-0`}
+            className={`modern-card ${gradientClass} rounded-3xl shadow-xl border-0 overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer`}
+            styles={{ body: { padding: '16px' } }}
             onClick={() =>handleClick(item.ID)}
             cover={
-              <div className="relative h-32 overflow-hidden"> 
+              <div className="relative h-40 overflow-hidden group"> 
                 <img
                   alt={item.name}
                   src={item.avatar || '/assets/默认封面.png'}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-3 left-4 text-white">
-                  <h3 className="font-bold text-lg mb-1">{item.name}</h3>
-                  <p className="text-sm opacity-95 overflow-hidden overflow-ellipsis line-clamp-2">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                <div className="absolute top-3 right-3">
+                  <div className="bg-white/20 backdrop-blur-md rounded-full px-3 py-1 text-white text-xs font-medium border border-white/30">
+                    已参加
+                  </div>
+                </div>
+                <div className="absolute bottom-3 left-4 right-4 text-white">
+                  <h3 className="font-bold text-xl mb-1.5 drop-shadow-lg">{item.name}</h3>
+                  <p className="text-sm opacity-95 overflow-hidden overflow-ellipsis line-clamp-2 drop-shadow-md">
                     {item.description}
                   </p>
                 </div>
               </div>
             }
           >
-            <div className="flex h-1 items-center justify-between">
-              <div className="flex items-center text-sm">
-                <CalendarOutlined className="mr-2" />
-                <span>{formatDate(item.created_at)}</span>
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center text-sm font-medium">
+                <div className="bg-white/30 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center">
+                  <CalendarOutlined className="mr-2 text-base" />
+                  <span>{formatDate(item.created_at)}</span>
+                </div>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm font-medium">已参加</span>
+                <div className="w-2.5 h-2.5 bg-green-400 rounded-full shadow-lg shadow-green-400/50 animate-pulse"></div>
+                <span className="text-sm font-semibold">活跃</span>
               </div>
             </div>
           </Card>

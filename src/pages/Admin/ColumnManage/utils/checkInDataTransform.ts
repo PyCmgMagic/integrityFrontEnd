@@ -12,7 +12,7 @@ export interface CheckInItem {
   username: string;
   time: string;
   punchId: number;
-  userId: string;
+  userId: number;
 }
 
 // 新API返回的打卡详情数据类型
@@ -27,7 +27,7 @@ export interface PunchDetailResponse {
       updated_at: string;
       deleted_at: null;
       column_id: number;
-      user_id: string;
+      user_id: number | string;
       content: string;
       status: number;
     };
@@ -73,7 +73,7 @@ export const transformPunchDetail = (response: PunchDetailResponse, username: st
   return {
     id: 0, // 单个详情页面不需要索引
     punchId: data.punch.ID,
-    userId: data.punch.user_id,
+    userId: (Number)(data.punch.user_id),
     date: new Date(data.punch.created_at).toLocaleDateString('zh-CN'),
     time: new Date(data.punch.created_at).toLocaleTimeString('zh-CN', { 
       hour: '2-digit', 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { message } from 'antd';
 import { API } from '../services/api';
 import type { CheckInData } from '../types/types';
@@ -16,8 +16,10 @@ export const usePunchRecords = (columnId: number) => {
   const [userCount, setUserCount] = useState(0);
   const [initialized, setInitialized] = useState(false);
   const [punchedToday, setPunchedToday] = useState(false);
+  const fetchInFlightRef = useRef(false);
+  const initialFetchRef = useRef<number | null>(null);
   const [columnInfo, setColumnInfo] = useState<{
-      ID: number;
+      id: number;
       name: string;
       description: string;
       avatar: string;
@@ -26,11 +28,13 @@ export const usePunchRecords = (columnId: number) => {
       end_time: string;
       start_time: string;
       start_date: number;
+      end_date: number;
       today_punch_count: number;
       owner_id: string;
       project_id: number;
+      punched_today: boolean;
   }>({
-    ID: 0,
+    id: 0,
     name: '',
     description: '',
     avatar: '',
@@ -39,9 +43,11 @@ export const usePunchRecords = (columnId: number) => {
     end_time: '',
     start_time: '',
     start_date: 0,
+    end_date: 0,
     today_punch_count: 0,
     owner_id: '',
-    project_id: 0
+    project_id: 0,
+    punched_today: false
   });
 
 
@@ -49,11 +55,17 @@ export const usePunchRecords = (columnId: number) => {
    * 获取打卡记录列表
    */
   const fetchPunchRecords = useCallback(async () => {
+    if (fetchInFlightRef.current) {
+      return;
+    }
+    fetchInFlightRef.current = true;
+
     // 验证columnId是否有效
     if (!columnId || columnId <= 0) {
       setError('无效的栏目ID');
       setLoading(false);
       setInitialized(true);
+      fetchInFlightRef.current = false;
       return;
     }
 
@@ -63,6 +75,8 @@ export const usePunchRecords = (columnId: number) => {
       
       // request工具已经提取了response.data.data，所以这里直接获得的是数据部分
       const data = await API.Column.getPunchRecords(columnId);
+      console.log(data);
+      console.log(22222222)
       const today_punch_count = await API.Column.getTodayTotalPunchRecords(columnId);
       const columnInfo = await API.Column.getColumnInfo(columnId)
       setColumnInfo(columnInfo.data)
@@ -81,6 +95,7 @@ export const usePunchRecords = (columnId: number) => {
       }
     } finally {
       setLoading(false);
+      fetchInFlightRef.current = false;
     }
   }, [columnId]);
 
@@ -114,7 +129,8 @@ export const usePunchRecords = (columnId: number) => {
 
   // 组件挂载时自动获取数据
   useEffect(() => {
-    if (columnId && columnId > 0 && !initialized) {
+    if (columnId && columnId > 0 && initialFetchRef.current !== columnId) {
+      initialFetchRef.current = columnId;
       fetchPunchRecords().then(() => {
         setInitialized(true);
       }).catch(() => {
@@ -122,7 +138,7 @@ export const usePunchRecords = (columnId: number) => {
         setInitialized(true);
       });
     }
-  }, [columnId, fetchPunchRecords, initialized]);
+  }, [columnId, fetchPunchRecords]);
 
   return {
     loading,

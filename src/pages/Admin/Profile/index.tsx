@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Typography, Avatar, List, Button,  Empty, Spin, Space } from 'antd';
-import { Dialog, SwipeAction, Toast, Tabs } from 'antd-mobile';
-import { EditOutlined,StarOutlined,  LogoutOutlined } from '@ant-design/icons';
+import { Dialog, Toast, Tabs } from 'antd-mobile';
+import { EditOutlined,StarOutlined,  LogoutOutlined, CalendarOutlined } from '@ant-design/icons';
 
 // 添加全局样式来禁用浏览器左滑返回
 const globalStyles = `
@@ -63,6 +64,7 @@ const { Title, Text } = Typography;
 const initialFavoriteData: FavoriteData[] = [];
 
 const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   // 从认证store获取用户信息
   const { user: authUser, setUserProfile, logout } = useAuthStore();
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -466,126 +468,152 @@ const ProfilePage: React.FC = () => {
               } as React.CSSProperties}
             >
               <Tabs.Tab title="我创建的活动" key="0">
-                <div className="p-2 pt-0">
-                  {myActivitiesLoading ? (
-                    <div className="flex justify-center items-center py-8">
-                      <Spin size="large">
-                        <div className="p-8 text-center text-gray-600">加载我创建的活动中...</div>
-                      </Spin>
+                {myActivitiesLoading ? (
+                  <div className="flex justify-center items-center py-8">
+                    <Spin size="large">
+                      <div className="p-8 text-center text-gray-600">加载我创建的活动中...</div>
+                    </Spin>
+                  </div>
+                ) : myActivitiesError ? (
+                  <div className="text-center py-12">
+                    <div className="mb-4">
+                      <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                     </div>
-                  ) : myActivitiesError ? (
-                    <div className="text-center py-12">
-                      <div className="mb-4">
-                        <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">加载失败</h3>
+                    <p className="text-gray-500 mb-4">{myActivitiesError}</p>
+                    {myActivitiesError.includes('登录') && (
+                      <div className="text-sm text-red-600 mb-4 p-3 bg-red-50 rounded-lg">
+                        提示：请检查您的登录状态，如果问题持续存在，请重新登录
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">加载失败</h3>
-                      <p className="text-gray-500 mb-4">{myActivitiesError}</p>
-                      {myActivitiesError.includes('登录') && (
-                        <div className="text-sm text-red-600 mb-4 p-3 bg-red-50 rounded-lg">
-                          提示：请检查您的登录状态，如果问题持续存在，请重新登录
-                        </div>
-                      )}
-                      <div className="space-x-4">
-                        <button 
-                          onClick={fetchMyActivities}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          重试
-                        </button>
-                        {myActivitiesError.includes('登录') && (
-                          <button 
-                            onClick={() => {
-                              logout();
-                              window.location.href = '/login';
-                            }}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            重新登录
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ) : myActivities.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="mb-4">
-                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">暂无创建的活动</h3>
-                       <p className="text-gray-500 mb-4">您还没有创建任何活动，快去创建第一个活动吧！</p>
-                       <div className="space-x-4">
-                         <button 
-                           onClick={fetchMyActivities}
-                           className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                         >
-                           刷新
-                         </button>
-                         <button 
-                           onClick={() => window.location.href = '/admin/home'}
-                           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                         >
-                           去创建活动
-                         </button>
-                       </div>
-                    </div>
-                  ) : (
-                    myActivities.map((activity, index) => (
-                      <SwipeAction
-                        key={activity.ID}
-                        style={{ ['--adm-swipe-action-actions-border-radius' as string]: '0.75rem' }}
-                        rightActions={[
-                          {
-                            key: 'delete',
-                            text: '删除',
-                            color: 'danger' as const,
-                            onClick: async () => {
-                              const result = await Dialog.confirm({
-                                content: '确定要删除这个活动吗？',
-                                confirmText: '确认',
-                                cancelText: '取消',
-                              });
-                              if (result) {
-                                try {
-                                  const response = await API.Activity.deleteActivity(activity.ID);
-                                   if (response.code === 200) {
-                                     // 重新获取我创建的活动列表
-                                     await fetchMyActivities();
-                                     Toast.show({ content: '删除成功', position: 'bottom' });
-                                   } else {
-                                     Toast.show({ content: response.msg || '删除失败', position: 'bottom' });
-                                   }
-                                } catch (error) {
-                                  console.error('删除活动失败:', error);
-                                  Toast.show({ content: '删除失败，请重试', position: 'bottom' });
-                                }
-                              }
-                            },
-                          },
-                        ]}
-                        className={index === myActivities.length - 1 ? '' : 'mb-3'}
+                    )}
+                    <div className="space-x-4">
+                      <button 
+                        onClick={fetchMyActivities}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
-                        <div className="w-full bg-blue-50 rounded-xl p-4 transition-all hover:bg-blue-100 hover:shadow-md">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center">
-                              <div>
-                                <Text strong className="text-gray-800">{activity.name}</Text>
-                                <div className="flex justify-between items-center mt-1">
-                                  <p className="text-gray-500 text-sm m-0">{activity.description || '暂无描述'}</p> 
-                                  <Text type="secondary" className="font-semibold ml-4">
-                                    {activity.start_date ? formatDateFromNumber(activity.start_date) : '未设置'}
-                                  </Text>
+                        重试
+                      </button>
+                      {myActivitiesError.includes('登录') && (
+                        <button 
+                          onClick={() => {
+                            logout();
+                            window.location.href = '/login';
+                          }}
+                          className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          重新登录
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : myActivities.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="mb-4">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">暂无创建的活动</h3>
+                    <p className="text-gray-500 mb-4">您还没有创建任何活动，快去创建第一个活动吧！</p>
+                    <div className="space-x-4">
+                      <button 
+                        onClick={fetchMyActivities}
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        刷新
+                      </button>
+                      <button 
+                        onClick={() => window.location.href = '/admin/home'}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        去创建活动
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 pt-0 space-y-5">
+                    {myActivities.map((activity, index) => {
+                      const gradientClasses = [
+                        'gradient-card-purple',
+                        'gradient-card-yellow', 
+                        'gradient-card-blue',
+                        'gradient-card-pink'
+                      ];
+                      const gradientClass = gradientClasses[index % 4];
+                      
+                      return (
+                        <Card
+                          key={activity.ID}
+                          className={`modern-card ${gradientClass} rounded-3xl shadow-xl border-0 overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer`}
+                          styles={{ body: { padding: '16px' } }}
+                          onClick={() => navigate(`/admin/activity/${activity.ID}`)}
+                          cover={
+                            <div className="relative h-40 overflow-hidden group"> 
+                              <img
+                                alt={activity.name}
+                                src={activity.avatar || '/assets/默认封面.png'}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                              <div className="absolute top-3 right-3">
+                                <div className="bg-white/20 backdrop-blur-md rounded-full px-3 py-1 text-white text-xs font-medium border border-white/30">
+                                  创建者
                                 </div>
                               </div>
+                              <div className="absolute bottom-3 left-4 right-4 text-white">
+                                <h3 className="font-bold text-xl mb-1.5 drop-shadow-lg">{activity.name}</h3>
+                                <p className="text-sm opacity-95 overflow-hidden overflow-ellipsis line-clamp-2 drop-shadow-md">
+                                  {activity.description || '暂无描述'}
+                                </p>
+                              </div>
                             </div>
+                          }
+                        >
+                          <div className="flex items-center justify-between pt-1">
+                            <div className="flex items-center text-sm font-medium">
+                              <div className="bg-white/30 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center">
+                                <CalendarOutlined className="mr-2 text-base" />
+                                <span>{activity.start_date ? formatDateFromNumber(activity.start_date) : '未设置'}</span>
+                              </div>
+                            </div>
+                            <Button 
+                              type="text" 
+                              danger 
+                              size="middle"
+                              className="font-medium hover:scale-105 transition-transform"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const result = await Dialog.confirm({
+                                  content: '确定要删除这个活动吗？',
+                                  confirmText: '确认',
+                                  cancelText: '取消',
+                                });
+                                if (result) {
+                                  try {
+                                    const response = await API.Activity.deleteActivity(activity.ID);
+                                    if (response.code === 200) {
+                                      await fetchMyActivities();
+                                      Toast.show({ content: '删除成功', position: 'bottom' });
+                                    } else {
+                                      Toast.show({ content: response.msg || '删除失败', position: 'bottom' });
+                                    }
+                                  } catch (error) {
+                                    console.error('删除活动失败:', error);
+                                    Toast.show({ content: '删除失败，请重试', position: 'bottom' });
+                                  }
+                                }
+                              }}
+                            >
+                              删除
+                            </Button>
                           </div>
-                        </div>
-                      </SwipeAction>
-                    ))
-                  )}
-                </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
               </Tabs.Tab>
               
               <Tabs.Tab title="最近打卡记录" key="1">

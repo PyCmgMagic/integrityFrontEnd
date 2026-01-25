@@ -14,7 +14,7 @@ import type { ActivityDetailResponse } from '../../../types/api';
 // 模拟用户信息，可以从 context 或 props 获取
 const currentUser = JSON.parse(localStorage.getItem('auth-storage') || 'null');
 /**
- * 美化后的活动详情页面
+ * 
  * @returns 
  */
 const ActivityDetailPage = () => {

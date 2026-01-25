@@ -158,14 +158,10 @@ const CheckInDetail: React.FC = () => {
       setLoading(true);
       const response = await API.Column.getPendingList(finalColumnId);
       
-      // 处理直接返回数组的情况
-      if (Array.isArray(response)) {
-        if (response.length > 0) {
-          const transformedItems = transformPendingData(response);
-          setItems(transformedItems);
-        } else {
-          setItems([]);
-        }
+      const punches = response.punches || [];
+      if (punches.length > 0) {
+        const transformedItems = transformPendingData(punches);
+        setItems(transformedItems);
       } else {
         setItems([]);
       }

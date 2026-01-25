@@ -114,7 +114,7 @@ const ProjectDetailPage = () => {
         activity_id: parseInt(activityId, 10),
         start_date: parseInt(values.timeRange[0].format('YYYYMMDD'), 10),
         end_date: parseInt(values.timeRange[1].format('YYYYMMDD'), 10),
-        avatar: values.cover || '',
+        avatar: '', // 不再需要封面
       };
 
       const success = await updateProject(updateData);
@@ -357,6 +357,8 @@ const ProjectDetailPage = () => {
         onClose={() => setEditColumnVisible(false)}
         onFinish={handleEditColumnFinish}
         projectId={parsedProjectId}
+        projectStartDate={projectDetail.start_date}
+        projectEndDate={projectDetail.end_date}
       />
     </div>
   );
