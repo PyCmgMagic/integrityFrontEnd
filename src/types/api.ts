@@ -98,6 +98,8 @@ export interface ActivityItem {
   start_date: number;
   end_date: number;
   avatar: string;
+  daily_point_limit?: number;
+  completion_bonus?: number;
   user: ActivityUser;
 }
 
@@ -115,6 +117,7 @@ export interface ProjectItem {
   name: string;
   avatar: string;
   description: string;
+  completion_bonus?: number;
 }
 
 export interface ActivityDetailResponse {
@@ -128,6 +131,8 @@ export interface CreateActivityRequest {
   start_date: number;
   end_date: number;
   avatar: string;
+  daily_point_limit?: number;
+  completion_bonus?: number;
 }
 
 export interface CreateActivityResponse {
@@ -140,6 +145,8 @@ export interface UpdateActivityRequest {
   start_date?: number;
   end_date?: number;
   avatar?: string;
+  daily_point_limit?: number;
+  completion_bonus?: number;
 }
 
 export interface ActivityListParams {
@@ -156,6 +163,7 @@ export interface ProjectColumn {
   avatar: string;
   daily_punch_limit: number; // 每日可打卡次数
   point_earned: number; // 每次打卡获得积分
+  optional?: boolean; // 是否为特殊栏目
 }
 
 export interface ProjectDetail {
@@ -165,6 +173,7 @@ export interface ProjectDetail {
   description: string;
   start_date: number;
   end_date: number;
+  completion_bonus?: number;
   columns: ProjectColumn[];
 }
 
@@ -185,6 +194,7 @@ export interface CreateColumnRequest {
   avatar: string;
   daily_punch_limit: number; // 每日可打卡次数
   point_earned: number; // 每次打卡获得积分
+  optional?: boolean; // 是否为特殊栏目
 }
 
 export interface CreateColumnResponse {
@@ -199,6 +209,7 @@ export interface UpdateColumnRequest {
   avatar?: string;
   daily_punch_limit?: number; // 每日可打卡次数
   point_earned?: number; // 每次打卡获得积分
+  optional?: boolean; // 是否为特殊栏目
 }
 
 // 参与活动历史相关类型定义

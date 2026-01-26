@@ -57,6 +57,7 @@ const ProjectDetailPage = () => {
       name: projectDetail.name,
       description: projectDetail.description,
       cover: projectDetail.avatar,
+      completion_bonus: projectDetail.completion_bonus,
       timeRange: [
         moment(projectDetail.start_date.toString(), 'YYYYMMDD'),
         moment(projectDetail.end_date.toString(), 'YYYYMMDD')
@@ -115,6 +116,9 @@ const ProjectDetailPage = () => {
         start_date: parseInt(values.timeRange[0].format('YYYYMMDD'), 10),
         end_date: parseInt(values.timeRange[1].format('YYYYMMDD'), 10),
         avatar: '', // 不再需要封面
+        completion_bonus: values.completion_bonus !== undefined && values.completion_bonus !== null
+          ? parseInt(values.completion_bonus, 10)
+          : undefined
       };
 
       const success = await updateProject(updateData);

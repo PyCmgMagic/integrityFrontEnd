@@ -16,6 +16,7 @@ interface ProjectData {
   startDate: string;
   endDate: string;
   coverImage?: string;
+  completionBonus?: number;
   categoryCount: number;
 }
 
@@ -26,6 +27,7 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
     startDate: '',
     endDate: '',
     coverImage: undefined,
+    completionBonus: undefined,
     categoryCount: 2
   });
   const [loading, setLoading] = useState(false);
@@ -67,7 +69,8 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
         activity_id: parseInt(activityId),
         start_date: formatDateToNumber(projectData.startDate),
         end_date: formatDateToNumber(projectData.endDate),
-        avatar: projectData.coverImage || '' // 使用上传的封面图片 URL
+        avatar: projectData.coverImage || '', // 使用上传的封面图片 URL
+        completion_bonus: projectData.completionBonus
       };
 
       console.log('创建项目请求数据:', createData);
@@ -151,6 +154,21 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
             placeholder="请输入"
             rows={4}
             className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all resize-none"
+          />
+        </div>
+
+        {/* 完成全部栏目奖励积分 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            完成全部栏目奖励积分
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={projectData.completionBonus ?? 0}
+            onChange={(e) => handleInputChange('completionBonus', parseInt(e.target.value, 10) || 0)}
+            placeholder="请输入完成全部栏目奖励积分，0代表不设置奖励"
+            className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
           />
         </div>
 

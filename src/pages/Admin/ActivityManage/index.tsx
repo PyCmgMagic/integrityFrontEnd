@@ -190,6 +190,8 @@ const ActivityDetailPage = () => {
     description: activityData.activity.description,
     cover: activityData.activity.avatar,
     avatar: activityData.activity.avatar,
+    daily_point_limit: activityData.activity.daily_point_limit,
+    completion_bonus: activityData.activity.completion_bonus,
     startTime: formatDateFromNumber(activityData.activity.start_date),
     endTime: formatDateFromNumber(activityData.activity.end_date),
     timeRange: [

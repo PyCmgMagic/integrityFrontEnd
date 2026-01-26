@@ -242,6 +242,7 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         avatar: '', // 不再需要上传封面
         daily_punch_limit: parseInt(values.daily_punch_limit), // 每日可打卡次数
         point_earned: parseInt(values.point_earned), // 每次打卡获得积分
+        optional: values.optional ?? false,
       };
 
       if (initialData?.id) {
@@ -357,6 +358,15 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
               />
             </div>
           </div>
+        </Form.Item>
+
+        <Form.Item
+          name="optional"
+          label={<span className="font-semibold text-gray-700">是否为特殊栏目</span>}
+          valuePropName="checked"
+          initialValue={false}
+        >
+          <input type="checkbox" className="h-4 w-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500" />
         </Form.Item>
 
         <Form.Item

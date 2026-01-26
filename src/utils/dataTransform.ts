@@ -81,14 +81,25 @@ export function transformActivityToCreateRequest(activity: {
   cover: string;
   startTime: string;
   endTime: string;
+  dailyPointLimit?: number;
+  completionBonus?: number;
 }) {
-  return {
+  const request: any = {
     name: activity.name,
     description: activity.description,
     avatar: activity.cover,
     start_date: formatDateToNumber(activity.startTime),
     end_date: formatDateToNumber(activity.endTime),
   };
+  
+  if (activity.dailyPointLimit !== undefined) {
+    request.daily_point_limit = activity.dailyPointLimit;
+  }
+  if (activity.completionBonus !== undefined) {
+    request.completion_bonus = activity.completionBonus;
+  }
+  
+  return request;
 }
 
 /**
@@ -102,6 +113,8 @@ export function transformActivityToUpdateRequest(activity: {
   cover?: string;
   startTime?: string;
   endTime?: string;
+  dailyPointLimit?: number;
+  completionBonus?: number;
 }) {
   const request: any = {};
   
@@ -110,6 +123,8 @@ export function transformActivityToUpdateRequest(activity: {
   if (activity.cover !== undefined) request.avatar = activity.cover;
   if (activity.startTime !== undefined) request.start_date = formatDateToNumber(activity.startTime);
   if (activity.endTime !== undefined) request.end_date = formatDateToNumber(activity.endTime);
+  if (activity.dailyPointLimit !== undefined) request.daily_point_limit = activity.dailyPointLimit;
+  if (activity.completionBonus !== undefined) request.completion_bonus = activity.completionBonus;
   
   return request;
 }

@@ -89,6 +89,10 @@ export interface RankingItem {
 export interface RankingListResponse {
   code: number;
   msg: string;
-  data: RankingItem[];
+  data: {
+    count: number;
+    rank_list: RankingItem[];
+    total: number;
+  };
   timestamp: number;
 }

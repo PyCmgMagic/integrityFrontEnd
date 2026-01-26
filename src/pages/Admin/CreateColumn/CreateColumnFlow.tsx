@@ -70,6 +70,7 @@ const CreateColumnFlow: React.FC = () => {
           point_earned: columnData.pointsPerCheckin,
           start_time: columnData.start_time,
           end_time: columnData.end_time,
+          optional: columnData.optional,
         };
 
         console.log(`正在创建第 ${i + 1} 个栏目:`, apiData);

@@ -152,12 +152,14 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
       // 使用封面图片URL，如果没有上传则使用默认图片
       const avatar = coverImageUrl || `https://picsum.photos/300/200?random=${Date.now()}`;
       
-      const createData = transformActivityToCreateRequest({
+const createData = transformActivityToCreateRequest({
         name: values.title,
         description: values.description,
         cover: avatar,
         startTime: startTime.format('YYYY-MM-DD'),
         endTime: endTime.format('YYYY-MM-DD'),
+        dailyPointLimit: values.daily_point_limit !== undefined && values.daily_point_limit !== null ? parseInt(values.daily_point_limit) : undefined,
+        completionBonus: values.completion_bonus !== undefined && values.completion_bonus !== null ? parseInt(values.completion_bonus) : undefined,
       });
 
       await ActivityAPI.createActivity(createData);
@@ -245,6 +247,67 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ visible, onCa
           <CoverUpload
             value={coverImageUrl}
             onChange={handleCoverImageChange}
+          />
+        </Form.Item>
+
+<Form.Item name="daily_point_limit" label="每日积分上限" 
+          rules={[
+            { 
+              validator: (_, value) => {
+                // 如果值为空或undefined，允许通过
+                if (value === undefined || value === null || value === '') {
+                  return Promise.resolve();
+                }
+                
+                // 转换为数字进行验证
+                const numValue = Number(value);
+                
+                // 验证是否为有效数字且大于等于0的整数
+                if (isNaN(numValue) || numValue < 0 || !Number.isInteger(numValue)) {
+                  return Promise.reject('请输入大于等于0的整数');
+                }
+                
+                return Promise.resolve();
+              }
+            }
+          ]}
+          extra="0代表不设置上限">
+          <Input 
+            type="number" 
+            placeholder="请输入每日积分上限，0代表不设置上限" 
+            min={0}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="completion_bonus"
+          label="完成全部栏目奖励积分"
+          rules={[
+            {
+              validator: (_, value) => {
+                // 如果值为空或undefined，允许通过
+                if (value === undefined || value === null || value === '') {
+                  return Promise.resolve();
+                }
+
+                // 转换为数字进行验证
+                const numValue = Number(value);
+
+                // 验证是否为有效数字且大于等于0的整数
+                if (isNaN(numValue) || numValue < 0 || !Number.isInteger(numValue)) {
+                  return Promise.reject('请输入大于等于0的整数');
+                }
+
+                return Promise.resolve();
+              }
+            }
+          ]}
+          extra="0代表不设置奖励"
+        >
+          <Input
+            type="number"
+            placeholder="请输入完成全部栏目奖励积分，0代表不设置奖励"
+            min={0}
           />
         </Form.Item>
 

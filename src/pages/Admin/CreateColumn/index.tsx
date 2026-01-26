@@ -24,6 +24,7 @@ export interface ColumnData {
   coverImage?: string;
   dailyCheckinLimit: number;
   pointsPerCheckin: number;
+  optional: boolean;
 }
 
 const CreateColumn: React.FC<CreateColumnProps> = ({
@@ -48,7 +49,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
     start_time: '00:00',
     end_time: '23:59',
     dailyCheckinLimit: 1,
-    pointsPerCheckin: 1
+    pointsPerCheckin: 1,
+    optional: false
   });
 
   // 组件挂载时恢复之前保存的数据
@@ -64,7 +66,7 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
    * @param field - 字段名
    * @param value - 字段值
    */
-  const handleInputChange = (field: keyof ColumnData, value: string | number) => {
+  const handleInputChange = (field: keyof ColumnData, value: string | number | boolean) => {
     setColumnData(prev => ({
       ...prev,
       [field]: value
@@ -136,6 +138,19 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
             rows={4}
             className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all resize-none"
           />
+        </div>
+
+        {/* 是否为特殊栏目 */}
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <label className="flex items-center justify-between text-sm text-gray-700 font-medium">
+            是否为特殊栏目
+            <input
+              type="checkbox"
+              checked={columnData.optional}
+              onChange={(e) => handleInputChange('optional', e.target.checked)}
+              className="h-4 w-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500"
+            />
+          </label>
         </div>
 
         {/* 活动时间 */}

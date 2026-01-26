@@ -118,11 +118,13 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose,
   useEffect(() => {
     if (visible) {
       if (initialData) {
-        // 设置表单字段值
+// 设置表单字段值
         form.setFieldsValue({
           name: initialData.name,
           description: initialData.description,
-          cover: initialData.cover || initialData.avatar
+          cover: initialData.cover || initialData.avatar,
+          daily_point_limit: initialData.daily_point_limit,
+          completion_bonus: initialData.completion_bonus
         });
 
         // 设置封面图片
@@ -240,13 +242,15 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose,
     try {
       setSubmitting(true);
 
-      // 准备更新数据
+// 准备更新数据
       const updateData = transformActivityToUpdateRequest({
         name: values.name,
         description: values.description,
         cover: imageUrl,
         startTime: startTime.format('YYYY-MM-DD'),
         endTime: endTime.format('YYYY-MM-DD'),
+        dailyPointLimit: values.daily_point_limit !== undefined && values.daily_point_limit !== null ? parseInt(values.daily_point_limit) : undefined,
+        completionBonus: values.completion_bonus !== undefined && values.completion_bonus !== null ? parseInt(values.completion_bonus) : undefined,
       });
 
       // 调用API更新活动
@@ -356,8 +360,72 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose,
               uploadButton
             )}
           </Upload>
+</Form.Item>
+
+        <Form.Item 
+          name="daily_point_limit" 
+          label={<span className="font-semibold text-gray-700">每日积分上限</span>}
+          rules={[
+            { 
+              validator: (_, value) => {
+                // 如果值为空或undefined，允许通过
+                if (value === undefined || value === null || value === '') {
+                  return Promise.resolve();
+                }
+                
+                // 转换为数字进行验证
+                const numValue = Number(value);
+                
+                // 验证是否为有效数字且大于等于0的整数
+                if (isNaN(numValue) || numValue < 0 || !Number.isInteger(numValue)) {
+                  return Promise.reject('请输入大于等于0的整数');
+                }
+                
+                return Promise.resolve();
+              }
+            }
+          ]}
+          extra="0代表不设置上限"
+        >
+          <Input 
+            type="number" 
+            placeholder="请输入每日积分上限，0代表不设置上限" 
+            min={0}
+          />
         </Form.Item>
-        
+
+        <Form.Item
+          name="completion_bonus"
+          label={<span className="font-semibold text-gray-700">完成全部栏目奖励积分</span>}
+          rules={[
+            {
+              validator: (_, value) => {
+                // 如果值为空或undefined，允许通过
+                if (value === undefined || value === null || value === '') {
+                  return Promise.resolve();
+                }
+
+                // 转换为数字进行验证
+                const numValue = Number(value);
+
+                // 验证是否为有效数字且大于等于0的整数
+                if (isNaN(numValue) || numValue < 0 || !Number.isInteger(numValue)) {
+                  return Promise.reject('请输入大于等于0的整数');
+                }
+
+                return Promise.resolve();
+              }
+            }
+          ]}
+          extra="0代表不设置奖励"
+        >
+          <Input
+            type="number"
+            placeholder="请输入完成全部栏目奖励积分，0代表不设置奖励"
+            min={0}
+          />
+        </Form.Item>
+
         <Form.Item style={{ marginTop: '20px' }}>
           <Button 
             type="primary" 

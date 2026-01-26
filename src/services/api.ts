@@ -190,14 +190,22 @@ export class ActivityAPI {
     const { page = 1, page_size = 20, force = false } = params;
     const safePage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
     const safePageSize = Number.isFinite(page_size) ? Math.max(1, Math.floor(page_size)) : 20;
-    const response = await request.postFull<import('../pages/User/ActivityDetail/types').RankingItem[]>(`/stats/activity/${id}/rank`, {
+    const response = await request.postFull<{
+      count: number;
+      rank_list: import('../pages/User/ActivityDetail/types').RankingItem[];
+      total: number;
+    }>(`/stats/activity/${id}/rank`, {
       page: safePage,
       page_size: safePageSize,
       force
     });
     return {
       ...response,
-      // 确保 timestamp 始终有值
+      data: {
+        count: response.data?.count ?? 0,
+        rank_list: response.data?.rank_list ?? [],
+        total: response.data?.total ?? 0
+      },
       timestamp: response.timestamp ?? Date.now()
     };
   }
@@ -345,6 +353,7 @@ export class ProjectAPI {
       start_date: number;
       end_date: number;
       avatar: string;
+      completion_bonus?: number;
     }
   ): Promise<void> {
     return request.put<void>(`/project/update/${id}`, data, {
@@ -376,6 +385,7 @@ export class ProjectAPI {
     start_date: number;
     end_date: number;
     avatar: string;
+    completion_bonus?: number;
   }): Promise<{ project_id: number }> {
     return request.post<{ project_id: number }>('/project/create', data, {
       showLoading: true,
@@ -569,6 +579,7 @@ export class ColumnAPI {
     avatar: string;
     daily_punch_limit: number; // 每日可打卡次数
     point_earned: number; // 每次打卡获得积分
+    optional?: boolean; // 是否为特殊栏目
   }): Promise<{ column_id: number }> {
     return request.post<{ column_id: number }>('/column/create', data, {
       showLoading: true,
@@ -589,6 +600,7 @@ export class ColumnAPI {
       avatar?: string;
       daily_punch_limit?: number; // 每日可打卡次数
       point_earned?: number; // 每次打卡获得积分
+      optional?: boolean; // 是否为特殊栏目
     }
   ): Promise<void> {
     return request.put<void>(`/column/update/${id}`, data, {
@@ -616,6 +628,7 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
   avatar: string; // 栏目封面
   daily_punch_limit: number; // 每日可打卡次数
   point_earned: number; // 每次打卡获得积分
+  optional?: boolean; // 是否为特殊栏目
   end_time: string; // 结束时间
   start_time: string; // 开始时间
   start_date: number; // 开始日期

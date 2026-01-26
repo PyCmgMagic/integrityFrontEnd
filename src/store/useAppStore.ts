@@ -62,6 +62,7 @@ export interface ColumnCreationData {
   coverImage?: string;
   dailyCheckinLimit: number;
   pointsPerCheckin: number;
+  optional: boolean;
 }
 
 interface AppState {

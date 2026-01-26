@@ -214,6 +214,38 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, o
             </div>
           </div>
         </Form.Item>
+
+        <Form.Item
+          name="completion_bonus"
+          label={<span className="font-semibold text-gray-700">完成全部栏目奖励积分</span>}
+          rules={[
+            {
+              validator: (_, value) => {
+                // 如果值为空或undefined，允许通过
+                if (value === undefined || value === null || value === '') {
+                  return Promise.resolve();
+                }
+
+                // 转换为数字进行验证
+                const numValue = Number(value);
+
+                // 验证是否为有效数字且大于等于0的整数
+                if (isNaN(numValue) || numValue < 0 || !Number.isInteger(numValue)) {
+                  return Promise.reject('请输入大于等于0的整数');
+                }
+
+                return Promise.resolve();
+              }
+            }
+          ]}
+          extra="0代表不设置奖励"
+        >
+          <Input
+            type="number"
+            placeholder="请输入完成全部栏目奖励积分，0代表不设置奖励"
+            min={0}
+          />
+        </Form.Item>
         
         <Form.Item style={{ marginTop: '20px' }}>
           <Button type="primary" htmlType="submit" block size="small" shape="default">

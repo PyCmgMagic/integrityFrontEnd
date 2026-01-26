@@ -24,6 +24,7 @@ interface UseAdminProjectDetailReturn {
     start_date: number;
     end_date: number;
     avatar: string;
+    completion_bonus?: number;
   }) => Promise<boolean>;
   /** 是否正在更新 */
   updating: boolean;
@@ -115,6 +116,7 @@ export const useAdminProjectDetail = (projectId: number | undefined): UseAdminPr
     start_date: number;
     end_date: number;
     avatar: string;
+    completion_bonus?: number;
   }): Promise<boolean> => {
     if (!projectId) {
       return false;
