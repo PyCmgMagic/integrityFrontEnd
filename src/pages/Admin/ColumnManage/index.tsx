@@ -219,7 +219,7 @@ const ColumnManage: React.FC = () => {
         </div>
       </header>
 
-      <main className="p-4 pb-10">
+      <main className="p-2 pb-10">
         <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
           <p className="text-gray-600 text-sm leading-relaxed">{columnInfo.description}</p>
         </div>

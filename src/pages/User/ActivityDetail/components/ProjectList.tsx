@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from 'antd';
-import { BookOutlined, ExperimentOutlined } from '@ant-design/icons';
+import ProjectIcon from '../../../../components/ProjectIcon';
 
 /**
  * 项目数据接口
@@ -12,6 +12,8 @@ interface Project {
   name: string;
   /** 项目描述 */
   description: string;
+  /** 项目图标名称 */
+  avatar: string;
 }
 
 /**
@@ -48,19 +50,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
     return gradients[index % gradients.length];
   };
 
-  /**
-   * 生成项目图标
-   * @param index 项目索引
-   * @returns 图标组件
-   */
-  const getProjectIcon = (index: number) => {
-    const icons = [
-      <BookOutlined key={index} className="text-4xl text-white" />,
-      <ExperimentOutlined key={index} className="text-4xl text-white" />,
-    ];
-    return icons[index % icons.length];
-  };
-
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-bold text-gray-700 px-2">打卡项目</h3>
@@ -72,7 +61,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
           >
             <div className="flex items-center">
               <div className="mr-4 bg-white/20 p-3 rounded-full">
-                {getProjectIcon(index)}
+                <ProjectIcon name={project.avatar} className="text-4xl text-white" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">{project.name}</h2>

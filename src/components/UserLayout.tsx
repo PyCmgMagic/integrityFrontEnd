@@ -46,7 +46,7 @@ const UserLayout = () => {
   ];
   return (
           <Layout>
-        <Content className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-[calc(100vh-64px)]">
+        <Content className="pt-1  px-3 pb-5 md:px-8 md:pb-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-[calc(100vh-64px)]">
           <div className="max-w-7xl mx-auto h-full">
             <Outlet />
           </div>

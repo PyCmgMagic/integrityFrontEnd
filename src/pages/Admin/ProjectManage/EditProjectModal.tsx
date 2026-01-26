@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, message, Drawer, Space } from 'antd';
+import { Modal, Form, Input, Button, message, Drawer, Space, Select } from 'antd';
 import { CalendarOutlined } from '@ant-design/icons';
 import dayjs, { type Dayjs } from 'dayjs';
+import { DEFAULT_PROJECT_ICON_NAME, PROJECT_ICON_OPTIONS } from '../../../utils/projectIcons';
 
 const { TextArea } = Input;
+const PROJECT_ICON_SELECT_OPTIONS = PROJECT_ICON_OPTIONS.map((option) => ({
+  value: option.name,
+  label: (
+    <span className="flex items-center gap-2">
+      <option.Icon />
+      {option.label}
+    </span>
+  ),
+}));
 
 /**
- * 移动端友好的日期时间选择器组件
+ * 移动端友好的日期时间选择器组件?
  */
 interface MobileDateTimePickerProps {
   value?: Dayjs;
@@ -35,14 +45,14 @@ const MobileDateTimePicker: React.FC<MobileDateTimePickerProps> = ({
   const handleConfirm = () => {
     if (tempDate && tempTime) {
       const combinedDateTime = dayjs(`${tempDate} ${tempTime}`);
-      if (minDate && combinedDateTime.isBefore(minDate)) {
-        message.error('选择的时间不能早于开始时间');
+        if (minDate && combinedDateTime.isBefore(minDate)) {
+      message.error('选择的时间不能早于开始时间。');
         return;
       }
       onChange?.(combinedDateTime);
       setPickerVisible(false);
     } else {
-      message.error('请选择完整的日期和时间');
+      message.error('请选择日期和时间。');
     }
   };
 
@@ -112,28 +122,32 @@ interface EditProjectModalProps {
 const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, onFinish, initialData }) => {
   const [form] = Form.useForm();
   
-  // 时间范围状态
+  // 时间范围状态?
   const [startTime, setStartTime] = useState<Dayjs | null>(null);
   const [endTime, setEndTime] = useState<Dayjs | null>(null);
 
-  // 当弹窗打开或初始数据变化时，同步表单数据
   useEffect(() => {
     if (visible) {
       if (initialData) {
-        // 将 initialData 中的日期字符串转换为 dayjs 对象
+        // initialData 中的日期字符串转换为 dayjs 对象
         const initialTimeRange = initialData.timeRange 
           ? [dayjs(initialData.timeRange[0]), dayjs(initialData.timeRange[1])]
           : [null, null];
 
-        // 设置表单所有字段的值
-        form.setFieldsValue({ ...initialData });
+        const resolvedInitialData = {
+          ...initialData,
+          avatar: initialData.avatar || DEFAULT_PROJECT_ICON_NAME,
+        };
+        // 设置表单所有字段的信息?
+        form.setFieldsValue(resolvedInitialData);
         
-        // 设置时间状态
+        // 设置时间状态?
         setStartTime(initialTimeRange[0]);
         setEndTime(initialTimeRange[1]);
       } else {
-        // 如果是新建活动，则清空所有状态
+        // 如果是新建活动，则清空所有状态?
         form.resetFields();
+        form.setFieldsValue({ avatar: DEFAULT_PROJECT_ICON_NAME });
         setStartTime(null);
         setEndTime(null);
       }
@@ -143,12 +157,12 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, o
   const handleFormSubmit = (values: any) => {
     // 验证时间范围
     if (!startTime || !endTime) {
-      message.error('请选择完整的活动时间范围');
+      message.error('请选择项目时间范围。');
       return;
     }
     
     if (endTime.isBefore(startTime)) {
-      message.error('结束时间不能早于开始时间');
+      message.error('结束时间不能早于开始时间。');
       return;
     }
 
@@ -173,30 +187,42 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, o
         <Form.Item 
           name="name" 
           label={<span className="font-semibold text-gray-700">项目名称</span>} 
-          rules={[{ required: true, message: '请输入项目名称' }]}
+          rules={[{ required: true, message: '请输入项目名称。' }]}
         >
-          <Input placeholder="请输入项目名称" />
+          <Input placeholder="请输入项目名称? " />
         </Form.Item>
 
         <Form.Item 
           name="description" 
           label={<span className="font-semibold text-gray-700">项目详情说明</span>} 
-          rules={[{ required: true, message: '请输入项目详情' }]}
+          rules={[{ required: true, message: '请输入项目详情说明。' }]}
         >
-          <TextArea rows={8} placeholder="请输入项目详情说明" />
+          <TextArea rows={8} placeholder="请输入项目详情说明? " />
         </Form.Item>
+
+        <Form.Item
+          name="avatar"
+          label={<span className="font-semibold text-gray-700">项目图标</span>}
+          rules={[{ required: true, message: '请选择项目图标' }]}
+        >
+          <Select
+            options={PROJECT_ICON_SELECT_OPTIONS}
+            optionLabelProp="label"
+            placeholder="选择项目图标"
+          />
+        </Form.Item>
+
         <Form.Item
           label={<span className="font-semibold text-gray-700">项目时间</span>}
           required
         >
           <div className="space-y-3">
             <div>
-              <div className="text-sm text-gray-600 mb-2">请选择开始</div>
+              <div className="text-sm text-gray-600 mb-2">请选择开始时间</div>
               <MobileDateTimePicker
                 value={startTime || undefined}
                 onChange={setStartTime}
-                placeholder="请选择开始时间"
-              />
+                placeholder="请选择开始时间?" />
             </div>
             
             <div className="flex justify-center">
@@ -204,7 +230,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, o
             </div>
             
             <div>
-              <div className="text-sm text-gray-600 mb-2">请选择结束</div>
+              <div className="text-sm text-gray-600 mb-2">请选择结束时间</div>
               <MobileDateTimePicker
                 value={endTime || undefined}
                 onChange={setEndTime}
@@ -215,34 +241,30 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, o
           </div>
         </Form.Item>
 
-        <Form.Item
+                <Form.Item
           name="completion_bonus"
-          label={<span className="font-semibold text-gray-700">完成全部栏目奖励积分</span>}
+          label={<span className="font-semibold text-gray-700">完成奖励</span>}
           rules={[
             {
               validator: (_, value) => {
-                // 如果值为空或undefined，允许通过
                 if (value === undefined || value === null || value === '') {
                   return Promise.resolve();
                 }
 
-                // 转换为数字进行验证
                 const numValue = Number(value);
-
-                // 验证是否为有效数字且大于等于0的整数
                 if (isNaN(numValue) || numValue < 0 || !Number.isInteger(numValue)) {
-                  return Promise.reject('请输入大于等于0的整数');
+                  return Promise.reject('请输入非负整数。');
                 }
 
                 return Promise.resolve();
               }
             }
           ]}
-          extra="0代表不设置奖励"
+          extra="0 表示无奖励"
         >
           <Input
             type="number"
-            placeholder="请输入完成全部栏目奖励积分，0代表不设置奖励"
+            placeholder="请输入完成奖励（0 表示无）"
             min={0}
           />
         </Form.Item>
@@ -258,3 +280,9 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, o
 };
 
 export default EditProjectModal;
+
+
+
+
+
+

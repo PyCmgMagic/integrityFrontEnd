@@ -1,7 +1,7 @@
 import  { useState, useEffect, useCallback, useRef } from 'react'; // 添加 useRef
 import { useNavigate, useParams } from 'react-router-dom';
 import { Modal, Button, List, Avatar, Space, message, Spin } from 'antd';
-import { LeftOutlined, BookOutlined, ExperimentOutlined, EditOutlined, DownloadOutlined } from '@ant-design/icons';
+import { LeftOutlined, EditOutlined, DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 // 导入外部的编辑弹窗组件
@@ -10,8 +10,8 @@ import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 import { ActivityAPI, ProjectAPI } from '../../../services/api';
 import { formatDateFromNumber } from '../../../utils/dataTransform';
 import type { ActivityDetailResponse } from '../../../types/api';
+import ProjectIcon from '../../../components/ProjectIcon';
 
-// 模拟用户信息，可以从 context 或 props 获取
 const currentUser = JSON.parse(localStorage.getItem('auth-storage') || 'null');
 /**
  * 
@@ -24,13 +24,6 @@ const ActivityDetailPage = () => {
   // 添加取消请求的引用
   const abortControllerRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
-
-  // 调试信息 - 开发环境下显示
-  console.log('🔧 ActivityDetailPage 渲染:', {
-    id,
-    pathname: window.location.pathname,
-  });
-
   // --- State 管理 ---
   const [isIntroVisible, setIntroVisible] = useState(false);
   const [isScoresVisible, setScoresVisible] = useState(false);
@@ -59,7 +52,6 @@ const ActivityDetailPage = () => {
    */
   const fetchActivityDetail = useCallback(async (activityId?: string) => {
     const currentId = activityId || id;
-    console.log('🔍 准备获取活动详情, 当前 id:', currentId);
     
     // 等待路由参数完全加载
     if (!currentId) {
@@ -211,16 +203,10 @@ const ActivityDetailPage = () => {
     id: Number(project.id),
     title: project.name || `项目 ${index + 1}`,
     subtitle: project.description || '暂无描述',
-    icon: index % 2 === 0 ? <BookOutlined className="text-4xl text-white" /> : <ExperimentOutlined className="text-4xl text-white" />,
+    icon: <ProjectIcon name={project.avatar} className="text-4xl text-white" />,
     gradient: index % 2 === 0 ? 'from-orange-500 to-red-500' : 'from-amber-500 to-orange-500',
   })) || [];
 
-  const scoreRecords = [
-    { task: '完成"瑞蛇衔知"项目打卡', score: 5, date: '2023-01-15' },
-    { task: '完成"灵蛇展跃"项目打卡', score: 3, date: '2023-01-14' },
-    { task: '连续打卡3天奖励', score: 10, date: '2023-01-13' },
-    { task: '首次完成打卡', score: 5, date: '2023-01-11' },
-  ];
 
   const rankingData = Array.from({ length: 30 }, (_, i) => ({
     rank: i + 1,
@@ -345,7 +331,7 @@ const ActivityDetailPage = () => {
   // 主UI渲染
   return (
     <div className="bg-slate-50 min-h-screen font-sans">
-      <header className="bg-gradient-to-br from-orange-400 to-red-500 text-white pt-6 px-4 pb-4shadow-lg rounded-b-3xl">
+      <header className="bg-gradient-to-br from-orange-400 to-red-500 text-white pt-6 px-2 pb-4shadow-lg rounded-b-3xl">
         <div className="flex items-center justify-between">
           <Button type="text" shape="circle" icon={<LeftOutlined />} className="text-white hover:bg-white/20" onClick={() => navigate(-1)} />
           <h1 className="text-xl font-bold">{activity.name}</h1>
@@ -364,7 +350,7 @@ const ActivityDetailPage = () => {
                 onClick={handleExportRanking}
                 className="px-2 py-1 text-sm h-auto bg-white text-red-500 font-light border-none hover:bg-white/90"
               >
-                导出排行榜
+                导出活动数据
               </Button>
           </Space>
             <div className="text-center mt-3">
@@ -374,7 +360,7 @@ const ActivityDetailPage = () => {
         </div>
       </header>
 
-      <main className="p-4 pb-20"> 
+      <main className="p-2 pb-20"> 
         <div className="space-y-4">
            {
             activityData?.activity?.owner_id === currentUser?.state.user.id &&  
@@ -425,16 +411,6 @@ const ActivityDetailPage = () => {
           <p className="text-gray-500">总分数</p>
           <p className="text-5xl font-bold text-orange-500">{userStats.totalScore}</p>
         </div>
-        <List
-          header={<div className="font-semibold">得分记录</div>}
-          dataSource={scoreRecords}
-          renderItem={(item) => (
-            <List.Item>
-              <List.Item.Meta title={item.task} description={item.date} />
-              <div className="font-bold text-green-500 text-lg">+{item.score}</div>
-            </List.Item>
-          )}
-        />
       </Modal>
  
       <Modal title="排行榜" open={isRankingVisible} onCancel={() => setRankingVisible(false)} footer={null} width={360}>

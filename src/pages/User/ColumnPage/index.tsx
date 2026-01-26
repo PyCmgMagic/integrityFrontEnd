@@ -9,7 +9,6 @@ import { usePunchRecords } from '../../../hooks/usePunchRecords';
 import type { CheckInData } from '../Profile/types';
 
 /**
- * 美化后的活动详情页面
  * @returns 
  */
 const ColumnPage = () => {
@@ -95,7 +94,7 @@ const ColumnPage = () => {
   };
 
 // 将API获取的打卡记录转换为组件需要的格式
-const formattedPunchRecords:CheckInData[] = (punchRecords || []).map((record, index) => ({
+const formattedPunchRecords:CheckInData[] = (punchRecords.reverse() || []).map((record, index) => ({
   id: record.id,
   title: `第${(punchRecords?.length || 0) - index}次打卡`,
   gradient: 'from-blue-400 to-blue-600',
@@ -125,7 +124,7 @@ const formattedPunchRecords:CheckInData[] = (punchRecords || []).map((record, in
         </div>
       </header>
       {/* 主内容区域 */}
-      <main className="p-4 pb-20">
+      <main className="p-2 pb-20">
         {/* 打卡信息 */}
         {gotoCheckIn ? (
           <CheckIn 

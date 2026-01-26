@@ -93,15 +93,15 @@
 
 /* 页面容器样式 */
 .page-container {
-  padding: 20px;
-  padding-bottom: 120px;
+  padding: 1px;
+  padding-bottom: 96px;
   background: transparent;
 }
 
 /* 响应式调整 */
 @media (max-width: 375px) {
   .page-container {
-    padding: 16px;
-    padding-bottom: 140px;
+    padding: 12px;
+    padding-bottom: 112px;
   }
 }

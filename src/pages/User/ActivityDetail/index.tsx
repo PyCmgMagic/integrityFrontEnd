@@ -75,7 +75,7 @@ const ActivityDetailPage: React.FC = () => {
   const { activity, projects } = activityData;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 space-y-4">
+    <div className="min-h-screen bg-gray-50 p-0 space-y-3 sm:p-4 sm:space-y-4">
       {/* 活动头部组件 */}
       <ActivityHeader 
         activity={{

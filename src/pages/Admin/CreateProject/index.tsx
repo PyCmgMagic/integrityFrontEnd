@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { ChevronLeft,  } from 'lucide-react';
 import {  useNavigate, useParams } from 'react-router-dom';
 import { ProjectAPI } from '../../../services/api';
-import { message } from 'antd';
+import { message, Select } from 'antd';
+import { DEFAULT_PROJECT_ICON_NAME, PROJECT_ICON_OPTIONS } from '../../../utils/projectIcons';
 
 
 interface CreateProjectProps {
@@ -15,18 +16,27 @@ interface ProjectData {
   description: string;
   startDate: string;
   endDate: string;
-  coverImage?: string;
+  avatar: string;
   completionBonus?: number;
   categoryCount: number;
 }
 
 const CreateNewProject: React.FC<CreateProjectProps> = () => {
+  const projectIconSelectOptions = PROJECT_ICON_OPTIONS.map((option) => ({
+    value: option.name,
+    label: (
+      <span className="flex items-center gap-2">
+        <option.Icon />
+        {option.label}
+      </span>
+    ),
+  }));
   const [projectData, setProjectData] = useState<ProjectData>({
     name: '',
     description: '',
     startDate: '',
     endDate: '',
-    coverImage: undefined,
+    avatar: DEFAULT_PROJECT_ICON_NAME,
     completionBonus: undefined,
     categoryCount: 2
   });
@@ -69,7 +79,7 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
         activity_id: parseInt(activityId),
         start_date: formatDateToNumber(projectData.startDate),
         end_date: formatDateToNumber(projectData.endDate),
-        avatar: projectData.coverImage || '', // 使用上传的封面图片 URL
+        avatar: projectData.avatar,
         completion_bonus: projectData.completionBonus
       };
 
@@ -154,6 +164,20 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
             placeholder="请输入"
             rows={4}
             className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all resize-none"
+          />
+        </div>
+
+        {/* 项目图标 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            项目图标
+          </label>
+          <Select
+            value={projectData.avatar}
+            onChange={(value) => handleInputChange('avatar', value)}
+            options={projectIconSelectOptions}
+            optionLabelProp="label"
+            className="w-full"
           />
         </div>
 

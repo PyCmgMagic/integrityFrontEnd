@@ -28,6 +28,8 @@ export interface Project {
   name: string;
   /** 项目描述 */
   description: string;
+  /** 项目图标名称 */
+  avatar: string;
 }
 
 /**

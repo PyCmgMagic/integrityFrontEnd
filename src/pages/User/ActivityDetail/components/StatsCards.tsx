@@ -78,7 +78,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({
             <Users className="text-blue-500 w-4 h-4" />
           </div>
           <p className="text-gray-900 text-sm font-bold leading-tight">{userStats.today_punched_user_count}</p>
-          <p className="text-gray-400 text-[10px] mt-0.5">今日参与</p>
+          <p className="text-gray-400 text-[10px] mt-0.5">今日参与人数</p>
         </div>
 
         {/* 当前连签 */}

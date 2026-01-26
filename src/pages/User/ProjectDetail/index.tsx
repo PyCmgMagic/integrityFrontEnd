@@ -1,21 +1,18 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar,  Spin, Result } from 'antd';
+import { Modal, Button,  Spin, Result } from 'antd';
 import { LeftOutlined, InfoCircleOutlined} from '@ant-design/icons';
 import { useProjectDetail } from '../../../hooks/useProjectDetail';
 import { formatDateRange } from '../../../utils/dataTransform';
 
 
 /**
- * 美化后的项目详情页面
  * @returns 
  */
 const ProjectDetailPage = () => {
   const { activityId, projectId } = useParams();
   const navigate = useNavigate();
   const [isIntroVisible, setIntroVisible] = useState(false);
-  const [isScoresVisible, setScoresVisible] = useState(false);
-  const [isRankingVisible, setRankingVisible] = useState(false);
 
   // 记忆化处理路由参数，确保参数解析的稳定性
   const parsedProjectId = useMemo(() => {
@@ -26,29 +23,6 @@ const ProjectDetailPage = () => {
 
   // 获取项目详情数据
   const { projectDetail, loading, error, isRetrying, refetch } = useProjectDetail(parsedProjectId);
-
-
-  // 模拟用户统计数据（后续可接入真实API）
-  const userStats = {
-    totalScore: 23,
-    maxStreak: 7,
-    rank: 21,
-    todayProgress: { completed: 3, total: 5 } // 今日打卡进度
-  };
-
-  const scoreRecords = [
-    { task: '完成“瑞蛇衔知”项目打卡', score: 5, date: '2023-01-15' },
-    { task: '完成“灵蛇展跃”项目打卡', score: 3, date: '2023-01-14' },
-    { task: '连续打卡3天奖励', score: 10, date: '2023-01-13' },
-    { task: '首次完成打卡', score: 5, date: '2023-01-11' },
-  ];
-
-  const rankingData = Array.from({ length: 30 }, (_, i) => ({
-    rank: i + 1,
-    name: `用户${String.fromCharCode(65 + (i % 26))}${i + 1}`,
-    score: 100 - i * 2,
-    avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${i}` 
-  }));
 
   /**
    * 处理栏目点击事件
@@ -155,7 +129,7 @@ const ProjectDetailPage = () => {
       </header>
 
       {/* 主内容区域 */}
-      <main className="p-4 pb-20">
+      <main className="p-2 pb-20">
         {/* 打卡栏目卡片 */}
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡栏目</h3>
@@ -219,40 +193,6 @@ const ProjectDetailPage = () => {
             <p>{projectDetail.description}</p>
           </div>
         </div>
-      </Modal>
-   
-
-      <Modal title="我的分数" open={isScoresVisible} onCancel={() => setScoresVisible(false)} footer={null}>
-        <div className="text-center mb-4">
-          <p className="text-gray-500">总分数</p>
-          <p className="text-5xl font-bold text-orange-500">{userStats.totalScore}</p>
-        </div>
-        <List
-          header={<div className="font-semibold">得分记录</div>}
-          dataSource={scoreRecords} 
-          renderItem={(item) => (
-            <List.Item>
-              <List.Item.Meta title={item.task} description={item.date} />
-              <div className="font-bold text-green-500 text-lg">+{item.score}</div>
-            </List.Item>
-          )}
-        />
-      </Modal>
-
-      <Modal title="排行榜" open={isRankingVisible} onCancel={() => setRankingVisible(false)} footer={null} width={360}>
-        <List
-          dataSource={rankingData}
-          renderItem={(item) => (
-            <List.Item>
-              <List.Item.Meta
-                avatar={<Avatar className={item.rank <= 3 ? 'bg-amber-400 text-white font-bold' : 'bg-gray-200 text-gray-600'}>{item.rank}</Avatar>}
-                title={<span className="font-semibold">{item.name}</span>}
-                description={<><Avatar size={20} src={item.avatar} className="mr-2"/>{item.name}</>}
-              />
-              <div className="font-bold text-gray-700">{item.score}分</div>
-            </List.Item>
-          )}
-        />
       </Modal>
     </div>
   );

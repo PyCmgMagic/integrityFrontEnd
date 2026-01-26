@@ -30,7 +30,7 @@ const AdminLayout = () => {
   ];
   return (
       <Layout>
-        <Content className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-[calc(100vh-64px)]">
+        <Content className="pt-1  px-2 pb-5 md:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-[calc(100vh-64px)]">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

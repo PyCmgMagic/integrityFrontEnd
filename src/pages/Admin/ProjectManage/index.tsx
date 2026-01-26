@@ -9,10 +9,9 @@ import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 import { useAdminProjectDetail } from '../../../hooks/useAdminProjectDetail';
 import { ColumnAPI } from '../../../services/api';
 
-// 模拟用户信息，可以从 context 或 props 获取
 
 /**
- * 管理员项目详情页面
+ * 管理员项目详情页?
  * @returns 
  */
 const ProjectDetailPage = () => {
@@ -42,14 +41,14 @@ const ProjectDetailPage = () => {
     updating
   } = useAdminProjectDetail(parsedProjectId);
 
-  // 格式化日期显示
+  // 格式化日期显示?
   const formatDateRange = (startDate: number, endDate: number) => {
     const start = moment(startDate.toString(), 'YYYYMMDD').format('M.D');
     const end = moment(endDate.toString(), 'YYYYMMDD').format('M.D');
     return `${start} - ${end}`;
   };
 
-  // 准备编辑表单的初始数据
+  // 准备编辑表单的初始数据?
   const projectInitialData = useMemo(() => {
     if (!projectDetail) return null;
     
@@ -57,6 +56,7 @@ const ProjectDetailPage = () => {
       name: projectDetail.name,
       description: projectDetail.description,
       cover: projectDetail.avatar,
+      avatar: projectDetail.avatar,
       completion_bonus: projectDetail.completion_bonus,
       timeRange: [
         moment(projectDetail.start_date.toString(), 'YYYYMMDD'),
@@ -71,7 +71,6 @@ const ProjectDetailPage = () => {
     todayProgress: { completed: 3, total: 5 } // 今日打卡进度
   };
 
-  // 使用API返回的栏目数据
   const columns = useMemo(() => {
     if (!projectDetail?.columns) return [];
     
@@ -80,15 +79,9 @@ const ProjectDetailPage = () => {
       title: column.name,
       gradient: 'from-amber-500 to-orange-500',
       avatar: column.avatar,
+      optional: column.optional,
     }));
   }, [projectDetail]);
-
-  const scoreRecords = [
-    { task: '完成“瑞蛇衔知”项目打卡', score: 5, date: '2023-01-15' },
-    { task: '完成“灵蛇展跃”项目打卡', score: 3, date: '2023-01-14' },
-    { task: '连续打卡3天奖励', score: 10, date: '2023-01-13' },
-    { task: '首次完成打卡', score: 5, date: '2023-01-11' },
-  ];
 
   const rankingData = Array.from({ length: 30 }, (_, i) => ({
     rank: i + 1,
@@ -115,7 +108,7 @@ const ProjectDetailPage = () => {
         activity_id: parseInt(activityId, 10),
         start_date: parseInt(values.timeRange[0].format('YYYYMMDD'), 10),
         end_date: parseInt(values.timeRange[1].format('YYYYMMDD'), 10),
-        avatar: '', // 不再需要封面
+        avatar: values.avatar,
         completion_bonus: values.completion_bonus !== undefined && values.completion_bonus !== null
           ? parseInt(values.completion_bonus, 10)
           : undefined
@@ -124,7 +117,7 @@ const ProjectDetailPage = () => {
       const success = await updateProject(updateData);
       
       if (success) {
-        message.success('项目信息已成功更新!');
+        message.success('项目信息已成功更改?');
         setEditProjectVisible(false);
       } else {
         message.error('更新项目信息失败');
@@ -135,11 +128,10 @@ const ProjectDetailPage = () => {
     }
   };
   const handleEditColumnFinish = (values: any) => {
-    console.log('表单数据已成功提交到父组件:', values);
+    console.log('表单数据已成功提交到父组件?', values);
     setEditColumnVisible(false);
     refetch();
   };
-  // 定义滑动操作的按钮
   const rightActions = (columnId: string) => [
     {
       key: 'delete',
@@ -177,8 +169,8 @@ const ProjectDetailPage = () => {
     return (
       <div className="bg-slate-50 min-h-screen font-sans flex items-center justify-center">
         <Alert
-          message="项目ID无效"
-          description="请检查URL中的项目ID是否正确"
+          message="\u9879\u76eeID\u65e0\u6548"
+          description="\u8bf7\u68c0\u67e5 URL \u4e2d\u7684\u9879\u76eeID\u3002"
           type="error"
           showIcon
           action={
@@ -205,12 +197,12 @@ const ProjectDetailPage = () => {
     );
   }
 
-  // 错误状态
+  // 错误状态处理
   if (error) {
     return (
       <div className="bg-slate-50 min-h-screen font-sans flex items-center justify-center">
         <Alert
-          message="加载失败"
+          message="\u52a0\u8f7d\u5931\u8d25"
           description={error}
           type="error"
           showIcon
@@ -234,8 +226,8 @@ const ProjectDetailPage = () => {
     return (
       <div className="bg-slate-50 min-h-screen font-sans flex items-center justify-center">
         <Alert
-          message="项目不存在"
-          description="未找到指定的项目信息"
+          message="\u9879\u76ee\u4e0d\u5b58\u5728"
+          description="\u672a\u80fd\u52a0\u8f7d\u6307\u5b9a\u7684\u9879\u76ee\u3002"
           type="warning"
           showIcon
           action={
@@ -249,10 +241,9 @@ const ProjectDetailPage = () => {
   }
 
   return (
-    // 使用更柔和的背景色
     <div className="bg-slate-50 min-h-screen font-sans">
       <header className="bg-gradient-to-br from-orange-400 to-red-500 text-white p-6 shadow-lg rounded-b-3xl">
-        {/* 顶部导航栏 */}
+        {/* 顶部导航*/}
         <div className="flex items-center justify-between">
           <Button type="text" shape="circle" icon={<LeftOutlined />} className="text-white hover:bg-white/20" onClick={() => navigate(-1)} />
           <h1 className="text-xl font-bold">{projectDetail.name}</h1>
@@ -275,8 +266,8 @@ const ProjectDetailPage = () => {
    
       </header>
 
-      {/* 主内容区域 */}
-      <main className="p-4 pb-20">
+      {/* 主内容区*/}
+      <main className="p-2 pb-20">
         {/* 打卡项目卡片 */}
         <div className="space-y-4">
           <div  className={`bg-gradient-to-r from-orange-500 to-red-500 p-3 flex-col rounded-2xl shadow-lg border-4 border-white/50 border-dashed  flex items-center justify-center`}>
@@ -295,7 +286,14 @@ const ProjectDetailPage = () => {
             <div key={column.id} className={`bg-gradient-to-r ${column.gradient} p-8 rounded-2xl shadow-lg flex items-center justify-between`}>
               <div className="flex items-center">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">{column.title}</h2>
+                  <h2 className="text-2xl font-bold text-white">
+                    {column.title}
+                    {column.optional && (
+                      <span className="ml-2 text-xs font-semibold text-white bg-emerald-500/90 px-2 py-0.5 rounded-full border border-emerald-200/80">
+                        特殊栏目
+                      </span>
+                    )}
+                  </h2>
                 </div>
               </div>
               <Button  
@@ -312,28 +310,18 @@ const ProjectDetailPage = () => {
       </main>
 
       {/* --- 弹窗 --- */}
-      <Modal title="项目简介" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
+      <Modal title="\u9879\u76ee\u4ecb\u7ecd" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
         <p className="text-gray-600 leading-relaxed">{projectDetail.description}</p>
       </Modal>
 
-      <Modal title="我的分数" open={isScoresVisible} onCancel={() => setScoresVisible(false)} footer={null}>
+            <Modal title="\u6211\u7684\u79ef\u5206" open={isScoresVisible} onCancel={() => setScoresVisible(false)} footer={null}>
         <div className="text-center mb-4">
-          <p className="text-gray-500">总分数</p>
+          <p className="text-gray-500">\u603b\u79ef\u5206</p>
           <p className="text-5xl font-bold text-orange-500">{userStats.totalScore}</p>
         </div>
-        <List
-          header={<div className="font-semibold">得分记录</div>}
-          dataSource={scoreRecords} 
-          renderItem={(item) => (
-            <List.Item>
-              <List.Item.Meta title={item.task} description={item.date} />
-              <div className="font-bold text-green-500 text-lg">+{item.score}</div>
-            </List.Item>
-          )}
-        />
       </Modal>
 
-      <Modal title="排行榜" open={isRankingVisible} onCancel={() => setRankingVisible(false)} footer={null} width={360}>
+      <Modal title="\u6392\u884c\u699c" open={isRankingVisible} onCancel={() => setRankingVisible(false)} footer={null} width={360}>
         <List
           dataSource={rankingData}
           renderItem={(item) => (
@@ -343,7 +331,7 @@ const ProjectDetailPage = () => {
                 title={<span className="font-semibold">{item.name}</span>}
                 description={<><Avatar size={20} src={item.avatar} className="mr-2"/>{item.name}</>}
               />
-              <div className="font-bold text-gray-700">{item.score}分</div>
+              <div className="font-bold text-gray-700">{item.score} \u5206</div>
             </List.Item>
           )}
         />
@@ -369,3 +357,4 @@ const ProjectDetailPage = () => {
 };
 
 export default ProjectDetailPage;
+
