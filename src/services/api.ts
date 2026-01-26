@@ -1,4 +1,4 @@
-/**
+﻿/**
  * API 服务类
  * 封装所有的 API 接口调用
  */
@@ -215,6 +215,16 @@ export class ActivityAPI {
    */
   static async exportActivityRanking(id: number, filename?: string): Promise<void> {
     const defaultFilename = filename || `活动排行榜_${id}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    return request.download(`/stats/activity/${id}/rank/export`, defaultFilename, {
+      showLoading: true,
+      showError: true,
+    });
+  }
+    /**
+   * 导出活动数据（admin）
+   */
+  static async exportActivity(id: number, filename?: string): Promise<void> {
+    const defaultFilename = filename || `活动数据_${id}_${new Date().toISOString().split('T')[0]}.xlsx`;
     return request.download(`/stats/activity/${id}/export`, defaultFilename, {
       showLoading: true,
       showError: true,

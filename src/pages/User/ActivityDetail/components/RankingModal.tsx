@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, List, Avatar, Spin, Empty, Pagination } from 'antd';
-import { TrophyOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Modal, List, Avatar, Spin, Empty, Pagination, Button, message, Tooltip } from 'antd';
+import { TrophyOutlined, DownloadOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { API } from '../../../../services/api';
 import type { RankingItem } from '../types';
 
@@ -12,6 +13,7 @@ interface RankingModalProps {
   visible: boolean;
   /** 活动ID */
   activityId: number;
+  activityEndDate?: number;
   /** 关闭弹窗事件 */
   onClose: () => void;
 }
@@ -23,9 +25,11 @@ interface RankingModalProps {
 const RankingModal: React.FC<RankingModalProps> = ({
   visible,
   activityId,
+  activityEndDate,
   onClose
 }) => {
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [rankingData, setRankingData] = useState<RankingItem[]>([]);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -66,6 +70,42 @@ const RankingModal: React.FC<RankingModalProps> = ({
     fetchRanking(page, pageSize);
   };
 
+  const canExport = useMemo(() => {
+    if (!activityEndDate) return false;
+    const today = Number(dayjs().format('YYYYMMDD'));
+    return today >= activityEndDate;
+  }, [activityEndDate]);
+  const exportDisabled = !activityId || !canExport;
+
+  const handleExportRanking = async () => {
+    if (!activityId) return;
+    if (!canExport) {
+      return;
+    }
+
+    setExporting(true);
+    try {
+      await API.Activity.exportActivityRanking(activityId);
+      message.success('排行榜导出成功');
+    } catch (error: any) {
+      console.error('导出排行榜失败:', error);
+      message.error(error?.message || '导出排行榜失败，请重试');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportClick = () => {
+    if (!activityId) {
+      message.info('活动信息不足，无法导出排行榜');
+      return;
+    }
+    if (!canExport) {
+      return;
+    }
+    handleExportRanking();
+  };
+
 
 
   /**
@@ -94,6 +134,22 @@ const RankingModal: React.FC<RankingModalProps> = ({
       className="ranking-modal"
       bodyStyle={{ padding: '12px 24px 24px' }}
     >
+      <div className="flex justify-end mb-2">
+        <Tooltip title={canExport ? '' : '用户在活动结束后才可导出排行榜'}>
+          <Button
+            size="small"
+            icon={<DownloadOutlined />}
+            loading={exporting}
+            aria-disabled={exportDisabled}
+            onClick={handleExportClick}
+            className={`text-emerald-600 border-emerald-300 hover:border-emerald-400 hover:text-emerald-700 ${
+              exportDisabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            导出排行榜
+          </Button>
+        </Tooltip>
+      </div>
       {loading ? (
         <div className="py-12 flex justify-center">
           <Spin tip="\u52a0\u8f7d\u6392\u884c\u699c.." />

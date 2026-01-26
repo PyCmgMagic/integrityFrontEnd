@@ -139,7 +139,14 @@ const ProjectDetailPage = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
                     <div>
-                      <h2 className="text-2xl font-bold text-white">{column.name}</h2>
+                      <h2 className="text-2xl font-bold text-white">
+                        {column.name}
+                        {column.optional && (
+                          <span className="ml-2 text-xs font-semibold text-white bg-emerald-500/90 px-2 py-0.5 rounded-full border border-emerald-200/80">
+                            特殊栏目
+                          </span>
+                        )}
+                      </h2>
                     </div>
                   </div>
                   <Button  

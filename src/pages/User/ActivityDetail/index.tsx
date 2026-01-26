@@ -116,6 +116,7 @@ const ActivityDetailPage: React.FC = () => {
       <RankingModal 
         visible={isRankingVisible}
         activityId={Number(id)}
+        activityEndDate={activity.end_date}
         onClose={() => setRankingVisible(false)}
       />
     </div>

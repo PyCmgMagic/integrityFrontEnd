@@ -1,6 +1,6 @@
 import  { useState, useEffect, useCallback, useRef } from 'react'; // 添加 useRef
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar, Space, message, Spin } from 'antd';
+import { Modal, Button,  Space, message, Spin } from 'antd';
 import { LeftOutlined, EditOutlined, DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -26,8 +26,6 @@ const ActivityDetailPage = () => {
   const mountedRef = useRef(true);
   // --- State 管理 ---
   const [isIntroVisible, setIntroVisible] = useState(false);
-  const [isScoresVisible, setScoresVisible] = useState(false);
-  const [isRankingVisible, setRankingVisible] = useState(false);
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   // API数据状态
   const [loading, setLoading] = useState(true);
@@ -192,12 +190,6 @@ const ActivityDetailPage = () => {
     ],
   } : null;
   
-  const userStats = {
-    totalScore: 23,
-    maxStreak: 7,
-    rank: 21,
-    todayProgress: { completed: 3, total: 5 }
-  };
 
   const projects = activityData?.projects?.map((project, index) => ({
     id: Number(project.id),
@@ -207,13 +199,6 @@ const ActivityDetailPage = () => {
     gradient: index % 2 === 0 ? 'from-orange-500 to-red-500' : 'from-amber-500 to-orange-500',
   })) || [];
 
-
-  const rankingData = Array.from({ length: 30 }, (_, i) => ({
-    rank: i + 1,
-    name: `用户${String.fromCharCode(65 + (i % 26))}${i + 1}`,
-    score: 100 - i * 2,
-    avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${i}`
-  }));
 
   const handleProjectClick = (projectId: number) => {
     navigate(`/admin/activity/${id}/project/${projectId}`);
@@ -230,18 +215,18 @@ const ActivityDetailPage = () => {
   };
 
   /**
-   * 处理导出排行榜
+   * 处理导出活动数据
    */
   const handleExportRanking = async () => {
     if (!id) return;
     
     setExporting(true);
     try {
-      await ActivityAPI.exportActivityRanking(Number(id));
-      message.success('排行榜导出成功!');
+      await ActivityAPI.exportActivity(Number(id));
+      message.success('活动数据导出成功!');
     } catch (error: any) {
-      console.error('导出排行榜失败:', error);
-      message.error(error.message || '导出排行榜失败，请重试');
+      console.error('导出活动数据失败:', error);
+      message.error(error.message || '导出活动数据失败，请重试');
     } finally {
       setExporting(false);
     }
@@ -404,29 +389,6 @@ const ActivityDetailPage = () => {
       {/* Modals */}
       <Modal title="活动简介" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
         <p className="text-gray-600 leading-relaxed">{activity.description}</p>
-      </Modal>
-
-      <Modal title="我的分数" open={isScoresVisible} onCancel={() => setScoresVisible(false)} footer={null}>
-        <div className="text-center mb-4">
-          <p className="text-gray-500">总分数</p>
-          <p className="text-5xl font-bold text-orange-500">{userStats.totalScore}</p>
-        </div>
-      </Modal>
- 
-      <Modal title="排行榜" open={isRankingVisible} onCancel={() => setRankingVisible(false)} footer={null} width={360}>
-        <List
-          dataSource={rankingData}
-          renderItem={(item) => (
-            <List.Item>
-              <List.Item.Meta
-                avatar={<Avatar className={item.rank <= 3 ? 'bg-amber-400 text-white font-bold' : 'bg-gray-200 text-gray-600'}>{item.rank}</Avatar>}
-                title={<span className="font-semibold">{item.name}</span>}
-                description={<><Avatar size={20} src={item.avatar} className="mr-2"/>{item.name}</>}
-              />
-              <div className="font-bold text-gray-700">{item.score}分</div>
-            </List.Item>
-          )}
-        />
       </Modal>
 
       {activityInitialData && (
