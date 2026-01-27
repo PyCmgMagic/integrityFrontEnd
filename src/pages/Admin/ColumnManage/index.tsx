@@ -82,10 +82,8 @@ const ColumnManage: React.FC = () => {
         // 批量获取收藏状态
         const starStatusMap = await loadStarStatusMap(punchIds);
         // 使用优化的转换方法，一次性应用收藏状态
-        console.log(starStatusMap);
         
         const transformedData = transformPendingDataWithStarStatus(punches, starStatusMap);
-        console.log('transformedData:', transformedData);
         setUnreviewedData(transformedData);
       } else {
         setUnreviewedData([]);

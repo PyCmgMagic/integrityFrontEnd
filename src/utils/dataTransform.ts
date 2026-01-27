@@ -156,7 +156,6 @@ export function transformPunchRecordToCheckInData(punchRecord: PunchRecord): Che
 export function transformPunchRecordsToCheckInData(punchRecords: PunchRecord[] | null): CheckInData[] {
   // 处理null或undefined的情况，返回空数组
   if (!punchRecords || !Array.isArray(punchRecords)) {
-    console.log("kong");
     return [];
   }
   return punchRecords.map(transformPunchRecordToCheckInData);

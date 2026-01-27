@@ -79,7 +79,6 @@ const ActivityDetailPage = () => {
       // 重置状态，准备发起新的请求
       setLoading(true);
       setError(null);
-      console.log('📡 调用API获取活动详情, activityId:', numericId);
       
       const response = await ActivityAPI.getActivityDetail(numericId);
       const staticResponse = await ActivityAPI.getActivityStaticDetail(numericId);
@@ -94,7 +93,6 @@ const ActivityDetailPage = () => {
         return;
       }
       if(staticResponse.code)
-      console.log('✅ 成功获取活动详情:', response);
       setActivityData(response);
       
     } catch (error: any) {
@@ -139,18 +137,14 @@ const ActivityDetailPage = () => {
 
   // 简化的 useEffect，只在 id 变化时触发
   useEffect(() => {
-    console.log('🚀 useEffect 触发，当前id:', id);
     if (!id) {
-      console.warn('⚠️ ID 参数未就绪，等待路由加载...');
       // 给路由参数一些时间来加载
       const timer = setTimeout(() => {
         if (mountedRef.current) {
-          console.log('⏰ 延迟后重试获取数据，当前页面参数:', window.location.pathname);
           // 重新检查URL参数
           const pathParts = window.location.pathname.split('/');
           const urlId = pathParts[pathParts.indexOf('activity') + 1];
           if (urlId && urlId !== id) {
-            console.log('📍 从URL直接获取ID:', urlId);
             fetchActivityDetail(urlId);
           }
         }

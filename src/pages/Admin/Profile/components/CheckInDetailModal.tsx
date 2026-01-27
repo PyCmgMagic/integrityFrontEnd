@@ -48,7 +48,6 @@ const CheckInDetailModal: React.FC<CheckInDetailModalProps> = ({
     setLoading(true);
     try {
       const response = await API.Column.getPunchDetail(punchId);
-      console.log('获取打卡详情成功:', response);
       if (response.code && response.data) {
         setPunchDetail(response.data);
         setIsStarred(response.data.stared);

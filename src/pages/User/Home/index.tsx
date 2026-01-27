@@ -48,9 +48,7 @@ const UserHomePage = () => {
     {
       pageSize: 20,
       deps: [actualSearchTerm], // 当实际搜索词变化时重新加载数据
-      onSuccess: (data, page) => {
-        console.log(`第${page}页加载成功，获得${data.length}条数据`);
-      },
+      onSuccess: () => {},
       onError: (error) => {
         console.error('加载活动失败:', error);
         message.error('加载活动失败，请稍后重试');

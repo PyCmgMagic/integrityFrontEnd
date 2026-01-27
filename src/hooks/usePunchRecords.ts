@@ -75,8 +75,6 @@ export const usePunchRecords = (columnId: number) => {
       
       // request工具已经提取了response.data.data，所以这里直接获得的是数据部分
       const data = await API.Column.getPunchRecords(columnId);
-      console.log(data);
-      console.log(22222222)
       const today_punch_count = await API.Column.getTodayTotalPunchRecords(columnId);
       const columnInfo = await API.Column.getColumnInfo(columnId)
       setColumnInfo(columnInfo.data)

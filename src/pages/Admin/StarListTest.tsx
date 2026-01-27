@@ -23,14 +23,11 @@ const StarListTest: React.FC = () => {
   const testGetStarList = async () => {
     setLoading(true);
     try {
-      console.log('正在调用收藏列表API...', { page, pageSize });
-      
       const response: StarListResponse = await API.Star.getStarList({
         page,
         page_size: pageSize,
       });
 
-      console.log('API响应:', response);
       setApiResponse(response);
 
       if (response.code === 200) {

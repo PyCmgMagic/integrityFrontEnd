@@ -10,7 +10,6 @@ import type { CheckInData, PunchItem } from '../../../../types/types';
 const transformPunchData = (punchItems: PunchItem[] | [] | undefined): CheckInData[] => {
   // 防护性检查：确保 punchItems 存在且为数组
   if (!punchItems || !Array.isArray(punchItems)) {
-    console.warn('打卡数据格式异常:', punchItems);
     return [];
   }
   
@@ -54,10 +53,7 @@ export const useCheckInData = () => {
       setLoading(true);
       setError(null);
       const response = await API.Column.getMyPunchList();
-      
-      // 调试：打印 API 响应结构
-      console.log('API 响应数据:', response);
- 
+
       let punchData: PunchItem[] = [];
       if (Array.isArray(response)) {
         punchData = response;
@@ -92,8 +88,6 @@ export const useCheckInData = () => {
       
       // API 调用成功后，从本地状态中移除该记录
       setCheckInData(prevData => prevData.filter(item => item.id !== id));
-      
-      console.log(`打卡记录 ${id} 删除成功`);
     } catch (err: any) {
       console.error('删除打卡记录失败:', err);
       throw new Error(err.message || '删除打卡记录失败，请稍后重试');

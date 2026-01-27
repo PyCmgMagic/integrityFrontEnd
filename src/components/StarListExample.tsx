@@ -21,9 +21,7 @@ const StarListExample: React.FC = () => {
     defaultPage: 1,
     defaultPageSize: 5, // 示例中只显示5条
     showError: true,
-    onSuccess: (data) => {
-      console.log('收藏列表加载成功:', data.length, '条记录');
-    },
+    onSuccess: () => {},
     onError: (error) => {
       console.error('收藏列表加载失败:', error);
     },

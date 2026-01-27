@@ -48,11 +48,7 @@ export const useProjectDetail = (projectId?: number) => {
       // 如果还有重试次数，延迟后自动重试
       if (retryCountRef.current < maxRetries) {
         retryCountRef.current++;
-        // 第一次重试延迟较短，后续递增
         const delay = retryCountRef.current === 1 ? 200 : 500 * retryCountRef.current;
-        console.log(`项目详情获取失败，${delay}ms后进行第${retryCountRef.current}次重试`);
-        
-        // 重试期间保持loading状态
         setTimeout(() => {
           fetchProjectDetail(true);
         }, delay);

@@ -41,9 +41,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onCancel, 
         };
         onSave(updatedData);
       })
-      .catch(info => {
-        console.log('表单验证失败:', info);
-      });
+      .catch(() => {});
   };
 
 

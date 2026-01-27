@@ -19,14 +19,11 @@ export const useActivityHistory = () => {
       setActivityHistoryLoading(true);
       const response: ParticipationHistoryResponse = await API.User.getParticipationHistory();
       
-      console.log('活动历史API响应:', response); // 调试日志
       
       // 根据ParticipationHistoryResponse类型处理数据
       if (response && response.activities && Array.isArray(response.activities)) {
-        console.log('活动历史数据:', response.activities);
         setActivityHistoryData(response.activities);
       } else {
-        console.warn('获取活动历史数据格式异常:', response);
         setActivityHistoryData([]);
       }
     } catch (error) {

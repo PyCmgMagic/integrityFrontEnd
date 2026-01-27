@@ -34,8 +34,6 @@ export const useAuthStore = create<AuthState>()(
       isLoggedIn: false,
       
       login: (loginData: { role_id: number; student_id: string; token: string }) => {
-        console.log('AuthStore: Logging in user', loginData);
-        
         // 根据 role_id 确定用户角色
         const role: 'user' | 'admin' = loginData.role_id === 1 ? 'admin' : 'user';
         
@@ -56,7 +54,6 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        console.log('AuthStore: Logging out');
         set({ 
           user: null, 
           token: null,

@@ -166,18 +166,14 @@ const ProfilePage: React.FC = () => {
         return;
       }
       
-      console.log('开始获取我创建的活动，用户信息:', authUser);
       const response = await API.Activity.getMyActivities();
-      console.log('我创建的活动API响应:', response);
       
       if (response.code === 200 && response.data) {
         setMyActivities(response.data);
         setMyActivitiesError('');
-        console.log('成功获取我创建的活动:', response.data.length, '个活动');
       } else {
         const errorMsg = response.msg || '获取我创建的活动失败';
         setMyActivitiesError(errorMsg);
-        console.error('获取我创建的活动失败 - 服务器响应:', response);
         Toast.show({ content: errorMsg, position: 'bottom' });
       }
     } catch (error: any) {
@@ -197,7 +193,6 @@ const ProfilePage: React.FC = () => {
       }
       
       setMyActivitiesError(errorMsg);
-      console.error('获取我创建的活动失败 - 详细错误:', error);
       Toast.show({ content: errorMsg, position: 'bottom' });
     } finally {
       setMyActivitiesLoading(false);
@@ -214,8 +209,6 @@ const ProfilePage: React.FC = () => {
         page: 1,
         page_size: 50, // 获取更多数据
       });
-      console.log(response)
-      console.log(response.data)
       if (response.code === 200 && response.data.stars) {
         // 将API返回的数据转换为UI需要的格式
         const transformedData: FavoriteData[] = response.data.stars.map((item: StarItem) => ({

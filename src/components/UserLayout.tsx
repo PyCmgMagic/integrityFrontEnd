@@ -9,7 +9,6 @@ const UserLayout = () => {
   // 直接从localStorage计算isAdmin状态，避免无限重渲染
   const role = JSON.parse(localStorage.getItem('auth-storage') || '{}');
   const isAdmin = role?.state?.user?.role_id === 1;
-  console.log(role);
   const userNavItems: NavItem[] = [
     {
       path: '/user/home',

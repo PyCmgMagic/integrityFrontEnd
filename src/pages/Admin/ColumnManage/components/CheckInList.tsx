@@ -42,7 +42,6 @@ export const CheckInList: React.FC<CheckInListProps> = ({
   onStarChange
 }) => {
   const navigate = useNavigate();
-console.log("000",data);
 
   /**
    * 获取未审核项目的滑动操作

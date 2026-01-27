@@ -54,8 +54,7 @@ const ExportDataModal: React.FC<ExportDataModalProps> = ({ visible, onCancel, on
         resetForm();
         setLoading(false);
       })
-      .catch(info => {
-        console.log('表单验证失败:', info);
+      .catch(() => {
         setLoading(false);
       });
   };

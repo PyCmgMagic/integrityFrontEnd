@@ -4,15 +4,6 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } fro
 import { message } from 'antd';
 import type { ApiResponse, RequestConfig, ApiError } from '../types/api';
 
-// 扩展 Axios 类型定义以支持自定义 metadata
-declare module 'axios' {
-  interface InternalAxiosRequestConfig {
-    metadata?: {
-      startTime: number;
-    };
-  }
-}
-
 // 基础配置
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 const DEFAULT_TIMEOUT = Number(import.meta.env.VITE_REQUEST_TIMEOUT) || 10000;
@@ -62,14 +53,6 @@ class RequestService {
           config.headers.Authorization = `Bearer ${token}`;
         }
 
-        // 添加请求时间戳
-        config.metadata = { startTime: Date.now() };
-
-        console.log(`🚀 [${config.method?.toUpperCase()}] ${config.url}`, {
-          params: config.params,
-          data: config.data,
-        });
-
         return config;
       },
       (error) => {
@@ -83,12 +66,6 @@ class RequestService {
       (response: AxiosResponse<ApiResponse>) => {
         const requestKey = this.getRequestKey(response.config);
         this.pendingRequests.delete(requestKey);
-
-        const duration = Date.now() - (response.config.metadata?.startTime || 0);
-        console.log(`✅ [${response.config.method?.toUpperCase()}] ${response.config.url} (${duration}ms)`, {
-          status: response.status,
-          data: response.data,
-        });
 
         // 检查业务状态码 - 更新为新的响应格式
         if (response.data && typeof response.data === 'object') {
@@ -147,7 +124,7 @@ class RequestService {
         return parsed.state?.token || null;
       }
     } catch (error) {
-      console.warn('Failed to get auth token:', error);
+      console.error('获取储存信息失败:', error);
     }
     return null;
   }
@@ -258,7 +235,6 @@ class RequestService {
     try {
       if (showLoading) {
         // 这里可以集成全局 loading 状态
-        console.log('Loading...');
       }
 
       const response = await this.instance.request<ApiResponse<T>>(axiosConfig);
@@ -271,14 +247,13 @@ class RequestService {
 
       // 重试机制
       if (retries > 0 && retries <= MAX_RETRIES && this.shouldRetry(error)) {
-        console.log(`Retrying request... (${retries} attempts left)`);
         return this.requestFull({ ...config, retries: retries - 1 });
       }
 
       throw error;
     } finally {
       if (showLoading) {
-        console.log('Loading finished');
+        // 这里可以集成全局 loading 状态
       }
     }
   }
@@ -597,7 +572,6 @@ class RequestService {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
 
-      console.log(`✅ File downloaded: ${finalFilename}`);
     } catch (error) {
       console.error('❌ Download failed:', error);
       throw error;

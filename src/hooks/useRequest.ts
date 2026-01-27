@@ -148,7 +148,6 @@ export function useRequest<T = any, P extends any[] = any[]>(
         // 重试逻辑
         if (retryCountRef.current < retries && shouldRetry(apiError)) {
           retryCountRef.current++;
-          console.log(`Retrying request... (${retryCountRef.current}/${retries})`);
           
           await new Promise((resolve) => setTimeout(resolve, retryDelay));
           return executeRequest(...args);

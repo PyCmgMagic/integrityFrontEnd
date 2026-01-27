@@ -47,7 +47,6 @@ const RankingModal: React.FC<RankingModalProps> = ({
     setLoading(true);
     try {
       const res = await API.Activity.getActivityRank(activityId, { page, page_size: pageSize });
-      console.log('Ranking API Response:', res);
       if (res.code === 200) {
         const list = res.data?.rank_list ?? (Array.isArray(res.data) ? res.data : (res.data as any)?.data || []);
         setRankingData(list);
@@ -132,7 +131,7 @@ const RankingModal: React.FC<RankingModalProps> = ({
       width={450}
       centered
       className="ranking-modal"
-      bodyStyle={{ padding: '12px 24px 24px' }}
+      styles={{ body: { padding: '12px 24px 24px' } }}
     >
       <div className="flex justify-end mb-2">
         <Tooltip title={canExport ? '' : '用户在活动结束后才可导出排行榜'}>
