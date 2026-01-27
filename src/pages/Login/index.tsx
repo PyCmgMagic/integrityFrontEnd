@@ -92,6 +92,7 @@ const LoginPage = () => {
   return (
     <div className={styles.screenContainer}>
       <div className={styles.background} />
+      <div className={styles.bottomWave} aria-hidden="true" />
       <div className={styles.content}>
         <div className={styles.logoContainer}>
           <div className={styles.logo}>

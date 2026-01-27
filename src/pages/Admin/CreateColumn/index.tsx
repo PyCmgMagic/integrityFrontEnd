@@ -121,7 +121,7 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
             type="text"
             value={columnData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="新栏目1"
+            placeholder="新栏目"
             className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
           />
         </div>
