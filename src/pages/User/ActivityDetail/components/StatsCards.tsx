@@ -63,8 +63,8 @@ const StatsCards: React.FC<StatsCardsProps> = ({
           <div>
             <p className="text-gray-400 text-xs font-medium">当前排名</p>
             <div className="flex items-baseline gap-1">
-              <p className="text-amber-600 text-3xl font-black">{userStats.rank}</p>
               <p className="text-gray-400 text-[10px] font-bold">TOP</p>
+              <p className="text-amber-600 text-3xl font-black">{userStats.rank}</p>
             </div>
           </div>
         </div>
