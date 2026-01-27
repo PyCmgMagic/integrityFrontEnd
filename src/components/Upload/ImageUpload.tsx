@@ -17,7 +17,7 @@ const ImageUpload = ({
   onChange, 
   maxCount = 9, 
   disabled = false,
-  className = '' 
+  className = '',
 }: ImageUploadProps) => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
@@ -97,7 +97,7 @@ const ImageUpload = ({
         fileToUpload = await compressImage(file, 1920, 1080, 0.8);
       }
 
-      // 上传到图床
+      // 上传到 OSS
       const imageUrl = await uploadImageToCloud(fileToUpload, (percent) => {
         setUploadProgress(percent);
       });

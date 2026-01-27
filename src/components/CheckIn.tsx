@@ -26,7 +26,7 @@ async function realUpload(file: File): Promise<ImageUploadItem> {
       fileToUpload = await compressImage(file, 1920, 1080, 0.8);
     }
 
-    // 上传到图床
+    // 上传到 OSS
     const imageUrl = await uploadImageToCloud(fileToUpload, (percent) => {
       console.log(`上传进度: ${percent}%`);
     });

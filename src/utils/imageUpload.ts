@@ -3,95 +3,88 @@
  * 封装图床API调用，提供统一的图片上传接口
  */
 
+import request from './request';
+
 /**
- * 图床API响应类型
+ * OSS 预签名上传接口的 data 结构
  */
-interface ImageUploadResponse {
-  code: number;
-  data: string;
-  msg: string;
+interface PresignedUploadData {
+  upload_url: string;
+  file_key: string;
+  file_url: string;
+  expires_at: string;
+  method: string;
+  headers: Record<string, string>;
 }
 
 /**
- * 上传图片到图床
+ * 上传图片到 OSS（预签名方式，项目统一使用）
+ * 流程：1) POST /punch/presigned-upload-url 获取预签名信息  2) 使用 PUT 将文件上传到 OSS
  * @param file 要上传的图片文件
  * @param onProgress 上传进度回调函数
- * @returns Promise<string> 返回图片URL
+ * @returns Promise<string> 返回图片可访问的 URL (file_url)
  */
 export const uploadImageToCloud = async (
   file: File,
   onProgress?: (percent: number) => void
 ): Promise<string> => {
+  const isImage = file.type.startsWith('image/');
+  if (!isImage) {
+    throw new Error('只能上传图片文件');
+  }
+  const maxSize = 10 * 1024 * 1024; // 10MB，与各组件校验一致
+  if (file.size > maxSize) {
+    throw new Error('图片大小不能超过10MB');
+  }
+
+  // 1. 请求预签名 URL（由调用方统一展示错误，此处不自动 message）
+  const presigned = await request.post<PresignedUploadData>(
+    '/punch/presigned-upload-url',
+    { filename: file.name, content_type: file.type || 'image/png' },
+    { showError: false }
+  );
+
+  const { upload_url, method, headers: presignedHeaders, file_url } = presigned;
+  const uploadMethod = (method || 'PUT').toUpperCase();
+
+  // 2. 使用 XHR 将文件 PUT 到 OSS（便于监听进度）
   return new Promise((resolve, reject) => {
-    // 验证文件类型
-    const isImage = file.type.startsWith('image/');
-    if (!isImage) {
-      reject(new Error('只能上传图片文件'));
-      return;
-    }
-
-    // 验证文件大小 (限制为5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      reject(new Error('图片大小不能超过5MB'));
-      return;
-    }
-
-    // 创建FormData
-    const formData = new FormData();
-    formData.append('image', file);
-
-    // 创建XMLHttpRequest以支持进度监听
     const xhr = new XMLHttpRequest();
 
-    // 监听上传进度
     if (onProgress) {
       xhr.upload.addEventListener('progress', (event) => {
         if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100);
-          onProgress(percent);
+          onProgress(Math.round((event.loaded / event.total) * 100));
         }
       });
     }
 
-    // 监听请求完成
     xhr.addEventListener('load', () => {
-      if (xhr.status === 200) {
-        try {
-          const response: ImageUploadResponse = JSON.parse(xhr.responseText);
-          
-          if (response.code === 200 && response.data) {
-            // 清理响应数据中的多余空格和引号
-            const imageUrl = response.data.trim().replace(/^["']|["']$/g, '');
-            resolve(imageUrl);
-          } else {
-            reject(new Error(response.msg || '上传失败'));
-          }
-        } catch (error) {
-          reject(new Error('解析响应数据失败'));
-        }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(file_url);
       } else {
         reject(new Error(`上传失败，状态码: ${xhr.status}`));
       }
     });
 
-    // 监听请求错误
-    xhr.addEventListener('error', () => {
-      reject(new Error('网络错误，上传失败'));
-    });
+    xhr.addEventListener('error', () => reject(new Error('网络错误，上传失败')));
+    xhr.addEventListener('timeout', () => reject(new Error('上传超时，请重试')));
+    xhr.timeout = 60000;
 
-    // 监听请求超时
-    xhr.addEventListener('timeout', () => {
-      reject(new Error('上传超时，请重试'));
-    });
+    xhr.open(uploadMethod, upload_url);
 
-    // 设置超时时间 (30秒)
-    xhr.timeout = 30000;
+    if (presignedHeaders && typeof presignedHeaders === 'object') {
+      for (const [key, value] of Object.entries(presignedHeaders)) {
+        if (key.toLowerCase() !== 'host' && value) {
+          xhr.setRequestHeader(key, value);
+        }
+      }
+    }
+    if (!presignedHeaders?.['Content-Type']) {
+      xhr.setRequestHeader('Content-Type', file.type || 'image/png');
+    }
 
-    // 发送请求
-    const uploadUrl = import.meta.env.VITE_IMAGE_UPLOAD_URL;
-    xhr.open('POST', uploadUrl);
-    xhr.send(formData);
+    xhr.send(file);
   });
 };
 

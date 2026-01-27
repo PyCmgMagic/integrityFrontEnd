@@ -56,6 +56,79 @@
   margin: 0 auto;
 }
 
+.pageTitle {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 340px;
+  padding: 20px 18px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(14px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  line-height: 1.35;
+  position: relative;
+  overflow: hidden;
+}
+
+.pageTitle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  opacity: 0.8;
+}
+
+.pageTitleQuote {
+  font-size: clamp(22px, 4.5vw, 26px);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+
+  background: linear-gradient(125deg, #fff 0%, #fff 35%, rgba(255, 234, 167, 0.95) 60%, #fff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: title-shimmer 6s ease-in-out infinite;
+}
+
+@keyframes title-shimmer {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+
+.pageTitleSub {
+  font-size: clamp(14px, 3.2vw, 16px);
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+  position: relative;
+  padding-top: 2px;
+}
+
+.pageTitleSub::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 2px;
+  margin: 0 auto 10px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  border-radius: 1px;
+}
+
 
 .titleText {
   font-size: 32px;
@@ -67,6 +140,14 @@
   letter-spacing: 2px;
   display: block;
   text-align: center;
+}
+
+.logoIcon {
+  width: 56px;
+  height: 56px;
+  z-index: 2;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.22));
+  user-select: none;
 }
 
 .logoWaves {
@@ -105,6 +186,8 @@
 }
 
 .roleSwitcher {
+  position: relative;
+  overflow: hidden;
   display: flex;
   justify-content: center;
   margin-bottom: 24px;
@@ -112,6 +195,19 @@
   border-radius: 50px;
   padding: 4px;
   width: 100%;
+}
+
+.roleIndicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 50px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
 }
 
 .roleButton {
@@ -123,9 +219,11 @@
   padding: 10px 24px;
   border-radius: 50px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
   flex: 1;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .roleButton:disabled {
@@ -134,9 +232,8 @@
 }
 
 .roleButton.active {
-  background: white;
-  color: #ff6b6b;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  color: #ff4d4f;
 }
 
 .formContainer {
@@ -146,6 +243,25 @@
   gap: 16px;
   margin-top: auto;
   margin-bottom: auto;
+}
+
+.formBody {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: form-body-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes form-body-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .inputWrapper {
@@ -203,7 +319,37 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
-  margin-top: 8px;
+}
+
+.casButton {
+  background: linear-gradient(135deg, #d90429 0%, #ff4d4f 55%, #ff7a45 100%);
+  box-shadow: 0 10px 28px rgba(217, 4, 41, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.2px;
+}
+
+.casButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -45%;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+}
+
+.casButton:hover:not(:disabled)::before {
+  left: 115%;
+}
+
+.casButtonIcon {
+  font-size: 18px;
+  margin-right: 10px;
+  vertical-align: -1px;
 }
 
 .submitButton:hover:not(:disabled) {
@@ -238,17 +384,21 @@
   color: white;
 }
 
-/* 移动端适配 - 解决虚拟键盘弹起时的布局问题 */
+/* 移动端适配 - 解决虚拟键盘弹起时挡住输入框的问题 */
 @media (max-width: 768px) {
   .screenContainer {
     height: 100dvh; /* 使用动态视口高度 */
     min-height: 100vh;
+    overflow-y: auto; /* 允许滚动，键盘弹起时可滚动到输入框 */
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* iOS 弹性滚动 */
   }
   
   .content {
     height: auto;
     min-height: 100%;
     padding: 40px 24px 20px 24px;
+    padding-bottom: 35vh; /* 底部留出空间，保证键盘弹起时能滚动到输入框 */
     justify-content: flex-start;
   }
   
@@ -274,5 +424,31 @@
     .screenContainer {
       height: -webkit-fill-available;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .background {
+    animation: none;
+  }
+
+  .pageTitleQuote {
+    animation: none;
+  }
+
+  .roleIndicator {
+    transition: none;
+  }
+
+  .roleButton {
+    transition: none;
+  }
+
+  .formBody {
+    animation: none;
+  }
+
+  .submitButton:hover:not(:disabled) {
+    transform: none;
   }
 }
