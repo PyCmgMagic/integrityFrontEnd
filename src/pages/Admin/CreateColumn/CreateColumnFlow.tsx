@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useLayoutEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { message } from 'antd';
 import CreateColumn from './index'; // 确保路径正确
@@ -33,8 +33,9 @@ const CreateColumnFlow: React.FC = () => {
     isCreatingColumn
   } = useAppStore();
 
-  // 组件挂载时清除之前的创建数据
-  useEffect(() => {
+  // 组件挂载时清除之前的创建数据。使用 useLayoutEffect 确保在子组件 CreateColumn 的
+  // useEffect（从 store 恢复数据）之前执行，避免「新建项目后再次进入栏目创建」时仍展示上一项目的栏目数据
+  useLayoutEffect(() => {
     clearColumnCreationData();
   }, [clearColumnCreationData]);
   

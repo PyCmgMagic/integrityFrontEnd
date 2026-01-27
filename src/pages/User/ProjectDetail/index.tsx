@@ -141,6 +141,7 @@ const ProjectDetailPage = () => {
                     <div>
                       <h2 className="text-2xl font-bold text-white">
                         {column.name}
+                        <br />
                         {column.optional && (
                           <span className="ml-2 text-xs font-semibold text-white bg-emerald-500/90 px-2 py-0.5 rounded-full border border-emerald-200/80">
                             特殊栏目
