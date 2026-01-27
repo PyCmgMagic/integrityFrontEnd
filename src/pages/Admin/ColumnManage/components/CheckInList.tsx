@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { List } from 'antd';
-import { CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Dialog, SwipeAction, Toast } from 'antd-mobile';
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import {SwipeAction} from 'antd-mobile';
 import type { CheckInItem } from '../utils/dataTransform';
 import { StarButton } from './StarButton';
 
@@ -78,33 +78,33 @@ console.log("000",data);
     },
   ];
 
-  /**
-   * 获取已审核项目的滑动操作
-   * @param item - 打卡项
-   * @returns 滑动操作配置
-   */
-  const getReviewedActions = (item: CheckInItem) => [
-    {
-      key: 'delete',
-      text: (
-        <div className="flex flex-col justify-center items-center h-full">
-          <DeleteOutlined />
-          <span className="text-xs mt-1">删除</span>
-        </div>
-      ),
-      color: 'danger',
-      onClick: async (): Promise<void> => {
-        const confirmed = await Dialog.confirm({ content: '确定要删除吗？' });
-        if (confirmed) {
-          // 在实际应用中，这里应该更新状态来移除项目
-          Toast.show({
-            content: `已删除 "${item.title}"`,
-            position: 'bottom'
-          });
-        }
-      },
-    },
-  ];
+  // /**
+  //  * 获取已审核项目的滑动操作
+  //  * @param item - 打卡项
+  //  * @returns 滑动操作配置
+  //  */
+  // const getReviewedActions = (item: CheckInItem) => [
+  //   {
+  //     key: 'delete',
+  //     text: (
+  //       <div className="flex flex-col justify-center items-center h-full">
+  //         <DeleteOutlined />
+  //         <span className="text-xs mt-1">删除</span>
+  //       </div>
+  //     ),
+  //     color: 'danger',
+  //     onClick: async (): Promise<void> => {
+  //       const confirmed = await Dialog.confirm({ content: '确定要删除吗？' });
+  //       if (confirmed) {
+  //         // 在实际应用中，这里应该更新状态来移除项目
+  //         Toast.show({
+  //           content: `已删除 "${item.title}"`,
+  //           position: 'bottom'
+  //         });
+  //       }
+  //     },
+  //   },
+  // ];
 
   /**
    * 处理列表项点击事件 - 待审核与已审核均支持点击查看打卡详情
@@ -149,7 +149,7 @@ console.log("000",data);
           rightActions={
             type === 'unreviewed'
               ? getUnreviewedActions(item)
-              : getReviewedActions(item)
+              : [] // 已审核项目暂不支持滑动操作
           }
         >
           <List.Item

@@ -52,3 +52,15 @@ html, body {
   align-items: center;
   min-height: 200px;
 }
+
+/* antd-mobile: fix Toast success/fail icon looking off-center (inline SVG baseline) */
+.adm-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.adm-toast-icon svg {
+  display: block;
+}
