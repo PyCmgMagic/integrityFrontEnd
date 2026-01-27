@@ -1,6 +1,5 @@
 import React from 'react';
 import { Image, Button } from 'antd';
-import { CloudDownloadOutlined } from '@ant-design/icons';
 import type { CheckInItem } from '../utils/checkInDataTransform';
 
 interface CheckInContentProps {
@@ -42,7 +41,6 @@ const CheckInContent: React.FC<CheckInContentProps> = ({ currentItem, onApprove,
               <p className="text-xs sm:text-sm text-gray-500 truncate">{currentItem.date} {currentItem.time}</p>
             </div>
           </div>
-          <CloudDownloadOutlined className="text-gray-400 text-lg sm:text-xl flex-shrink-0 ml-2" />
         </div>
 
         {/* 文字内容区域 */}

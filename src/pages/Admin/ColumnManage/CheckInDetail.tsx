@@ -40,25 +40,32 @@ const CheckInDetail: React.FC = () => {
   // 使用useMemo稳定punchIds数组引用，避免无限重渲染
   const punchIds = useMemo(() => locationState.punchIds || [], [locationState.punchIds]);
   
-  // 获取当前打卡记录ID，优先使用路由参数，其次使用状态中的ID
-  const punchId = parseInt(params.punchId || '') || currentPunchId;
+  // 获取当前打卡记录ID：review 路由使用 reviewId，punch 路由使用 punchId，其次使用状态中的 currentPunchId
+  const punchId = parseInt(params.reviewId || params.punchId || '') || currentPunchId;
   const finalColumnId = columnId || parseInt(params.columnId || '0');
   
   const [items, setItems] = useState<CheckInItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPunchIndex, setCurrentPunchIndex] = useState<number>(0);
 
-  // 使用自定义 hooks
+  // 使用自定义 hooks（非 punchIds 模式用 currentIndex/currentItem）
   const { currentIndex, currentItem, goToPrevious, goToNext } = useCheckInNavigation(items, currentPunchIndex);
+  // punchIds 模式下以 currentPunchIndex 为准，保证滑动与页码正确
+  const displayIndex = punchIds.length > 1 ? currentPunchIndex : currentIndex;
+  const effectiveCurrentItem =
+    punchIds.length > 1
+      ? (items[Math.min(currentPunchIndex, items.length - 1)] ?? items[0])
+      : currentItem;
+
   /**
    * 从列表中移除当前项并处理导航
    */
   const removeCurrentItem = (): void => {
-    const newItems = items.filter((_, i) => i !== currentIndex);
+    const idx = items.length > 0 ? Math.min(displayIndex, items.length - 1) : 0;
+    const newItems = items.filter((_, i) => i !== idx);
     setItems(newItems);
     
     if (newItems.length === 0) {
-      // 如果没有更多记录，返回上一页
       navigate(-1);
       return;
     }
@@ -77,25 +84,25 @@ const CheckInDetail: React.FC = () => {
   }, []);
 
   const { handleApprove, handleReject, toggleStar,  isStarLoading } = useCheckInReview({
-    currentItem,
+    currentItem: effectiveCurrentItem,
     onItemRemoved: removeCurrentItem,
     onStarChange: handleStarChange
   });
 
   /**
    * 获取单个打卡详情数据
+   * @param keepPunchIndex - 为 true 时不重置 currentPunchIndex，用于 punchIds 模式下滑动时保持页码
    */
-  const fetchPunchDetail = useCallback(async (targetPunchId: number) => {
+  const fetchPunchDetail = useCallback(async (targetPunchId: number, keepPunchIndex = false) => {
     try {
       setLoading(true);
       const response = await API.Column.getPunchDetail(targetPunchId);
       console.log('获取打卡详情:', response);
       
       if (response && response.data) {
-        // 转换单个打卡详情数据
         const transformedItem = transformPunchDetail(response);
         setItems([transformedItem]);
-        setCurrentPunchIndex(0);
+        if (!keepPunchIndex) setCurrentPunchIndex(0);
       } else {
         setItems([]);
         Toast.show({ content: '获取打卡详情失败', icon: 'fail' });
@@ -107,7 +114,7 @@ const CheckInDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // fetchPunchDetail不依赖任何外部变量
+  }, []);
 
   /**
    * 获取多个打卡详情数据（支持滑动切换）
@@ -179,37 +186,29 @@ const CheckInDetail: React.FC = () => {
    * 处理滑动到下一个打卡记录
    */
   const handleSwipeNext = useCallback(() => {
-    if (punchIds.length > 1 && currentIndex < punchIds.length - 1) {
-      // 如果有多个打卡记录ID，切换到下一个
-      const nextIndex = currentIndex + 1;
+    if (punchIds.length > 1 && currentPunchIndex < punchIds.length - 1) {
+      const nextIndex = currentPunchIndex + 1;
       const nextPunchId = punchIds[nextIndex];
       setCurrentPunchIndex(nextIndex);
-      
-      // 动态加载下一个打卡详情
-      fetchPunchDetail(nextPunchId);
+      fetchPunchDetail(nextPunchId, true);
     } else if (currentIndex < items.length - 1) {
-      // 兼容旧版本的列表切换
       goToNext();
     }
-  }, [currentIndex, punchIds, items.length, goToNext]);
+  }, [currentPunchIndex, currentIndex, punchIds, items.length, goToNext, fetchPunchDetail]);
 
   /**
    * 处理滑动到上一个打卡记录
    */
   const handleSwipePrevious = useCallback(() => {
-    if (punchIds.length > 1 && currentIndex > 0) {
-      // 如果有多个打卡记录ID，切换到上一个
-      const prevIndex = currentIndex - 1;
+    if (punchIds.length > 1 && currentPunchIndex > 0) {
+      const prevIndex = currentPunchIndex - 1;
       const prevPunchId = punchIds[prevIndex];
       setCurrentPunchIndex(prevIndex);
-      
-      // 动态加载上一个打卡详情
-      fetchPunchDetail(prevPunchId);
+      fetchPunchDetail(prevPunchId, true);
     } else if (currentIndex > 0) {
-      // 兼容旧版本的列表切换
       goToPrevious();
     }
-  }, [currentIndex, punchIds, goToPrevious]);
+  }, [currentPunchIndex, currentIndex, punchIds, goToPrevious, fetchPunchDetail]);
 
   const swipeHandlers = useSwipeable({
     onSwipedLeft: handleSwipeNext,
@@ -276,8 +275,8 @@ const CheckInDetail: React.FC = () => {
     <div className="min-h-screen bg-blue-500 flex flex-col relative overflow-hidden" {...swipeHandlers}>
       {/* 头部 */}
       <CheckInDetailHeader
-        currentItem={currentItem}
-        isStarred={currentItem?.starred || false}
+        currentItem={effectiveCurrentItem}
+        isStarred={effectiveCurrentItem?.starred || false}
         isStarLoading={isStarLoading}
         onBack={() => navigate(-1)}
         onToggleStar={toggleStar}
@@ -286,14 +285,14 @@ const CheckInDetail: React.FC = () => {
       {/* 内容区域 */}
       <div className="flex-1 flex flex-col relative">
         <CheckInContent 
-          currentItem={currentItem}
+          currentItem={effectiveCurrentItem}
           onApprove={handleApprove}
           onReject={handleReject}
         />
       </div>
       
       {/* 导航箭头 - 响应式定位 */}
-      {((punchIds.length > 1 && currentIndex > 0) || (punchIds.length <= 1 && currentIndex > 0)) && (
+      {((punchIds.length > 1 && displayIndex > 0) || (punchIds.length <= 1 && currentIndex > 0)) && (
         <div className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-10">
           <button 
             onClick={handleSwipePrevious}
@@ -304,7 +303,7 @@ const CheckInDetail: React.FC = () => {
         </div>
       )}
       
-      {((punchIds.length > 1 && currentIndex < punchIds.length - 1) || (punchIds.length <= 1 && currentIndex < items.length - 1)) && (
+      {((punchIds.length > 1 && displayIndex < punchIds.length - 1) || (punchIds.length <= 1 && currentIndex < items.length - 1)) && (
         <div className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-10">
           <button 
             onClick={handleSwipeNext}
@@ -325,10 +324,9 @@ const CheckInDetail: React.FC = () => {
                   key={i}
                   onClick={() => {
                     if (punchIds.length > 1) {
-                      // 新版本：直接跳转到指定的打卡记录
                       const targetPunchId = punchIds[i];
                       setCurrentPunchIndex(i);
-                      fetchPunchDetail(targetPunchId);
+                      fetchPunchDetail(targetPunchId, true);
                     } else {
                       // 兼容旧版本：使用原有的切换逻辑
                       const diff = i - currentIndex;
@@ -344,7 +342,7 @@ const CheckInDetail: React.FC = () => {
                     }
                   }}
                   className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 touch-manipulation ${
-                    i === currentIndex 
+                    i === displayIndex 
                       ? 'bg-white shadow-lg scale-125 ring-2 ring-white/50' 
                       : 'bg-white/60 hover:bg-white/80 active:scale-110'
                   }`}

@@ -1,7 +1,25 @@
 import React from 'react';
 import { Button } from 'antd';
 import { LeftOutlined, StarOutlined, StarFilled, LoadingOutlined } from '@ant-design/icons';
-import type { CheckInItem } from '../utils/checkInDataTransform';
+import type { CheckInItem, ReviewStatus } from '../utils/checkInDataTransform';
+
+const STATUS_MAP: Record<ReviewStatus, { label: string; className: string }> = {
+  pending: { label: '未审核', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  approved: { label: '已通过', className: 'bg-green-100 text-green-800 border-green-200' },
+  rejected: { label: '已拒绝', className: 'bg-red-100 text-red-800 border-red-200' },
+};
+
+const StatusBadge: React.FC<{ status?: ReviewStatus }> = ({ status }) => {
+  const s = status ?? 'pending';
+  const { label, className } = STATUS_MAP[s];
+  return (
+    <span
+      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium border ${className}`}
+    >
+      {label}
+    </span>
+  );
+};
 
 interface CheckInDetailHeaderProps {
   currentItem: CheckInItem | undefined;
@@ -76,6 +94,10 @@ const CheckInDetailHeader: React.FC<CheckInDetailHeaderProps> = ({
         <p className="font-semibold tracking-wider text-sm sm:text-base">
           {currentItem ? `${currentItem.date} ${currentItem.time}` : '加载中...'}
         </p>
+        {/* 审核状态：未审核 / 已通过 / 已拒绝 */}
+        <div className="mt-2">
+          <StatusBadge status={currentItem?.status} />
+        </div>
       </div>
     </header>
   );

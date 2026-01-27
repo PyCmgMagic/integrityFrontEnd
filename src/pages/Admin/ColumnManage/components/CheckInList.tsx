@@ -107,25 +107,25 @@ console.log("000",data);
   ];
 
   /**
-   * 处理列表项点击事件
+   * 处理列表项点击事件 - 待审核与已审核均支持点击查看打卡详情
+   * 已审核列表会传入 punchIds，以便详情页支持左右滑动切换
    * @param item - 点击的打卡项
    * @param index - 项目索引
    */
   const handleItemClick = (item: CheckInItem, index: number): void => {
-    // 已审核列表禁用点击功能
-    if (type === 'reviewed') {
-      return;
+    const state: Record<string, unknown> = {
+      items: data,
+      currentIndex: index,
+      reviewType: type
+    };
+    // 已审核且有多条时传入 punchIds，详情页可左右滑动查看
+    if (type === 'reviewed' && data.length > 1) {
+      state.punchIds = data.map((i) => i.id);
+      state.currentPunchId = item.id;
     }
-    
     navigate(
       `/admin/activity/${activityId}/project/${projectId}/column/${columnId}/review/${item.id}`,
-      {
-        state: {
-          items: data,
-          currentIndex: index,
-          reviewType: type
-        }
-      }
+      { state }
     );
   };
 

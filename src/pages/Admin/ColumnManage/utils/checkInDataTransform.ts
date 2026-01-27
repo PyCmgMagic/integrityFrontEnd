@@ -1,5 +1,8 @@
 import type { PendingPunchItem } from '../../../../types/api';
 
+// 审核状态：未审核、已通过、已拒绝
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
+
 // 类型定义
 export interface CheckInItem {
   id: number;
@@ -8,11 +11,13 @@ export interface CheckInItem {
   text: string;
   images: string[];
   starred?: boolean;// 兼容旧API
-  stared?: boolean; 
+  stared?: boolean;
   username: string;
   time: string;
   punchId: number;
   userId: number;
+  /** 审核状态：pending=未审核，approved=已通过，rejected=已拒绝 */
+  status?: ReviewStatus;
 }
 
 // 新API返回的打卡详情数据类型
@@ -58,8 +63,16 @@ export const transformPendingData = (data: PendingPunchItem[]): CheckInItem[] =>
       return img.trim().replace(/[`'"\s]/g, '');
     }).filter(img => img.length > 0), // 过滤掉空字符串
     starred: item.stared,
-    username: item.nick_name
+    username: item.nick_name,
+    status: 'pending' as ReviewStatus
   }));
+};
+
+/** 根据后端 punch.status 数字转换为审核状态：0=未审核，1=已通过，2=已拒绝 */
+const parseReviewStatus = (n: number | undefined): ReviewStatus => {
+  if (n === 1) return 'approved';
+  if (n === 2) return 'rejected';
+  return 'pending';
 };
 
 /**
@@ -86,6 +99,7 @@ export const transformPunchDetail = (response: PunchDetailResponse, username: st
       return img.trim().replace(/[`'"\s]/g, '');
     }).filter(img => img.length > 0), // 过滤掉空字符串
     starred: data.stared, // 使用API返回的收藏状态
-    username: username
+    username: username,
+    status: parseReviewStatus(data.punch.status)
   };
 };
