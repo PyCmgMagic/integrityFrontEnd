@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import ProtectedRoute from '../components/ProtectedRoute';
+import PublicRoute from '../components/PublicRoute';
 import LoadingComponent from '../components/LoadingComponent'; 
 
 // 懒加载页面组件
@@ -46,9 +47,11 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: (
-      <Suspense fallback={<LoadingComponent />}>
-        <LoginPage />
-      </Suspense>
+      <PublicRoute>
+        <Suspense fallback={<LoadingComponent />}>
+          <LoginPage />
+        </Suspense>
+      </PublicRoute>
     ),
   },
   {
@@ -271,10 +274,10 @@ export const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <Navigate to="/login" replace />,
+    element: <Navigate to="/admin/home" replace />,
   },
   {
     path: '*',
-    element: <Navigate to="/login" replace />,
+    element: <Navigate to="/admin/home" replace />,
   },
 ]);

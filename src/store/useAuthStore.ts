@@ -20,10 +20,16 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isLoggedIn: boolean;
+  /**
+   * True once zustand/persist has rehydrated state from storage.
+   * Prevents route guards from redirecting before persisted auth is available.
+   */
+  hasHydrated: boolean;
   login: (loginData: { role_id: number; student_id: string; token: string }) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
   setUserProfile: (profileData: any) => void;
+  setHasHydrated: (hydrated: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -32,6 +38,8 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isLoggedIn: false,
+      hasHydrated: false,
+      setHasHydrated: (hydrated: boolean) => set({ hasHydrated: hydrated }),
       
       login: (loginData: { role_id: number; student_id: string; token: string }) => {
         // 根据 role_id 确定用户角色
@@ -87,6 +95,9 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store';
 
@@ -8,18 +7,12 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { isLoggedIn, user } = useAuthStore();
-  const [hydrated, setHydrated] = useState(false);
+  const { hasHydrated, isLoggedIn, token, user } = useAuthStore();
 
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
+  // Wait for zustand/persist to rehydrate auth state to avoid redirect races on refresh.
+  if (!hasHydrated) return null;
 
-  if (!hydrated) {
-    return null;
-  }
-
-  if (!isLoggedIn || !user) {
+  if (!isLoggedIn || !token || !user) {
     return <Navigate to="/login" replace />;
   }
   if (requiredRole) {
