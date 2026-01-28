@@ -204,7 +204,7 @@ const RankingModal: React.FC<RankingModalProps> = ({
           )}
         </>
       ) : (
-        <Empty description="\u6682\u65e0\u6392\u540d\u6570\u636e" className="py-8" />
+        <Empty description="暂无排行榜数据" className="py-8" />
       )}
     </Modal>
   );

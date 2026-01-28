@@ -5,6 +5,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { ActivityAPI } from '../services/api';
 import { transformActivityToCreateRequest } from '../utils/dataTransform';
 import CoverUpload from './Upload/CoverUpload';
+import { FIELD_LIMITS } from '../utils/fieldLimits';
 
 const { TextArea } = Input;
 
@@ -206,12 +207,26 @@ const createData = transformActivityToCreateRequest({
       destroyOnHidden
     >
       <Form form={form} layout="vertical">
-        <Form.Item name="title" label="活动标题" rules={[{ required: true, message: '请输入活动标题!' }]}>
-          <Input placeholder="请输入活动标题" />
+        <Form.Item
+          name="title"
+          label="活动标题"
+          rules={[
+            { required: true, message: '请输入活动标题(不超过75字)' },
+            { max: FIELD_LIMITS.name, message: `活动标题最多 ${FIELD_LIMITS.name} 个字符` },
+          ]}
+        >
+          <Input placeholder="请输入活动标题(不超过75字)" maxLength={FIELD_LIMITS.name} showCount />
         </Form.Item>
 
-        <Form.Item name="description" label="活动描述" rules={[{ required: true, message: '请输入活动描述!' }]}>
-          <TextArea rows={3} placeholder="请描述活动内容..." />
+        <Form.Item
+          name="description"
+          label="活动描述"
+          rules={[
+            { required: true, message: '请输入活动描述（不超过200字）!' },
+            { max: FIELD_LIMITS.description, message: `活动描述最多 ${FIELD_LIMITS.description} 个字符` },
+          ]}
+        >
+          <TextArea rows={3} placeholder="请描述活动内容...（不超过200字）" maxLength={FIELD_LIMITS.description} showCount />
         </Form.Item>
 
         <Form.Item

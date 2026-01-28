@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, message, Drawer, Space } from 'antd';
 import { CalendarOutlined } from '@ant-design/icons';
 import dayjs, { type Dayjs } from 'dayjs';
 import { API } from '../../../services/api';
+import { FIELD_LIMITS } from '../../../utils/fieldLimits';
 
 const { TextArea } = Input;
 
@@ -287,17 +288,23 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         <Form.Item
           name="name"
           label={<span className="font-semibold text-gray-700">栏目名称</span>}
-          rules={[{ required: true, message: '请输入栏目名称' }]}
+          rules={[
+            { required: true, message: '请输入栏目名称' },
+            { max: FIELD_LIMITS.name, message: `栏目名称最多 ${FIELD_LIMITS.name} 个字符` },
+          ]}
         >
-          <Input placeholder="请输入栏目名称" />
+          <Input placeholder="请输入栏目名称" maxLength={FIELD_LIMITS.name} showCount />
         </Form.Item>
 
         <Form.Item
           name="description"
           label={<span className="font-semibold text-gray-700">栏目详情说明</span>}
-          rules={[{ required: true, message: '请输入栏目详情' }]}
+          rules={[
+            { required: true, message: '请输入栏目详情' },
+            { max: FIELD_LIMITS.description, message: `栏目描述最多 ${FIELD_LIMITS.description} 个字符` },
+          ]}
         >
-          <TextArea rows={8} placeholder="请输入栏目详情说明" />
+          <TextArea rows={8} placeholder="请输入栏目详情说明" maxLength={FIELD_LIMITS.description} showCount />
         </Form.Item>
         <Form.Item
           name="dateRange"

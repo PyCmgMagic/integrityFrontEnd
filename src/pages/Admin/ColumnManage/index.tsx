@@ -13,6 +13,7 @@ import { CheckInList } from './components/CheckInList';
 import { ReviewTabs, type ReviewTabType } from './components/ReviewTabs';
 import type { CheckInItem, ColumnInfo } from './utils/dataTransform';
 import { Toast } from 'antd-mobile';
+import { useAdminProjectDetail } from '../../../hooks/useAdminProjectDetail';
 
 // 接口和工具函数已移至独立模块
 
@@ -44,6 +45,7 @@ const ColumnManage: React.FC = () => {
   });
   const { activityId, projectId, columnId } = useParams();
   const parsedProjectId = parseInt(projectId || '0');
+  const { projectDetail } = useAdminProjectDetail(parsedProjectId);
   
   // 使用ref来跟踪当前请求
   const currentRequestRef = useRef<number>(0);
@@ -257,8 +259,8 @@ const ColumnManage: React.FC = () => {
         onClose={() => setEditColumnVisible(false)}
         onFinish={handleEditColumnFinish} 
         projectId={parsedProjectId}
-        projectStartDate={columnInfo.start_date}
-        projectEndDate={columnInfo.end_date}
+        projectStartDate={projectDetail?.start_date ?? 0}
+        projectEndDate={projectDetail?.end_date ?? 0}
         initialData={columnInfo}
       />
     </div>

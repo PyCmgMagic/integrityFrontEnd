@@ -6,6 +6,7 @@ import type { UploadFile } from 'antd/es/upload/interface';
 import dayjs, { type Dayjs } from 'dayjs';
 import { ActivityAPI } from '../../../services/api';
 import { transformActivityToUpdateRequest } from '../../../utils/dataTransform';
+import { FIELD_LIMITS } from '../../../utils/fieldLimits';
 
 const { TextArea } = Input;
 
@@ -292,17 +293,23 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({ visible, onClose,
         <Form.Item 
           name="name" 
           label={<span className="font-semibold text-gray-700">活动名称</span>} 
-          rules={[{ required: true, message: '请输入活动名称' }]}
+          rules={[
+            { required: true, message: '请输入活动名称（不超过75字）' },
+            { max: FIELD_LIMITS.name, message: `活动名称最多 ${FIELD_LIMITS.name} 个字符` },
+          ]}
         >
-          <Input placeholder="请输入活动名称" />
+          <Input placeholder="请输入活动名称（不超过75字）" maxLength={FIELD_LIMITS.name} showCount />
         </Form.Item>
 
         <Form.Item 
           name="description" 
           label={<span className="font-semibold text-gray-700">活动详情说明</span>} 
-          rules={[{ required: true, message: '请输入活动详情' }]}
+          rules={[
+            { required: true, message: '请输入活动详情（不超过200字）' },
+            { max: FIELD_LIMITS.description, message: `活动描述最多 ${FIELD_LIMITS.description} 个字符` },
+          ]}
         >
-          <TextArea rows={8} placeholder="请输入活动详情说明" />
+          <TextArea rows={8} placeholder="请输入活动详情说明（不超过200字）" maxLength={FIELD_LIMITS.description} showCount />
         </Form.Item>
         <Form.Item
           label={<span className="font-semibold text-gray-700">活动时间</span>}

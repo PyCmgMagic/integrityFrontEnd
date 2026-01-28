@@ -4,6 +4,7 @@ import {  useNavigate, useParams } from 'react-router-dom';
 import { ProjectAPI } from '../../../services/api';
 import { message, Select } from 'antd';
 import { DEFAULT_PROJECT_ICON_NAME, PROJECT_ICON_OPTIONS } from '../../../utils/projectIcons';
+import { FIELD_LIMITS } from '../../../utils/fieldLimits';
 
 
 interface CreateProjectProps {
@@ -70,6 +71,15 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
       return;
     }
 
+    if (projectData.name.length > FIELD_LIMITS.name) {
+      message.error(`项目名称不能超过 ${FIELD_LIMITS.name} 个字符`);
+      return;
+    }
+    if (projectData.description.length > FIELD_LIMITS.description) {
+      message.error(`项目描述不能超过 ${FIELD_LIMITS.description} 个字符`);
+      return;
+    }
+
     setLoading(true);
     try {
       // 准备API请求数据
@@ -117,6 +127,8 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
 
   const isFormValid = projectData.name.trim() !== '' && 
                      projectData.description.trim() !== '' &&
+                     projectData.name.length <= FIELD_LIMITS.name &&
+                     projectData.description.length <= FIELD_LIMITS.description &&
                      projectData.startDate !== '' &&
                      projectData.endDate !== '' &&
                      projectData.categoryCount > 0;
@@ -148,7 +160,8 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
             type="text"
             value={projectData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="新项目"
+            placeholder="新项目(不超过75字)"
+            maxLength={FIELD_LIMITS.name}
             className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
           />
         </div>
@@ -161,8 +174,9 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
           <textarea
             value={projectData.description}
             onChange={(e) => handleInputChange('description', e.target.value)}
-            placeholder="请输入"
+            placeholder="请输入（不超过200字）"
             rows={4}
+            maxLength={FIELD_LIMITS.description}
             className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all resize-none"
           />
         </div>

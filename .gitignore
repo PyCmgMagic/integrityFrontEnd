@@ -33,3 +33,4 @@ docs
 *.sln
 *.sw?
 dist.zip
+.env.development

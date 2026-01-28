@@ -44,7 +44,7 @@ const ActivityHistoryTab: React.FC<ActivityHistoryTabProps> = ({
   }
 
   return (
-    <div className="p-4 pt-0 space-y-5">
+    <div className="px-1 py-2 pt-0 space-y-5">
       {activityHistory.map((item, index) => {
         const gradientClasses = [
           'gradient-card-purple',

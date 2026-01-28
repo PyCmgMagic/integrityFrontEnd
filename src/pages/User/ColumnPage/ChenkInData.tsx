@@ -155,7 +155,7 @@ const ChenkInData = ({
           <p className="text-gray-600 text-sm leading-relaxed">{column.description}</p>
         </div>
           <div className='flex items-center justify-between mb-4'>
-            <p>总打卡记录：{totalRecords}条</p>
+            <p>今日已有{totalRecords}人打卡~</p>
             <p>我已打卡：{currentUserCheckInCount}次</p>
           </div>
         </div>

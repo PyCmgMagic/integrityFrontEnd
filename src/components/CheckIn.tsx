@@ -3,6 +3,7 @@ import { Button, Toast, TextArea, ImageUploader,Divider } from 'antd-mobile';
 import type { ImageUploadItem  } from 'antd-mobile';
 import { API } from '../services/api';
 import { uploadImageToCloud, compressImage } from '../utils/imageUpload';
+import { FIELD_LIMITS } from '../utils/fieldLimits';
 // 定义传递给组件的 props 类型
 interface CheckInPageProps {
   columnId: number; // 添加column_id参数
@@ -55,9 +56,17 @@ const CheckIn: React.FC<CheckInPageProps> = ({ columnId, onSuccess, setGotoCheck
    */
   const handleSubmit = async () => {
     // 可以增加文本内容的校验
-    if (!content.trim()) {
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
       Toast.show({
-        content: '请输入打卡内容',
+        content: '请输入打卡内容(不超过500字)',
+        position: 'bottom',
+      });
+      return;
+    }
+    if (trimmedContent.length > FIELD_LIMITS.checkInContent) {
+      Toast.show({
+        content: `打卡内容不能超过 ${FIELD_LIMITS.checkInContent} 个字符`,
         position: 'bottom',
       });
       return;
@@ -78,7 +87,7 @@ const CheckIn: React.FC<CheckInPageProps> = ({ columnId, onSuccess, setGotoCheck
       // 调用API提交打卡记录
       const response = await API.Column.insertPunchRecord({
         column_id: columnId,
-        content: content.trim(),
+        content: trimmedContent,
         images: images
       });
 
@@ -121,7 +130,9 @@ const CheckIn: React.FC<CheckInPageProps> = ({ columnId, onSuccess, setGotoCheck
           <TextArea
             value={content}
             onChange={setContent}
-            placeholder="请输入打卡内容"
+            placeholder="请输入打卡内容（不超过500字）"
+            maxLength={FIELD_LIMITS.checkInContent}
+            showCount
             autoSize={{ minRows: 4, maxRows: 6 }}
             className="text-base"
           />

@@ -3,6 +3,7 @@ import {  Calendar, Clock } from 'lucide-react';
 import { useAppStore } from '../../../store/useAppStore';
 import { useParams } from 'react-router-dom';
 import { message } from 'antd';
+import { FIELD_LIMITS } from '../../../utils/fieldLimits';
 
 export interface CreateColumnProps {
   onBack?: () => void;
@@ -74,6 +75,15 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
   };
 
   const handleNext = () => {
+    if (columnData.name.length > FIELD_LIMITS.name) {
+      message.error(`栏目名称不能超过 ${FIELD_LIMITS.name} 个字符`);
+      return;
+    }
+    if (columnData.description.length > FIELD_LIMITS.description) {
+      message.error(`栏目描述不能超过 ${FIELD_LIMITS.description} 个字符`);
+      return;
+    }
+
     // 验证日期范围是否在项目范围内
     if (projectStartDate && columnData.startDate < projectStartDate) {
       message.error(`栏目开始日期不能早于项目开始日期 (${projectStartDate})`);
@@ -95,6 +105,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
 
   const isFormValid = columnData.name.trim() !== '' && 
                      columnData.description.trim() !== '' &&
+                     columnData.name.length <= FIELD_LIMITS.name &&
+                     columnData.description.length <= FIELD_LIMITS.description &&
                      columnData.startDate !== '' &&
                      columnData.endDate !== '' &&
                      columnData.dailyCheckinLimit > 0 &&
@@ -121,7 +133,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
             type="text"
             value={columnData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="新栏目"
+            placeholder="新栏目(不超过75个字)"
+            maxLength={FIELD_LIMITS.name}
             className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
           />
         </div>
@@ -134,8 +147,9 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
           <textarea
             value={columnData.description}
             onChange={(e) => handleInputChange('description', e.target.value)}
-            placeholder="请输入"
+            placeholder="请输入（不超过200字）"
             rows={4}
+            maxLength={FIELD_LIMITS.description}
             className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all resize-none"
           />
         </div>

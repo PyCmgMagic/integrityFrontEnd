@@ -75,14 +75,14 @@ export const usePunchRecords = (columnId: number) => {
       
       // request工具已经提取了response.data.data，所以这里直接获得的是数据部分
       const data = await API.Column.getPunchRecords(columnId);
-      const today_punch_count = await API.Column.getTodayTotalPunchRecords(columnId);
+      // const today_punch_count = await API.Column.getTodayTotalPunchRecords(columnId);
       const columnInfo = await API.Column.getColumnInfo(columnId)
       setColumnInfo(columnInfo.data)
       // 转换数据格式
       const transformedRecords = transformPunchRecordsToCheckInData(data.records);
       setPunchRecords(transformedRecords);
       setMyCount(data.my_count);
-      setUserCount(today_punch_count.today_punch_count);
+      setUserCount(columnInfo.data.today_punch_count);
       setPunchedToday(data.punched_today)
     } catch (err: any) {
       const errorMessage = err?.message || '获取打卡记录失败';

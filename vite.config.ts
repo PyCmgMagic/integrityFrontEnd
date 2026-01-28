@@ -13,6 +13,15 @@ export default defineConfig({
       '.cpolar.top',
       '.natappfree.cc', // 允许所有natapp免费域名
       'z68d6abb.natappfree.cc', // 允许当前natapp域名
-    ]
+    ],
+    // Dev-only: proxy API requests to avoid browser CORS/preflight issues.
+    proxy: {
+      // With VITE_API_BASE_URL=/api/v1, requests like /api/v1/... will match this rule.
+      '/api': {
+        target: 'https://daka.sduonline.cn',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   }
 })

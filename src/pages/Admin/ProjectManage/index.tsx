@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Modal, Button, List, Avatar,  message, Spin, Alert } from 'antd';
+import { Modal, Button,  message, Spin, Alert } from 'antd';
 import { LeftOutlined,  EditOutlined } from '@ant-design/icons';
 import EditProjectModal from './EditProjectModal';
 import moment from 'moment';
@@ -18,8 +18,6 @@ const ProjectDetailPage = () => {
   const { activityId, projectId } = useParams();
   const navigate = useNavigate();
   const [isIntroVisible, setIntroVisible] = useState(false);
-  const [isScoresVisible, setScoresVisible] = useState(false);
-  const [isRankingVisible, setRankingVisible] = useState(false);
   const [isEditProjectVisible, setEditProjectVisible] = useState(false);
   const [isEditColumnVisible, setEditColumnVisible] = useState(false);
 
@@ -64,12 +62,6 @@ const ProjectDetailPage = () => {
       ],
     };
   }, [projectDetail]);
-  const userStats = {
-    totalScore: 23,
-    maxStreak: 7,
-    rank: 21,
-    todayProgress: { completed: 3, total: 5 } // 今日打卡进度
-  };
 
   const columns = useMemo(() => {
     if (!projectDetail?.columns) return [];
@@ -82,13 +74,6 @@ const ProjectDetailPage = () => {
       optional: column.optional,
     }));
   }, [projectDetail]);
-
-  const rankingData = Array.from({ length: 30 }, (_, i) => ({
-    rank: i + 1,
-    name: `用户${String.fromCharCode(65 + (i % 26))}${i + 1}`,
-    score: 100 - i * 2,
-    avatar: `https://api.dicebear.com/7.x/miniavs/svg?seed=${i}` // 使用 placeholder 头像
-  }));
 
   const handleColumnClick = (columnId: string) => {
     navigate(`/admin/activity/${activityId}/project/${projectId}/column/${columnId}`);
@@ -169,8 +154,8 @@ const ProjectDetailPage = () => {
     return (
       <div className="bg-slate-50 min-h-screen font-sans flex items-center justify-center">
         <Alert
-          message="\u9879\u76eeID\u65e0\u6548"
-          description="\u8bf7\u68c0\u67e5 URL \u4e2d\u7684\u9879\u76eeID\u3002"
+          message="项目ID无效"
+          description="请检查URL中的项目ID。"
           type="error"
           showIcon
           action={
@@ -202,7 +187,7 @@ const ProjectDetailPage = () => {
     return (
       <div className="bg-slate-50 min-h-screen font-sans flex items-center justify-center">
         <Alert
-          message="\u52a0\u8f7d\u5931\u8d25"
+          message="加载失败"
           description={error}
           type="error"
           showIcon
@@ -226,8 +211,8 @@ const ProjectDetailPage = () => {
     return (
       <div className="bg-slate-50 min-h-screen font-sans flex items-center justify-center">
         <Alert
-          message="\u9879\u76ee\u4e0d\u5b58\u5728"
-          description="\u672a\u80fd\u52a0\u8f7d\u6307\u5b9a\u7684\u9879\u76ee\u3002"
+          message="项目不存在"
+          description="未能加载指定的项目"
           type="warning"
           showIcon
           action={
@@ -288,6 +273,7 @@ const ProjectDetailPage = () => {
                 <div>
                   <h2 className="text-2xl font-bold text-white">
                     {column.title}
+                    <br />
                     {column.optional && (
                       <span className="ml-2 text-xs font-semibold text-white bg-emerald-500/90 px-2 py-0.5 rounded-full border border-emerald-200/80">
                         特殊栏目
@@ -310,32 +296,10 @@ const ProjectDetailPage = () => {
       </main>
 
       {/* --- 弹窗 --- */}
-      <Modal title="\u9879\u76ee\u4ecb\u7ecd" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
+      <Modal title="项目介绍" open={isIntroVisible} onCancel={() => setIntroVisible(false)} footer={null}>
         <p className="text-gray-600 leading-relaxed">{projectDetail.description}</p>
       </Modal>
 
-            <Modal title="\u6211\u7684\u79ef\u5206" open={isScoresVisible} onCancel={() => setScoresVisible(false)} footer={null}>
-        <div className="text-center mb-4">
-          <p className="text-gray-500">\u603b\u79ef\u5206</p>
-          <p className="text-5xl font-bold text-orange-500">{userStats.totalScore}</p>
-        </div>
-      </Modal>
-
-      <Modal title="\u6392\u884c\u699c" open={isRankingVisible} onCancel={() => setRankingVisible(false)} footer={null} width={360}>
-        <List
-          dataSource={rankingData}
-          renderItem={(item) => (
-            <List.Item>
-              <List.Item.Meta
-                avatar={<Avatar className={item.rank <= 3 ? 'bg-amber-400 text-white font-bold' : 'bg-gray-200 text-gray-600'}>{item.rank}</Avatar>}
-                title={<span className="font-semibold">{item.name}</span>}
-                description={<><Avatar size={20} src={item.avatar} className="mr-2"/>{item.name}</>}
-              />
-              <div className="font-bold text-gray-700">{item.score} \u5206</div>
-            </List.Item>
-          )}
-        />
-      </Modal>
       {projectInitialData && (
         <EditProjectModal
           visible={isEditProjectVisible}

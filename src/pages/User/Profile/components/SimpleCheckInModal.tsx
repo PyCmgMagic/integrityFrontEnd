@@ -5,6 +5,7 @@ import type { CheckInData } from '../../../../types/types';
 import { API } from '../../../../services/api';
 import ImageUpload from '../../../../components/Upload/ImageUpload';
 import '../../../../styles/SimpleCheckInModal.css';
+import { FIELD_LIMITS } from '../../../../utils/fieldLimits';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -101,6 +102,10 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
   const handleSave = async () => {
     if (!checkInData.id) {
       message.error('缺少必要的更新参数');
+      return;
+    }
+    if (editContent.trim().length > FIELD_LIMITS.checkInContent) {
+      message.error(`打卡内容不能超过 ${FIELD_LIMITS.checkInContent} 个字符`);
       return;
     }
 
@@ -261,8 +266,10 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
               <TextArea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                placeholder="请输入打卡内容..."
+                placeholder="请输入打卡内容...（不超过500字）"
                 rows={6}
+                maxLength={FIELD_LIMITS.checkInContent}
+                showCount
                 className="resize-none"
               />
             ) : (

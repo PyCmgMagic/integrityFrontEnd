@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, message, Drawer, Space, Select } from 'antd
 import { CalendarOutlined } from '@ant-design/icons';
 import dayjs, { type Dayjs } from 'dayjs';
 import { DEFAULT_PROJECT_ICON_NAME, PROJECT_ICON_OPTIONS } from '../../../utils/projectIcons';
+import { FIELD_LIMITS } from '../../../utils/fieldLimits';
 
 const { TextArea } = Input;
 const PROJECT_ICON_SELECT_OPTIONS = PROJECT_ICON_OPTIONS.map((option) => ({
@@ -187,17 +188,23 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, o
         <Form.Item 
           name="name" 
           label={<span className="font-semibold text-gray-700">项目名称</span>} 
-          rules={[{ required: true, message: '请输入项目名称。' }]}
+          rules={[
+            { required: true, message: '请输入项目名称(不超过75字)' },
+            { max: FIELD_LIMITS.name, message: `项目名称最多 ${FIELD_LIMITS.name} 个字符` },
+          ]}
         >
-          <Input placeholder="请输入项目名称? " />
+          <Input placeholder="请输入项目名称（不超过75字）" maxLength={FIELD_LIMITS.name} showCount />
         </Form.Item>
 
         <Form.Item 
           name="description" 
           label={<span className="font-semibold text-gray-700">项目详情说明</span>} 
-          rules={[{ required: true, message: '请输入项目详情说明。' }]}
+          rules={[
+            { required: true, message: '请输入项目详情说明（不超过200字）' },
+            { max: FIELD_LIMITS.description, message: `项目描述最多 ${FIELD_LIMITS.description} 个字符` },
+          ]}
         >
-          <TextArea rows={8} placeholder="请输入项目详情说明? " />
+          <TextArea rows={8} placeholder="请输入项目详情说明（不超过200字）" maxLength={FIELD_LIMITS.description} showCount />
         </Form.Item>
 
         <Form.Item
@@ -222,7 +229,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, o
               <MobileDateTimePicker
                 value={startTime || undefined}
                 onChange={setStartTime}
-                placeholder="请选择开始时间?" />
+                placeholder="请选择开始时间" />
             </div>
             
             <div className="flex justify-center">
@@ -253,7 +260,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ visible, onClose, o
 
                 const numValue = Number(value);
                 if (isNaN(numValue) || numValue < 0 || !Number.isInteger(numValue)) {
-                  return Promise.reject('请输入非负整数。');
+                  return Promise.reject('请输入非负整数');
                 }
 
                 return Promise.resolve();

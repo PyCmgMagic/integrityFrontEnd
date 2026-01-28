@@ -53,7 +53,7 @@ const ActivityDetailPage = () => {
     
     // 等待路由参数完全加载
     if (!currentId) {
-      console.warn('⚠️ ID 参数未就绪');
+      console.warn(' ID 参数未就绪');
       return;
     }
 
@@ -82,7 +82,7 @@ const ActivityDetailPage = () => {
       
       const response = await ActivityAPI.getActivityDetail(numericId);
       const staticResponse = await ActivityAPI.getActivityStaticDetail(numericId);
-      if(response.activity.owner_id !==  currentUser?.state.user.id ){
+      if(response.activity.owner_id !==  currentUser?.state.user.student_id ){
         navigate(`/user/activity/${numericId}`);
         return;
       }
@@ -342,7 +342,7 @@ const ActivityDetailPage = () => {
       <main className="p-2 pb-20"> 
         <div className="space-y-4">
            {
-            activityData?.activity?.owner_id === currentUser?.state.user.id &&  
+            activityData?.activity?.owner_id === currentUser?.state.user.student_id &&  
             <div  className={`bg-gradient-to-r from-orange-500 to-red-500 p-3 flex-col rounded-2xl shadow-lg border-4 border-white/50 border-dashed  flex items-center justify-center `}>
               <div className="flex items-center"></div>
             <div onClick={() => navigate(`/admin/create/activity/${id}/project`)} className=" w-16 h-16 rounded-full flex items-center justify-center mb-2 border-2 border-white/50 border-dashed shadow">

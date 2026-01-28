@@ -261,12 +261,12 @@ const ProfilePage: React.FC = () => {
         const fallbackProfile: UserProfile = {
           name: authUser.nick_name || authUser.name || '未设置',
           avatar: authUser.avatar || '/assets/默认头像.png',
-          bio: '管理员账户',
+          bio: '',
           studentId: authUser.student_id || '未设置',
-          grade: '2024级',
+          grade: '',
           college: authUser.college || '未设置',
           major: authUser.major || '未设置',
-          dob: '2006-01-01',
+          dob: '',
           gender: '男',
         };
         setUser(fallbackProfile);
@@ -363,6 +363,14 @@ const ProfilePage: React.FC = () => {
 
   // 取消收藏的处理函数
   const handleRemoveFavorite = async (id: number) => {
+    const result = await Dialog.confirm({
+      content: '确定要取消收藏吗？',
+      confirmText: '确认',
+      cancelText: '取消',
+    });
+
+    if (!result) return;
+
     try {
       const response = await API.Star.cancelStar(id);
       if (response.code === 200) {
@@ -460,7 +468,7 @@ const ProfilePage: React.FC = () => {
             >
               <Tabs.Tab title="我创建的活动" key="0">
                 {myActivitiesLoading ? (
-                  <div className="flex justify-center items-center py-8">
+                  <div className="flex justify-center items-center py-6">
                     <Spin size="large">
                       <div className="p-8 text-center text-gray-600">加载我创建的活动中...</div>
                     </Spin>
@@ -524,7 +532,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 pt-0 space-y-5">
+                  <div className="p-2 pt-0 space-y-5">
                     {myActivities.map((activity, index) => {
                       const gradientClasses = [
                         'gradient-card-purple',
@@ -662,7 +670,7 @@ const ProfilePage: React.FC = () => {
                 />
               </Tabs.Tab>
               <Tabs.Tab title="我的收藏" key="4">
-                <div className="p-4 pt-0">
+                <div className="p-2 pt-0">
                   <Spin spinning={favoriteLoading}>
                     {favoriteData.length > 0 ? (
                       <List
@@ -670,7 +678,7 @@ const ProfilePage: React.FC = () => {
                         renderItem={(item) => (
                           <List.Item key={item.id} className="border-0 px-0 py-2">
                             <div 
-                              className="w-full bg-yellow-50 rounded-xl p-4 transition-all hover:bg-yellow-100 hover:shadow-md cursor-pointer"
+                              className="w-full bg-yellow-50 rounded-xl px-1 py-2 transition-all hover:bg-yellow-100 hover:shadow-md cursor-pointer"
                               onClick={() => handleFavoriteClick(item.id)}
                             >
                               <div className="flex justify-between items-center">
