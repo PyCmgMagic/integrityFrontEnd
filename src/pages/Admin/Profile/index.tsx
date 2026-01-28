@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, Typography, Avatar, List, Button,  Empty, Spin, Space } from 'antd';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Card, Typography, Avatar, List, Button,  Empty, Spin } from 'antd';
 import { Dialog, Toast, Tabs } from 'antd-mobile';
-import { EditOutlined,StarOutlined,  LogoutOutlined, CalendarOutlined } from '@ant-design/icons';
+import { BankOutlined, BookOutlined, EditOutlined, IdcardOutlined, LogoutOutlined, CalendarOutlined, StarOutlined } from '@ant-design/icons';
 
 // 添加全局样式来禁用浏览器左滑返回
 const globalStyles = `
@@ -62,12 +62,19 @@ const { Title, Text } = Typography;
 const initialFavoriteData: FavoriteData[] = [];
 
 const ProfilePage: React.FC = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   // 从认证store获取用户信息
   const { user: authUser, setUserProfile, logout } = useAuthStore();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
+
+  // If navigated here for completing missing fields, open the edit modal automatically.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('edit') === '1') setIsEditModalVisible(true);
+  }, [location.search]);
 
   // const [checkInData, setCheckInData] = useState<CheckInData[]>(initialCheckInData);
   const [myActivities, setMyActivities] = useState<any[]>([]);
@@ -77,6 +84,7 @@ const ProfilePage: React.FC = () => {
   const [favoriteLoading, setFavoriteLoading] = useState<boolean>(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState<boolean>(false);
   const [selectedPunchId, setSelectedPunchId] = useState<number>(0);
+  const displayName = user?.nick_name || user?.name || '未设置';
 
   // 使用用户端个人中心的hooks
   const { checkInData: userCheckInData, loading: checkInLoading, error: checkInError, deleteCheckIn, refreshData } = useCheckInData();
@@ -241,7 +249,9 @@ const ProfilePage: React.FC = () => {
       
       // 转换API数据格式为前端UserProfile格式
       const userProfile: UserProfile = {
-        name: profileData.nick_name || profileData.name || '未设置',
+        // name 为真实姓名（不可编辑）；nick_name 为昵称（可编辑）
+        name: profileData.name || '未设置',
+        nick_name: profileData.nick_name || '',
         avatar: profileData.avatar || '/assets/默认头像.png',
         studentId: authUser?.student_id || '未设置',
         grade: profileData.grade || '未设置', 
@@ -259,7 +269,8 @@ const ProfilePage: React.FC = () => {
       // 使用认证store中的基本信息作为fallback
       if (authUser) {
         const fallbackProfile: UserProfile = {
-          name: authUser.nick_name || authUser.name || '未设置',
+          name: authUser.name || '未设置',
+          nick_name: authUser.nick_name || '',
           avatar: authUser.avatar || '/assets/默认头像.png',
           bio: '',
           studentId: authUser.student_id || '未设置',
@@ -314,13 +325,14 @@ const ProfilePage: React.FC = () => {
    */
   const handleModalSave = async (updatedData: UserProfile) => {
     try {
+      const nickName = (updatedData.nick_name || '').trim();
       // 转换前端数据格式为API所需格式
       const updateRequest = {
-        nick_name: updatedData.name,
         avatar: updatedData.avatar,
         college: updatedData.college,
         major: updatedData.major,
         grade: updatedData.grade,
+        ...(nickName ? { nick_name: nickName } : {}),
       };
       
       // 调用API更新用户信息
@@ -422,31 +434,86 @@ const ProfilePage: React.FC = () => {
       <div className="bg-gray-50 min-h-screen font-sans pb-12 p-1">
         <div className="max-w-2xl mx-auto">
           {/* 用户信息卡片 */}
-          <Card className="border-1 border-gray-200 mb-4 bg-white" style={{ position: 'relative' }}>
-            {/* 退出登录按钮 */}
-            <Button 
-              type="text" 
-              icon={<LogoutOutlined />} 
-              onClick={handleLogout}
-              className="text-gray-600 hover:text-red-500 hover:bg-red-50"
-              style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}
-            >
-              退出登录
-            </Button>
-            <div className="flex flex-col items-center p-4">
-              <div className="relative mb-3">
-                <Avatar size={100} src={user.avatar} className="border-2 border-gray-300"/>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-md flex items-center justify-center border-1 border-black cursor-pointer bg-white hover:bg-gray-100 transition-colors" onClick={showEditModal}>
-                  <EditOutlined />
+          
+          <Card
+            className="rounded-2xl overflow-hidden border-1 border-gray-200 bg-white shadow-sm"
+            styles={{ body: { padding: 0 } }}
+          >
+            <div className="relative h-28 bg-gradient-to-r from-rose-200 via-orange-200 to-amber-200">
+              <div
+                className="absolute inset-0 opacity-25"
+                style={{
+                  backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.55) 0, rgba(255,255,255,0) 40%)',
+                }}
+              />
+
+              <Button
+                type="text"
+                icon={<LogoutOutlined />}
+                onClick={handleLogout}
+                className="text-white/90 hover:text-white hover:bg-white/10"
+                style={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}
+              >
+                退出登录
+              </Button>
+            </div>
+
+            <div className="px-5 pb-5">
+              <div className="relative -mt-10 flex items-end justify-between gap-3">
+                <div className="relative">
+                  <Avatar size={88} src={user.avatar} className="border-4 border-white shadow-md" />
+                  <button
+                    type="button"
+                    onClick={showEditModal}
+                    className="absolute -bottom-1 -right-1 h-9 w-9 rounded-full bg-white shadow-md ring-1 ring-black/5 flex items-center justify-center hover:bg-gray-50"
+                    aria-label="编辑个人信息"
+                  >
+                    <EditOutlined className="text-gray-700" />
+                  </button>
                 </div>
+
+                <Button
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={showEditModal}
+                  className="border-gray-200 text-gray-700 hover:text-gray-900"
+                >
+                  编辑资料
+                </Button>
               </div>
-              <Title level={3} className="mt-2 font-bold">{user?.name}</Title>
-              <div className="mt-1 text-center">
-                <Text type="secondary" className="block">学号: {user?.studentId}</Text>
-                <Space>
-                <Text type="secondary" className="block">{user?.college}</Text>
-                <Text type="secondary" className="block">{user?.major}</Text>
-              </Space>
+
+              <div className="mt-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <Title level={4} className="!m-0 !font-bold text-gray-900">
+                    {displayName}
+                  </Title>
+                  <span className="shrink-0 text-xs text-gray-500 bg-gray-100/80 px-2 py-0.5 rounded-full">
+                    年级：{user?.grade || '未设置'}
+                  </span>
+                </div>
+                <Text type="secondary" className="block mt-1">
+                  姓名：{user?.name || '未设置'}
+                </Text>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div className="col-span-2 flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2">
+                  <IdcardOutlined className="text-gray-400" />
+                  <span className="text-gray-600">学号</span>
+                  <span className="ml-auto font-medium text-gray-900">{user?.studentId || '未设置'}</span>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2">
+                  <BankOutlined className="text-gray-400" />
+                  <span className="text-gray-600">学院</span>
+                  <span className="ml-auto font-medium text-gray-900">{user?.college || '未设置'}</span>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2">
+                  <BookOutlined className="text-gray-400" />
+                  <span className="text-gray-600">专业</span>
+                  <span className="ml-auto font-medium text-gray-900">{user?.major || '未设置'}</span>
+                </div>
               </div>
             </div>
           </Card>
@@ -457,6 +524,7 @@ const ProfilePage: React.FC = () => {
             style={{
               touchAction: 'pan-y', // 只允许垂直滑动
               overscrollBehaviorX: 'none', // 禁用水平过度滚动
+              marginTop: 16,
             }}
           >
             <Tabs 

@@ -5,6 +5,4 @@
 export {
   useActivityDetail,
   useUserStats,
-  useScoreRecords,
-  useRankingData
 } from './useActivityDetail';

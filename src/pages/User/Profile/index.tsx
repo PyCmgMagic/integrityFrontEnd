@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card, Tabs, Spin, Typography } from 'antd';
 import type { UserProfile } from '../../../types/types';
 
@@ -10,6 +11,7 @@ import { useUserProfile, useActivityHistory, useCheckInData } from './hooks';
 const { Text } = Typography;
 
 const ProfilePage: React.FC = () => {
+  const location = useLocation();
   // 使用自定义hooks管理状态和数据
   const { user, loading, updateUserProfile } = useUserProfile();
   const { activityHistoryData, activityHistoryLoading } = useActivityHistory();
@@ -17,6 +19,12 @@ const ProfilePage: React.FC = () => {
   
   // 本地状态
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
+
+  // If navigated here for completing missing fields, open the edit modal automatically.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('edit') === '1') setIsEditModalVisible(true);
+  }, [location.search]);
 
   /**
    * 格式化日期显示
@@ -96,7 +104,7 @@ const ProfilePage: React.FC = () => {
           />
           
           {/* 打卡与活动历史 */}
-          <Card className="rounded-2xl shadow-lg border-0 bg-white">
+          <Card className="rounded-2xl shadow-lg border-0 bg-white" style={{ marginTop: 16 }}>
             <Tabs 
               defaultActiveKey="1" 
               centered 

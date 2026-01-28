@@ -12,6 +12,7 @@ export interface User {
   nick_name?: string;
   college?: string;
   major?: string;
+  grade?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -81,11 +82,12 @@ export const useAuthStore = create<AuthState>()(
         if (currentUser && profileData) {
           const updatedUser: User = {
             ...currentUser,
-            name: profileData.nick_name || currentUser.name,
+            name: profileData.name,
             nick_name: profileData.nick_name,
             avatar: profileData.avatar?.trim(),
             college: profileData.college,
             major: profileData.major,
+            grade: profileData.grade,
             created_at: profileData.created_at,
             updated_at: profileData.updated_at,
           };

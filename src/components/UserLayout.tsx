@@ -4,6 +4,7 @@ import {
   UserOutlined
 } from '@ant-design/icons';
 import BottomNavigation, { type NavItem } from './BottomNavigation/BottomNavigation';
+import ProfileSetupGuard from './ProfileSetupGuard';
 const { Content } = Layout;
 const UserLayout = () => {
   // 直接从localStorage计算isAdmin状态，避免无限重渲染
@@ -47,6 +48,7 @@ const UserLayout = () => {
           <Layout>
         <Content className="pt-1  px-3 pb-5 md:px-8 md:pb-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-[calc(100vh-64px)]">
           <div className="max-w-7xl mx-auto h-full">
+            <ProfileSetupGuard profilePath="/user/profile" />
             <Outlet />
           </div>
       <BottomNavigation items={isAdmin ? adminNavItems : userNavItems} />

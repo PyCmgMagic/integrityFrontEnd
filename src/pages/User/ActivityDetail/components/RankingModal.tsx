@@ -151,7 +151,7 @@ const RankingModal: React.FC<RankingModalProps> = ({
       </div>
       {loading ? (
         <div className="py-12 flex justify-center">
-          <Spin tip="\u52a0\u8f7d\u6392\u884c\u699c.." />
+          <Spin tip="加载排行榜.." />
         </div>
       ) : rankingData.length > 0 ? (
         <>
@@ -166,7 +166,7 @@ const RankingModal: React.FC<RankingModalProps> = ({
                   
                   <Avatar 
                     size={44} 
-                    src={item.user.avatar || '/assets/\u9ed8\u8ba4\u5934\u50cf.png'} 
+                    src={item.user.avatar || '/assets/默认头像.png'} 
                     className="bg-gray-100 flex-shrink-0"
                   >
                     {!item.user.avatar && !item.user.nick_name && 'U'}
@@ -174,7 +174,7 @@ const RankingModal: React.FC<RankingModalProps> = ({
                   
                   <div className="flex-grow min-w-0">
                     <div className="font-bold text-gray-800 truncate">
-                      {item.user.nick_name}
+                      {item.user.name || item.user.nick_name || '未知用户'}
                     </div>
                     <div className="text-xs text-gray-400 truncate mt-0.5">
                       {[item.user.college, item.user.major, item.user.grade].filter(Boolean).join(' | ')}

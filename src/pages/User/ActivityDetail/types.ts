@@ -78,6 +78,7 @@ export interface RankingItem {
     student_id: string;
     role_id: number;
     nick_name: string;
+    name: string;
     avatar: string;
     college: string;
     major: string;

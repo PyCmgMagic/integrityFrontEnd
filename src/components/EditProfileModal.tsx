@@ -68,8 +68,17 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onCancel, 
             />
         </Form.Item>
 
-        <Form.Item name="name" label="姓名" rules={[{ required: true, message: '请输入你的姓名!' }]}>
-          <Input placeholder="请输入姓名"/>
+        <Form.Item
+          name="name"
+          label="姓名"
+          tooltip="姓名不可修改"
+          rules={[{ required: true, message: '姓名缺失，请联系管理员补全' }]}
+        >
+          <Input placeholder="姓名" disabled />
+        </Form.Item>
+
+        <Form.Item name="nick_name" label="昵称">
+          <Input placeholder="请输入昵称" />
         </Form.Item>
 
         <Row gutter={16}>

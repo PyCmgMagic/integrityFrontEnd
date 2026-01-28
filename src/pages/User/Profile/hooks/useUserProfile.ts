@@ -23,7 +23,9 @@ export const useUserProfile = () => {
       
       // 转换API数据格式为前端UserProfile格式
       const userProfile: UserProfile = {
-        name: profileData.nick_name || profileData.name || '未设置',
+        // name 为真实姓名（不可编辑）；nick_name 为昵称（可编辑）
+        name: profileData.name || '未设置',
+        nick_name: profileData.nick_name || '',
         avatar: profileData.avatar || '/assets/默认头像.png',
         studentId: authUser?.student_id || '未设置',
         grade: profileData.grade || '未设置', 
@@ -41,7 +43,8 @@ export const useUserProfile = () => {
       // 使用认证store中的基本信息作为fallback
       if (authUser) {
         const fallbackProfile: UserProfile = {
-          name: authUser.nick_name || authUser.name || '未设置',
+          name: authUser.name || '未设置',
+          nick_name: authUser.nick_name || '',
           avatar: authUser.avatar || '/assets/默认头像.png',
           bio: '个人描述',
           studentId: authUser.student_id || '未设置',
@@ -64,13 +67,14 @@ export const useUserProfile = () => {
    */
   const updateUserProfile = async (updatedData: UserProfile): Promise<boolean> => {
     try {
+      const nickName = (updatedData.nick_name || '').trim();
       // 转换前端数据格式为API所需格式
       const updateRequest = {
-        nick_name: updatedData.name,
         avatar: updatedData.avatar,
         college: updatedData.college,
         major: updatedData.major,
         grade: updatedData.grade,
+        ...(nickName ? { nick_name: nickName } : {}),
       };
       
       // 调用API更新用户信息
