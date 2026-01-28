@@ -8,6 +8,7 @@ import type { ApiResponse, RequestConfig, ApiError } from '../types/api';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 const DEFAULT_TIMEOUT = Number(import.meta.env.VITE_REQUEST_TIMEOUT) || 10000;
 const MAX_RETRIES = 3;
+const HUMAN_VERIFICATION_CODE = 468;
 
 /**
  * 创建 Axios 实例
@@ -71,6 +72,17 @@ class RequestService {
         if (response.data && typeof response.data === 'object') {
           // 新的响应格式：{"code":200,"msg":"Success","data":...,"timestamp":...}
           if (response.data.code && response.data.code !== 200) {
+            if (response.data.code === HUMAN_VERIFICATION_CODE) {
+              // Triggered human verification (captcha). Reload the page immediately.
+              this.handleHumanVerification();
+              const error: ApiError = {
+                code: response.data.code,
+                message: response.data.msg || 'Human verification required',
+                details: response.data,
+                silent: true,
+              };
+              return Promise.reject(error);
+            }
             const error: ApiError = {
               code: response.data.code,
               message: response.data.msg || '请求失败',
@@ -80,6 +92,17 @@ class RequestService {
           }
           // 兼容旧格式
           if (response.data.success === false) {
+            if (response.data.code === HUMAN_VERIFICATION_CODE) {
+              // Triggered human verification (captcha). Reload the page immediately.
+              this.handleHumanVerification();
+              const error: ApiError = {
+                code: response.data.code || HUMAN_VERIFICATION_CODE,
+                message: response.data.msg || 'Human verification required',
+                details: response.data,
+                silent: true,
+              };
+              return Promise.reject(error);
+            }
             const error: ApiError = {
               code: response.data.code || -1,
               message: response.data.msg || '请求失败',
@@ -162,6 +185,11 @@ class RequestService {
       if (status === 401) {
         this.handleUnauthorized();
       }
+      if (status === HUMAN_VERIFICATION_CODE) {
+        // Triggered human verification (captcha). Reload the page immediately.
+        this.handleHumanVerification();
+        apiError.silent = true;
+      }
     } else if (error.request) {
       // 网络错误
       apiError = {
@@ -194,6 +222,7 @@ class RequestService {
       404: '请求的资源不存在',
       405: '请求方法不允许',
       408: '请求超时',
+      468: 'Human verification required',
       500: '服务器内部错误',
       502: '网关错误',
       503: '服务不可用',
@@ -220,6 +249,24 @@ class RequestService {
   }
 
   /**
+   * 触发人机验证（captcha）时，直接重载页面。
+   * 加一个简单的节流，避免遇到 468 时无限刷新。
+   */
+  private handleHumanVerification(): void {
+    try {
+      const key = 'human-verification-reload-at';
+      const now = Date.now();
+      const last = Number(sessionStorage.getItem(key) || '0');
+      if (last && now - last < 3000) return;
+      sessionStorage.setItem(key, String(now));
+    } catch {
+      // ignore
+    }
+
+    window.location.reload();
+  }
+
+  /**
    * 通用请求方法 - 返回完整的响应结构
    */
   async requestFull<T = any>(
@@ -241,8 +288,9 @@ class RequestService {
       // 返回完整的响应结构，包含 code、msg、data、timestamp 等
       return response.data;
     } catch (error) {
-      if (showError && error instanceof Object && 'message' in error) {
-        message.error(error.message as string);
+      const errObj = error as any;
+      if (showError && errObj && typeof errObj === 'object' && 'message' in errObj && !errObj.silent) {
+        message.error(errObj.message as string);
       }
 
       // 重试机制
