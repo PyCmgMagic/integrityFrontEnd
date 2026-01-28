@@ -105,7 +105,7 @@ const ActivityDetailPage = () => {
       
       // 如果是取消错误，则静默处理，不显示任何用户提示
       if (isCanceled) {
-        console.log('🚫 请求被主动取消 (开发环境下的正常行为)');
+        console.log('🚫 请求被主动取消');
         return; // 直接退出，不执行后续错误处理
       }
       
@@ -184,13 +184,22 @@ const ActivityDetailPage = () => {
     ],
   } : null;
   
-
+  const getProjectGradient = (index: number): string => {
+    const gradients = [
+      'from-orange-500 to-red-500',
+      'from-amber-500 to-orange-500',
+      'from-blue-500 to-purple-500',
+      'from-green-500 to-blue-500',
+      'from-purple-500 to-pink-500',
+    ];
+    return gradients[index % gradients.length];
+  };
   const projects = activityData?.projects?.map((project, index) => ({
     id: Number(project.id),
     title: project.name || `项目 ${index + 1}`,
     subtitle: project.description || '暂无描述',
     icon: <ProjectIcon name={project.avatar} className="text-4xl text-white" />,
-    gradient: index % 2 === 0 ? 'from-orange-500 to-red-500' : 'from-amber-500 to-orange-500',
+    gradient: getProjectGradient(index) ,
   })) || [];
 
 

@@ -1,4 +1,4 @@
-import  {  useState } from 'react';
+import  {  useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {  Button,Spin } from 'antd';
 import { LeftOutlined, CheckCircleOutlined } from '@ant-design/icons';
@@ -7,6 +7,7 @@ import ChenkInData from './ChenkInData';
 import CheckIn from '../../../components/CheckIn';
 import { usePunchRecords } from '../../../hooks/usePunchRecords';
 import type { CheckInData } from '../Profile/types';
+import { isWithinDailyPunchWindow } from '../../../utils/columnTimeStatus';
 
 /**
  * @returns 
@@ -17,6 +18,13 @@ const ColumnPage = () => {
   
   // 添加打卡页面显示状态管理
   const [gotoCheckIn, setGotoCheckIn] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    // Update frequently enough for minute-level time windows, without being too noisy.
+    const t = setInterval(() => setNowMs(Date.now()), 30 * 1000);
+    return () => clearInterval(t);
+  }, []);
   
   // 获取栏目ID（从URL参数中获取）
   const currentColumnId = columnId ? parseInt(columnId) : 1; // 如果没有columnId，使用默认值1
@@ -34,6 +42,15 @@ const ColumnPage = () => {
     refreshPunchRecords,
     deletePunchRecord,
   } = usePunchRecords(currentColumnId);
+
+  const inPunchTimeWindow = useMemo(() => {
+    return isWithinDailyPunchWindow(nowMs, {
+      startDate: columnInfo.start_date,
+      endDate: columnInfo.end_date,
+      startTime: columnInfo.start_time,
+      endTime: columnInfo.end_time,
+    });
+  }, [nowMs, columnInfo.end_date, columnInfo.end_time, columnInfo.start_date, columnInfo.start_time]);
   
   /**
    * 处理打卡按钮点击事件
@@ -163,10 +180,10 @@ const formattedPunchRecords:CheckInData[] = (punchRecords.reverse() || []).map((
           icon={<CheckCircleOutlined style={{ fontSize: '28px' }} />}
           style={{ height: 'auto', padding: '10px 24px' }}
           onClick={handleCheckIn}
-          disabled={loading || !initialized}
+          disabled={loading || !initialized || punchedToday || !inPunchTimeWindow}
           loading={loading}
         >
-          {punchedToday ? '已完成打卡' : '立即打卡'}
+          {punchedToday ? '已完成打卡' : (!inPunchTimeWindow ? '不在打卡时间内' : '立即打卡')}
         </Button>
       </div>
     </div>

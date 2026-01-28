@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Modal, Button,  Spin, Result } from 'antd';
 import { LeftOutlined, InfoCircleOutlined} from '@ant-design/icons';
 import { useProjectDetail } from '../../../hooks/useProjectDetail';
 import { formatDateRange } from '../../../utils/dataTransform';
+import { getColumnTimeStatus } from '../../../utils/columnTimeStatus';
 
 
 /**
@@ -13,6 +14,12 @@ const ProjectDetailPage = () => {
   const { activityId, projectId } = useParams();
   const navigate = useNavigate();
   const [isIntroVisible, setIntroVisible] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setNowMs(Date.now()), 60 * 1000);
+    return () => clearInterval(t);
+  }, []);
 
   // 记忆化处理路由参数，确保参数解析的稳定性
   const parsedProjectId = useMemo(() => {
@@ -134,7 +141,24 @@ const ProjectDetailPage = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡栏目</h3>
           {projectDetail.columns && projectDetail.columns.length > 0 ? (
-            projectDetail.columns.map((column, index) => ( 
+            projectDetail.columns.map((column, index) => {
+              const effectiveStartDate = column.start_date ?? projectDetail.start_date;
+              const effectiveEndDate = column.end_date ?? projectDetail.end_date;
+
+              const status = getColumnTimeStatus(nowMs, {
+                startDate: effectiveStartDate,
+                endDate: effectiveEndDate,
+                startTime: column.start_time,
+                endTime: column.end_time,
+              });
+
+              const statusMeta = {
+                not_started: { label: '未开始', badge: 'bg-slate-600/90 border-slate-200/80' },
+                in_progress: { label: '进行中', badge: 'bg-sky-500/90 border-sky-200/80' },
+                ended: { label: '已结束', badge: 'bg-rose-500/90 border-rose-200/80' },
+              }[status];
+
+              return (
               <div key={`${column.id}-${index}`} className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 rounded-2xl shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
@@ -142,11 +166,16 @@ const ProjectDetailPage = () => {
                       <h2 className="text-2xl font-bold text-white">
                         {column.name}
                         <br />
-                        {column.optional && (
-                          <span className="ml-2 text-xs font-semibold text-white bg-emerald-500/90 px-2 py-0.5 rounded-full border border-emerald-200/80">
-                            特殊栏目
+                        <span className="inline-flex flex-wrap items-center gap-2">
+                          <span className={`text-xs font-semibold text-white px-2 py-0.5 rounded-full border ${statusMeta.badge}`}>
+                            {statusMeta.label}
                           </span>
-                        )}
+                          {column.optional && (
+                            <span className="text-xs font-semibold text-white bg-emerald-500/90 px-2 py-0.5 rounded-full border border-emerald-200/80">
+                              特殊栏目
+                            </span>
+                          )}
+                        </span>
                       </h2>
                     </div>
                   </div>
@@ -164,8 +193,13 @@ const ProjectDetailPage = () => {
                     <span>每次获得: {column.point_earned}积分</span>
                   </div>
                 </div>
+                <div className="mt-2 text-white/80 text-xs">
+                  时间：{formatDateRange(effectiveStartDate, effectiveEndDate)}
+                  {(column.start_time || column.end_time) ? ` ${column.start_time || ''}-${column.end_time || ''}` : ''}
+                </div>
               </div>
-            ))
+              );
+            })
           ) : (
             <div className="text-center py-8 text-gray-500">
               <p>暂无打卡栏目</p>

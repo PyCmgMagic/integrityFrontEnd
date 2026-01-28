@@ -161,6 +161,10 @@ export interface ProjectColumn {
   id: number;
   name: string;
   avatar: string;
+  start_date?: number;
+  end_date?: number;
+  start_time?: string;
+  end_time?: string;
   daily_punch_limit: number; // 每日可打卡次数
   point_earned: number; // 每次打卡获得积分
   optional?: boolean; // 是否为特殊栏目

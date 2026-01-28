@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Modal, Button,  message, Spin, Alert } from 'antd';
 import { LeftOutlined,  EditOutlined } from '@ant-design/icons';
@@ -8,6 +8,7 @@ import EditColumnModal from './EditColumnModal';
 import { Dialog, SwipeAction, Toast } from 'antd-mobile';
 import { useAdminProjectDetail } from '../../../hooks/useAdminProjectDetail';
 import { ColumnAPI } from '../../../services/api';
+import { getColumnTimeStatus } from '../../../utils/columnTimeStatus';
 
 
 /**
@@ -20,6 +21,12 @@ const ProjectDetailPage = () => {
   const [isIntroVisible, setIntroVisible] = useState(false);
   const [isEditProjectVisible, setEditProjectVisible] = useState(false);
   const [isEditColumnVisible, setEditColumnVisible] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setNowMs(Date.now()), 60 * 1000);
+    return () => clearInterval(t);
+  }, []);
 
   // 解析项目ID
   const parsedProjectId = useMemo(() => {
@@ -72,6 +79,10 @@ const ProjectDetailPage = () => {
       gradient: 'from-amber-500 to-orange-500',
       avatar: column.avatar,
       optional: column.optional,
+      start_date: column.start_date ?? projectDetail.start_date,
+      end_date: column.end_date ?? projectDetail.end_date,
+      start_time: column.start_time,
+      end_time: column.end_time,
     }));
   }, [projectDetail]);
 
@@ -263,35 +274,59 @@ const ProjectDetailPage = () => {
             <p  onClick={() => setEditColumnVisible(true)} className="text-lg font-semibold text-white">新增栏目</p>
             </div>
           <h3 className="text-lg font-bold text-gray-700 px-2">打卡栏目</h3>
-          {columns.map((column) => (
-            <SwipeAction
-              key={column.id}
-              rightActions={rightActions(column.id)}
-            >
-            <div key={column.id} className={`bg-gradient-to-r ${column.gradient} p-8 rounded-2xl shadow-lg flex items-center justify-between`}>
-              <div className="flex items-center">
-                <div>
-                  <h2 className="text-2xl font-bold text-white">
-                    {column.title}
-                    <br />
-                    {column.optional && (
-                      <span className="ml-2 text-xs font-semibold text-white bg-emerald-500/90 px-2 py-0.5 rounded-full border border-emerald-200/80">
-                        特殊栏目
-                      </span>
-                    )}
-                  </h2>
-                </div>
-              </div>
-              <Button  
-                shape="round" 
-                className="bg-white text-red-500 font-bold border-none hover:bg-white/90"
-                onClick={() => handleColumnClick(column.id)}
+          {columns.map((column) => {
+            const status = getColumnTimeStatus(nowMs, {
+              startDate: column.start_date,
+              endDate: column.end_date,
+              startTime: column.start_time,
+              endTime: column.end_time,
+            });
+
+            const statusMeta = {
+              not_started: { label: '未开始', badge: 'bg-slate-600/90 border-slate-200/80' },
+              in_progress: { label: '进行中', badge: 'bg-sky-500/90 border-sky-200/80' },
+              ended: { label: '已结束', badge: 'bg-rose-500/90 border-rose-200/80' },
+            }[status];
+
+            return (
+              <SwipeAction
+                key={column.id}
+                rightActions={rightActions(column.id)}
               >
-                进入栏目
-              </Button>
-            </div>
-            </SwipeAction>
-          ))}
+              <div key={column.id} className={`bg-gradient-to-r ${column.gradient} p-8 rounded-2xl shadow-lg flex items-center justify-between`}>
+                <div className="flex items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {column.title}
+                      <br />
+                      <span className="inline-flex flex-wrap items-center gap-2">
+                        <span className={`text-xs font-semibold text-white px-2 py-0.5 rounded-full border ${statusMeta.badge}`}>
+                          {statusMeta.label}
+                        </span>
+                        {column.optional && (
+                          <span className="text-xs font-semibold text-white bg-emerald-500/90 px-2 py-0.5 rounded-full border border-emerald-200/80">
+                            特殊栏目
+                          </span>
+                        )}
+                      </span>
+                    </h2>
+                    <div className="mt-2 text-white/80 text-xs">
+                      时间：{formatDateRange(column.start_date, column.end_date)}
+                      {(column.start_time || column.end_time) ? ` ${column.start_time || ''}-${column.end_time || ''}` : ''}
+                    </div>
+                  </div>
+                </div>
+                <Button  
+                  shape="round" 
+                  className="bg-white text-red-500 font-bold border-none hover:bg-white/90"
+                  onClick={() => handleColumnClick(column.id)}
+                >
+                  进入栏目
+                </Button>
+              </div>
+              </SwipeAction>
+            );
+          })}
         </div>
       </main>
 
