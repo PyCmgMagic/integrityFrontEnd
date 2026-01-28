@@ -18,8 +18,9 @@ interface ProjectData {
   startDate: string;
   endDate: string;
   avatar: string;
-  completionBonus?: number;
-  categoryCount: number;
+  // Keep numeric inputs as strings so users can clear/edit without being forced to 0.
+  completionBonus: string;
+  categoryCount: string;
 }
 
 const CreateNewProject: React.FC<CreateProjectProps> = () => {
@@ -38,15 +39,15 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
     startDate: '',
     endDate: '',
     avatar: DEFAULT_PROJECT_ICON_NAME,
-    completionBonus: undefined,
-    categoryCount: 2
+    completionBonus: '',
+    categoryCount: '2'
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   // 从URL中获取 activityId
   const { activityId } = useParams();
 
-  const handleInputChange = (field: keyof ProjectData, value: string | number) => {
+  const handleInputChange = <K extends keyof ProjectData>(field: K, value: ProjectData[K]) => {
     setProjectData(prev => ({
       ...prev,
       [field]: value
@@ -71,6 +72,19 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
       return;
     }
 
+    const categoryCountNum = parseInt(projectData.categoryCount, 10);
+    if (!Number.isFinite(categoryCountNum) || categoryCountNum <= 0) {
+      message.error('栏目数量必须大于0');
+      return;
+    }
+
+    const completionBonusNum =
+      projectData.completionBonus.trim() === '' ? 0 : parseInt(projectData.completionBonus, 10);
+    if (!Number.isFinite(completionBonusNum) || completionBonusNum < 0) {
+      message.error('奖励积分必须是非负整数');
+      return;
+    }
+
     if (projectData.name.length > FIELD_LIMITS.name) {
       message.error(`项目名称不能超过 ${FIELD_LIMITS.name} 个字符`);
       return;
@@ -90,18 +104,12 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
         start_date: formatDateToNumber(projectData.startDate),
         end_date: formatDateToNumber(projectData.endDate),
         avatar: projectData.avatar,
-        completion_bonus: projectData.completionBonus
+        completion_bonus: completionBonusNum
       };
-
-      console.log('创建项目请求数据:', createData);
 
       // 调用API创建项目
       const response = await ProjectAPI.CreateNewProject(createData);
       const projectId = response.project_id;
-
-      console.log('项目创建成功，项目ID:', projectId);
-      console.log('将要创建的栏目总数:', projectData.categoryCount);
-
       message.success('项目创建成功！');
 
       // 导航到第一个栏目的创建页面
@@ -110,7 +118,7 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
         `/admin/create/activity/${activityId}/project/${projectId}/column/1`,
         {
           state: { 
-            totalCategories: projectData.categoryCount,
+            totalCategories: categoryCountNum,
             projectStartDate: projectData.startDate,
             projectEndDate: projectData.endDate
           },
@@ -125,13 +133,15 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
     }
   };
 
+  const categoryCountForValid = parseInt(projectData.categoryCount, 10);
   const isFormValid = projectData.name.trim() !== '' && 
                      projectData.description.trim() !== '' &&
                      projectData.name.length <= FIELD_LIMITS.name &&
                      projectData.description.length <= FIELD_LIMITS.description &&
                      projectData.startDate !== '' &&
                      projectData.endDate !== '' &&
-                     projectData.categoryCount > 0;
+                     Number.isFinite(categoryCountForValid) &&
+                     categoryCountForValid > 0;
     return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
@@ -203,8 +213,8 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
           <input
             type="number"
             min="0"
-            value={projectData.completionBonus ?? 0}
-            onChange={(e) => handleInputChange('completionBonus', parseInt(e.target.value, 10) || 0)}
+            value={projectData.completionBonus}
+            onChange={(e) => handleInputChange('completionBonus', e.target.value.replace(/\D/g, ''))}
             placeholder="请输入完成全部栏目奖励积分，0代表不设置奖励"
             className="w-full px-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
           />
@@ -249,7 +259,7 @@ const CreateNewProject: React.FC<CreateProjectProps> = () => {
                   type="number"
                   min="1"
                   value={projectData.categoryCount}
-                  onChange={(e) => handleInputChange('categoryCount', parseInt(e.target.value) || 0)}
+                  onChange={(e) => handleInputChange('categoryCount', e.target.value.replace(/\D/g, ''))}
                   className="w-16 px-2 py-1 text-center text-lg font-medium text-blue-500 bg-gray-50 border border-gray-200 rounded focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                 />
                 <span className="text-sm text-gray-600">个栏目</span>

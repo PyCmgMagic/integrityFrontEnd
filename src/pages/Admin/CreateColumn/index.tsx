@@ -28,6 +28,12 @@ export interface ColumnData {
   optional: boolean;
 }
 
+type ColumnFormData = Omit<ColumnData, 'dailyCheckinLimit' | 'pointsPerCheckin'> & {
+  // Keep numeric inputs as strings so users can clear/edit without being forced to 0.
+  dailyCheckinLimit: string;
+  pointsPerCheckin: string;
+};
+
 const CreateColumn: React.FC<CreateColumnProps> = ({
   onBack,
   onNext,
@@ -42,15 +48,15 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
   // 从URL参数中获取当前步骤
   const currentStep = params.columnIndex ? parseInt(params.columnIndex, 10) : columnIndex;
   
-  const [columnData, setColumnData] = useState<ColumnData>({
+  const [columnData, setColumnData] = useState<ColumnFormData>({
     name: '',
     description: '',
     startDate: projectStartDate || '',
     endDate: projectEndDate || '',
     start_time: '00:00',
     end_time: '23:59',
-    dailyCheckinLimit: 1,
-    pointsPerCheckin: 1,
+    dailyCheckinLimit: '1',
+    pointsPerCheckin: '1',
     optional: false
   });
 
@@ -58,7 +64,11 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
   useEffect(() => {
     const savedData = getColumnData(currentStep);
     if (savedData) {
-      setColumnData(savedData);
+      setColumnData({
+        ...savedData,
+        dailyCheckinLimit: String(savedData.dailyCheckinLimit ?? ''),
+        pointsPerCheckin: String(savedData.pointsPerCheckin ?? ''),
+      });
     }
   }, [currentStep, getColumnData]);
 
@@ -67,7 +77,10 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
    * @param field - 字段名
    * @param value - 字段值
    */
-  const handleInputChange = (field: keyof ColumnData, value: string | number | boolean) => {
+  const handleInputChange = <K extends keyof ColumnFormData>(
+    field: K,
+    value: ColumnFormData[K]
+  ) => {
     setColumnData(prev => ({
       ...prev,
       [field]: value
@@ -75,6 +88,22 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
   };
 
   const handleNext = () => {
+    const dailyCheckinLimitNum = parseInt(columnData.dailyCheckinLimit, 10);
+    if (
+      !Number.isFinite(dailyCheckinLimitNum) ||
+      dailyCheckinLimitNum < 0 ||
+      dailyCheckinLimitNum > 10
+    ) {
+      message.error('限制每日打卡次数必须是 0-10 的整数');
+      return;
+    }
+
+    const pointsPerCheckinNum = parseInt(columnData.pointsPerCheckin, 10);
+    if (!Number.isFinite(pointsPerCheckinNum) || pointsPerCheckinNum < 0) {
+      message.error('每日打卡获得积分必须是非负整数');
+      return;
+    }
+
     if (columnData.name.length > FIELD_LIMITS.name) {
       message.error(`栏目名称不能超过 ${FIELD_LIMITS.name} 个字符`);
       return;
@@ -99,18 +128,27 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
     }
 
     if (onNext) {
-      onNext(columnData);
+      onNext({
+        ...columnData,
+        dailyCheckinLimit: dailyCheckinLimitNum,
+        pointsPerCheckin: pointsPerCheckinNum,
+      });
     }
   };
 
+  const dailyCheckinLimitForValid = parseInt(columnData.dailyCheckinLimit, 10);
+  const pointsPerCheckinForValid = parseInt(columnData.pointsPerCheckin, 10);
   const isFormValid = columnData.name.trim() !== '' && 
                      columnData.description.trim() !== '' &&
                      columnData.name.length <= FIELD_LIMITS.name &&
                      columnData.description.length <= FIELD_LIMITS.description &&
                      columnData.startDate !== '' &&
                      columnData.endDate !== '' &&
-                     columnData.dailyCheckinLimit > 0 &&
-                     columnData.pointsPerCheckin > 0;
+                     Number.isFinite(dailyCheckinLimitForValid) &&
+                     dailyCheckinLimitForValid >= 0 &&
+                     dailyCheckinLimitForValid <= 10 &&
+                     Number.isFinite(pointsPerCheckinForValid) &&
+                     pointsPerCheckinForValid >= 0;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -172,8 +210,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             活动时间
           </label>
-          <div className="flex items-center space-x-3">
-            <div className="flex-1 relative">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div className="relative min-w-0">
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="date"
@@ -182,8 +220,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
                 className="w-full pl-12 pr-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
               />
             </div>
-            <div className="text-gray-400 text-lg">—</div>
-            <div className="flex-1 relative">
+            <div className="text-gray-400 text-lg px-1">—</div>
+            <div className="relative min-w-0">
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="date"
@@ -200,8 +238,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             一天内打卡时间
           </label>
-          <div className="flex items-center space-x-3">
-            <div className="flex-1 relative">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div className="relative min-w-0">
               <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="time"
@@ -210,8 +248,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
                 className="w-full pl-12 pr-4 py-3 bg-gray-100 border-0 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
               />
             </div>
-            <div className="text-gray-400 text-lg">—</div>
-            <div className="flex-1 relative">
+            <div className="text-gray-400 text-lg px-1">—</div>
+            <div className="relative min-w-0">
               <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="time"
@@ -233,7 +271,9 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
                 min="0"
                 max="10"
                 value={columnData.dailyCheckinLimit}
-                onChange={(e) => handleInputChange('dailyCheckinLimit', Number(e.target.value))}
+                onChange={(e) =>
+                  handleInputChange('dailyCheckinLimit', e.target.value.replace(/\D/g, ''))
+                }
                 className="w-16 px-2 py-1 text-center text-lg font-medium text-blue-500 bg-gray-50 border border-gray-200 rounded focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
               />
               <span className="text-sm text-gray-600">次</span>
@@ -250,7 +290,9 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
                 type="number"
                 min="0"
                 value={columnData.pointsPerCheckin}
-                onChange={(e) => handleInputChange('pointsPerCheckin', Number(e.target.value))}
+                onChange={(e) =>
+                  handleInputChange('pointsPerCheckin', e.target.value.replace(/\D/g, ''))
+                }
                 className="w-16 px-2 py-1 text-center text-lg font-medium text-blue-500 bg-gray-50 border border-gray-200 rounded focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
               />
               <span className="text-sm text-gray-600">分</span>

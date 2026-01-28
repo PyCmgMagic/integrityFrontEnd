@@ -71,14 +71,6 @@ const CheckIn: React.FC<CheckInPageProps> = ({ columnId, onSuccess, setGotoCheck
       });
       return;
     }
-    if (fileList.length === 0) {
-      Toast.show({
-        content: '请至少上传一张图片',
-        position: 'bottom',
-      });
-      return;
-    }
-
     setLoading(true);
     try {
       // 提取图片URL
