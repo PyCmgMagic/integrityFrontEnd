@@ -7,6 +7,7 @@ import LoadingComponent from '../components/LoadingComponent';
 import RouteErrorPage from '../pages/Error/RouteErrorPage';
 import FriendlyErrorPage from '../pages/Error/FriendlyErrorPage';
 
+// eslint-disable-next-line react-refresh/only-export-components
 function DevThrowRouteError(): JSX.Element {
   // Local-only preview: verify `errorElement` UI quickly.
   throw new Error('预览：模拟运行时错误（RouteErrorPage）');
