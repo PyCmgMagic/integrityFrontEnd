@@ -1,8 +1,16 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
+import type { JSX } from 'react';
 import ProtectedRoute from '../components/ProtectedRoute';
 import PublicRoute from '../components/PublicRoute';
 import LoadingComponent from '../components/LoadingComponent'; 
+import RouteErrorPage from '../pages/Error/RouteErrorPage';
+import FriendlyErrorPage from '../pages/Error/FriendlyErrorPage';
+
+function DevThrowRouteError(): JSX.Element {
+  // Local-only preview: verify `errorElement` UI quickly.
+  throw new Error('预览：模拟运行时错误（RouteErrorPage）');
+}
 
 // 懒加载页面组件
 const LoginPage = lazy(() => import('../pages/Login'));
@@ -44,8 +52,46 @@ const CheckInDetail = lazy(() => import('../pages/Admin/ColumnManage/CheckInDeta
 
 // 路由配置
 export const router = createBrowserRouter([
+  ...(import.meta.env.DEV
+    ? [
+        {
+          path: '/__preview/error',
+          element: (
+            <FriendlyErrorPage
+              status="error"
+              title="预览：错误页面"
+              subtitle="这是一个示例展示，不代表真实故障。"
+              errorMessage="Importing a module script failed（示例）"
+              onReload={() => window.location.reload()}
+              onBack={() => window.history.back()}
+              onHome={() => window.location.assign('/')}
+            />
+          ),
+        },
+        {
+          path: '/__preview/404',
+          element: (
+            <FriendlyErrorPage
+              status="404"
+              title="预览：找不到页面"
+              subtitle="示例：当访问了不存在的地址时，你可以这样提示用户。"
+              errorMessage="/some/unknown/path"
+              onReload={() => window.location.reload()}
+              onBack={() => window.history.back()}
+              onHome={() => window.location.assign('/')}
+            />
+          ),
+        },
+        {
+          path: '/__preview/route-error',
+          errorElement: <RouteErrorPage />,
+          element: <DevThrowRouteError />,
+        },
+      ]
+    : []),
   {
     path: '/login',
+    errorElement: <RouteErrorPage />,
     element: (
       <PublicRoute>
         <Suspense fallback={<LoadingComponent />}>
@@ -56,6 +102,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/user',
+    errorElement: <RouteErrorPage />,
     element: (
       <ProtectedRoute requiredRole="user">
         <Suspense fallback={<LoadingComponent />}>
@@ -129,6 +176,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/admin',
+    errorElement: <RouteErrorPage />,
     element: (
       <ProtectedRoute requiredRole="admin">
         <Suspense fallback={<LoadingComponent />}>

@@ -1,0 +1,176 @@
+/* Hand-drawn / doodle styling for error pages (mobile-first). */
+
+.error-page-bg {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  padding: 44px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(1200px 600px at 20% 10%, rgba(99, 102, 241, 0.14), transparent 55%),
+    radial-gradient(900px 520px at 90% 20%, rgba(14, 165, 233, 0.12), transparent 55%),
+    radial-gradient(900px 560px at 40% 95%, rgba(244, 114, 182, 0.10), transparent 60%),
+    linear-gradient(135deg, rgba(248, 250, 252, 1), rgba(255, 255, 255, 1));
+}
+
+.error-page-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* soft grain-ish overlay (no external assets) */
+  background: radial-gradient(circle at 20% 30%, rgba(2, 6, 23, 0.035), transparent 55%),
+    radial-gradient(circle at 80% 70%, rgba(2, 6, 23, 0.03), transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(2, 6, 23, 0.02), transparent 60%);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.error-card {
+  position: relative;
+  width: 100%;
+  max-width: 920px;
+  border-radius: 24px;
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 10px 30px rgba(2, 6, 23, 0.08),
+    0 2px 8px rgba(2, 6, 23, 0.04);
+}
+
+.error-card::after {
+  /* subtle "hand-drawn" border wobble using shadow layers */
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 26px;
+  border: 2px dashed rgba(79, 70, 229, 0.14);
+  pointer-events: none;
+  transform: rotate(-0.18deg);
+}
+
+.error-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .error-hero {
+    grid-template-columns: 360px 1fr;
+    gap: 22px;
+  }
+}
+
+.doodle-wrap {
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0.02), rgba(2, 6, 23, 0.00));
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.doodle-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -40px;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(99, 102, 241, 0.16), transparent 55%),
+    radial-gradient(circle at 70% 70%, rgba(14, 165, 233, 0.14), transparent 55%),
+    radial-gradient(circle at 15% 85%, rgba(244, 114, 182, 0.12), transparent 55%);
+  filter: blur(10px);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.error-illus {
+  position: relative;
+  width: 100%;
+  height: auto;
+  transform-origin: 50% 50%;
+  animation: doodle-float 7s ease-in-out infinite;
+}
+
+.scribble-path {
+  stroke-dasharray: 900;
+  stroke-dashoffset: 900;
+  animation: doodle-draw 1.35s ease forwards;
+}
+
+.spark {
+  transform-origin: 50% 50%;
+  animation: doodle-wiggle 2.6s ease-in-out infinite;
+}
+
+.error-actions :where(.ant-btn) {
+  border-radius: 9999px;
+}
+
+.error-actions :where(.ant-btn-primary) {
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.18);
+}
+
+.error-title {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: rgba(15, 23, 42, 0.92);
+}
+
+@media (min-width: 768px) {
+  .error-title {
+    font-size: 26px;
+  }
+}
+
+.error-subtitle {
+  margin: 8px 0 0;
+  color: rgba(51, 65, 85, 0.86);
+}
+
+.error-meta {
+  margin-top: 10px;
+  color: rgba(100, 116, 139, 0.92);
+}
+
+@keyframes doodle-float {
+  0% {
+    transform: translateY(0px) rotate(-0.6deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(0.6deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(-0.6deg);
+  }
+}
+
+@keyframes doodle-wiggle {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes doodle-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error-illus,
+  .spark,
+  .scribble-path {
+    animation: none !important;
+  }
+}
