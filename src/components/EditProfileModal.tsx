@@ -1,8 +1,30 @@
 
-import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, Button, Row, Col } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Modal, Form, Input, Button, Row, Col, Select } from 'antd';
 import AvatarUpload from './Upload/AvatarUpload';
 import type { UserProfile, UserProfileForm } from '../types/types'; 
+import { COLLEGE_MAJOR_PRESETS } from '../constants/profilePresets';
+
+const GRADE_YEARS = [2019,2020, 2021, 2022, 2023, 2024, 2025] as const;
+
+const normalizeUnsetToUndefined = (v?: string) => {
+  if (!v) return undefined;
+  const s = String(v).trim();
+  if (!s) return undefined;
+  if (s === '未设置' || s === '暂无' || s === '暂无信息') return undefined;
+  return s;
+};
+
+const normalizeGradeToYear = (grade?: string) => {
+  const s = normalizeUnsetToUndefined(grade);
+  if (!s) return undefined;
+
+  const match = s.match(/\b(20\d{2})\b/);
+  if (!match) return s;
+
+  const year = match[1];
+  return GRADE_YEARS.includes(Number(year) as (typeof GRADE_YEARS)[number]) ? year : s;
+};
 
 // 定义组件的 props 类型
 interface EditProfileModalProps {
@@ -15,12 +37,41 @@ interface EditProfileModalProps {
 const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onCancel, onSave, currentUser }) => {
   const [form] = Form.useForm<UserProfileForm>();
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(currentUser?.avatar);
+  const selectedCollege = Form.useWatch('college', form);
+  const selectedMajor = Form.useWatch('major', form);
+  const selectedGrade = Form.useWatch('grade', form);
+
+  const collegeOptions = useMemo(() => {
+    const options = Object.keys(COLLEGE_MAJOR_PRESETS).map((college) => ({ label: college, value: college }));
+    const current = normalizeUnsetToUndefined(currentUser?.college);
+    if (current && !options.some((o) => o.value === current)) return [{ label: current, value: current }, ...options];
+    return options;
+  }, [currentUser?.college]);
+
+  const gradeOptions = useMemo(() => {
+    const options = GRADE_YEARS.map((year) => ({ label: String(year), value: String(year) }));
+    const current = normalizeGradeToYear((selectedGrade as string | undefined) ?? currentUser?.grade);
+    if (current && !options.some((o) => o.value === current)) return [{ label: current, value: current }, ...options];
+    return options;
+  }, [selectedGrade, currentUser?.grade]);
+
+  const majorOptions = useMemo(() => {
+    const college = normalizeUnsetToUndefined(selectedCollege);
+    const majors = (college && COLLEGE_MAJOR_PRESETS[college]) || [];
+    const options = majors.map((m) => ({ label: m, value: m }));
+    const current = normalizeUnsetToUndefined(selectedMajor);
+    if (current && !options.some((o) => o.value === current)) return [{ label: current, value: current }, ...options];
+    return options;
+  }, [selectedCollege, selectedMajor]);
 
   useEffect(() => {
     if (currentUser && visible) {
       setAvatarUrl(currentUser.avatar);
       form.setFieldsValue({
         ...currentUser,
+        grade: normalizeGradeToYear(currentUser.grade),
+        college: normalizeUnsetToUndefined(currentUser.college),
+        major: normalizeUnsetToUndefined(currentUser.major),
       });
     }
   }, [currentUser, visible, form]);
@@ -84,18 +135,46 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onCancel, 
         <Row gutter={16}>
             <Col span={12}>
                 <Form.Item name="college" label="学院">
-                    <Input placeholder="例如：计算机学院" />
+                    <Select
+                      placeholder="请选择学院"
+                      options={collegeOptions}
+                      allowClear
+                      showSearch
+                      filterOption={(input, option) =>
+                        String(option?.label ?? '')
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      onChange={(nextCollege) => {
+                        const majors = (nextCollege && COLLEGE_MAJOR_PRESETS[String(nextCollege)]) || [];
+                        const currentMajor = selectedMajor;
+                        if (currentMajor && !majors.includes(String(currentMajor))) {
+                          form.setFieldValue('major', undefined);
+                        }
+                      }}
+                    />
                 </Form.Item>
             </Col>
             <Col span={12}>
                 <Form.Item name="major" label="专业">
-                    <Input placeholder="例如：软件工程" />
+                    <Select
+                      placeholder={selectedCollege ? '请选择专业' : '请先选择学院'}
+                      options={majorOptions}
+                      allowClear
+                      disabled={!selectedCollege}
+                      showSearch
+                      filterOption={(input, option) =>
+                        String(option?.label ?? '')
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                    />
                 </Form.Item>
             </Col>
         </Row>
 
         <Form.Item name="grade" label="年级">
-            <Input placeholder="例如：2024" />
+            <Select placeholder="请选择年级" options={gradeOptions} allowClear />
         </Form.Item>
       </Form>
     </Modal>
