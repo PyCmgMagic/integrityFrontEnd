@@ -9,10 +9,6 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       '127.0.0.1',
-      '.ngrok-free.app', // 允许所有 ngrok 域名
-      '.cpolar.top',
-      '.natappfree.cc', // 允许所有 natapp 免费域名
-      'z68d6abb.natappfree.cc', // 允许当前 natapp 域名
     ],
     // Dev-only: proxy API requests to avoid browser CORS/preflight issues.
     proxy: {

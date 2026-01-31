@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Input, Empty, Spin, message, Dropdown } from 'antd';
 import { SearchOutlined, CalendarOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
@@ -63,20 +63,50 @@ const UserHomePage = () => {
     }
   );
 
-  /**
-   * 处理搜索框输入变化
-   */
-  const handleInputChange = (value: string) => {
-    setSearchTerm(value);
-  };
+  // 防抖定时器引用
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
-   * 处理搜索执行
+   * 处理搜索框输入变化（带防抖）
+   * 当用户停止输入 400ms 后才触发实际搜索
    */
-  const handleSearch = (value: string) => {
+  const handleInputChange = useCallback((value: string) => {
+    setSearchTerm(value);
+    
+    // 清除之前的定时器
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    
+    // 设置新的防抖定时器
+    searchDebounceRef.current = setTimeout(() => {
+      setActualSearchTerm(value);
+    }, 400); // 400ms 防抖延迟
+  }, []);
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, []);
+
+  /**
+   * 处理搜索执行（立即执行，不等待防抖）
+   * 当用户点击搜索按钮或按回车键时触发
+   */
+  const handleSearch = useCallback((value: string) => {
+    // 清除防抖定时器，避免重复触发
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = null;
+    }
+    setSearchTerm(value);
     setActualSearchTerm(value);
     // actualSearchTerm变化会通过deps自动触发数据重新加载
-  };
+  }, []);
 
   /**
    * 处理活动卡片点击
