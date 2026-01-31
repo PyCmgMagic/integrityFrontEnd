@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Card, Tabs, Spin, Typography } from 'antd';
+import { Button, Card, Modal, Tabs, Spin, Typography, message } from 'antd';
+import { QuestionCircleOutlined, RightOutlined } from '@ant-design/icons';
 import type { UserProfile } from '../../../types/types';
 
 // 导入组件
 import EditProfileModal from '../../../components/EditProfileModal';
 import { UserInfoCard, CheckInTab, ActivityHistoryTab } from './components';
 import { useUserProfile, useActivityHistory, useCheckInData } from './hooks';
+import { FEEDBACK_QQ_GROUP } from '../../../config/feedback';
 
 const { Text } = Typography;
 
@@ -19,6 +21,7 @@ const ProfilePage: React.FC = () => {
   
   // 本地状态
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
+  const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState<boolean>(false);
 
   // If navigated here for completing missing fields, open the edit modal automatically.
   useEffect(() => {
@@ -52,6 +55,17 @@ const ProfilePage: React.FC = () => {
    * 关闭编辑模态框
    */
   const handleModalCancel = () => setIsEditModalVisible(false);
+
+  const handleCopyQQGroup = async () => {
+    if (!FEEDBACK_QQ_GROUP) return;
+    try {
+      await navigator.clipboard.writeText(FEEDBACK_QQ_GROUP);
+      message.success('已复制QQ群号');
+    } catch (e) {
+      console.error('复制失败:', e);
+      message.error('复制失败，请手动复制');
+    }
+  };
 
   /**
    * 处理个人信息保存
@@ -102,6 +116,25 @@ const ProfilePage: React.FC = () => {
             user={user}
             onEditClick={showEditModal}
           />
+
+          {/* 问题反馈 */}
+          <Card className="rounded-2xl shadow-lg border-0 bg-white" style={{ marginTop: 16 }}>
+            <div
+              role="button"
+              tabIndex={0}
+              className="flex items-center justify-between cursor-pointer select-none"
+              onClick={() => setIsFeedbackModalVisible(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setIsFeedbackModalVisible(true);
+              }}
+            >
+              <div className="flex items-center gap-2 text-gray-800">
+                <QuestionCircleOutlined className="text-gray-500" />
+                <span className="font-medium">问题反馈</span>
+              </div>
+              <RightOutlined className="text-gray-400" />
+            </div>
+          </Card>
           
           {/* 打卡与活动历史 */}
           <Card className="rounded-2xl shadow-lg border-0 bg-white" style={{ marginTop: 16 }}>
@@ -184,6 +217,31 @@ const ProfilePage: React.FC = () => {
         onSave={handleModalSave}
         currentUser={user}
       />
+
+      <Modal
+        title="问题反馈"
+        open={isFeedbackModalVisible}
+        onCancel={() => setIsFeedbackModalVisible(false)}
+        footer={null}
+        centered
+      >
+        <div className="text-gray-700">
+          <div className="mb-2">加入QQ群反馈问题：</div>
+          <div className="flex items-center justify-between gap-3 bg-gray-50 rounded-lg px-3 py-2">
+            <span className="font-mono text-gray-900">
+              {FEEDBACK_QQ_GROUP ? `QQ群：${FEEDBACK_QQ_GROUP}` : 'QQ群：稍后设置'}
+            </span>
+            <Button size="small" onClick={handleCopyQQGroup} disabled={!FEEDBACK_QQ_GROUP}>
+              复制
+            </Button>
+          </div>
+          {!FEEDBACK_QQ_GROUP && (
+            <div className="mt-2 text-xs text-gray-500">
+              群号配置后这里会自动显示。
+            </div>
+          )}
+        </div>
+      </Modal>
     </>
   );
 };

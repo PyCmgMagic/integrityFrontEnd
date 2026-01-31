@@ -72,6 +72,7 @@ class RequestService {
         if (response.data && typeof response.data === 'object') {
           // 新的响应格式：{"code":200,"msg":"Success","data":...,"timestamp":...}
           if (response.data.code && response.data.code !== 200) {
+            if (response.data.code === 401) this.handleUnauthorized();
             if (response.data.code === HUMAN_VERIFICATION_CODE) {
               // Triggered human verification (captcha). Reload the page immediately.
               this.handleHumanVerification();
@@ -92,6 +93,7 @@ class RequestService {
           }
           // 兼容旧格式
           if (response.data.success === false) {
+            if (response.data.code === 401) this.handleUnauthorized();
             if (response.data.code === HUMAN_VERIFICATION_CODE) {
               // Triggered human verification (captcha). Reload the page immediately.
               this.handleHumanVerification();

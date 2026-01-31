@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Input, Empty, Spin, Dropdown, message } from 'antd';
 import { SearchOutlined, CalendarOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useAuthStore  } from '../../../store';
 import { ActivityAPI } from '../../../services/api';
 import { transformActivityFromAPI } from '../../../utils/dataTransform';
+import { getActivityTimeStatus } from '../../../utils/activityTimeStatus';
 import CreateActivityModal from '../../../components/CreateActivityModal';
 import useInfiniteScroll from '../../../hooks/useInfiniteScroll';
 import useViewportHeight from '../../../hooks/useViewportHeight';
@@ -22,6 +23,12 @@ const AdminHomePage = () => {
   const [actualSearchTerm, setActualSearchTerm] = useState(''); // 实际用于搜索的值
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const viewportHeight = useViewportHeight(); // 获取当前视口高度
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setNowMs(Date.now()), 60 * 1000);
+    return () => clearInterval(t);
+  }, []);
 
   // 使用无限滚动Hook
   const {
@@ -234,8 +241,24 @@ const AdminHomePage = () => {
                       <span>{activity.startTime} ~ {activity.endTime}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-medium">进行中</span>
+                      {(() => {
+                        const status = getActivityTimeStatus(nowMs, {
+                          startDate: activity.startTime,
+                          endDate: activity.endTime,
+                        });
+                        const meta = {
+                          not_started: { label: '未开始', dot: 'bg-slate-400' },
+                          in_progress: { label: '进行中', dot: 'bg-green-500' },
+                          ended: { label: '已结束', dot: 'bg-rose-500' },
+                        }[status];
+
+                        return (
+                          <>
+                            <div className={`w-2 h-2 ${meta.dot} rounded-full`}></div>
+                            <span className="text-sm font-medium">{meta.label}</span>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 </Card>

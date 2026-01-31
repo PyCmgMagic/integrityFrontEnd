@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Card, Typography, Avatar, List, Button,  Empty, Spin } from 'antd';
+import { Card, Typography, Avatar, List, Button, Empty, Spin, Modal } from 'antd';
 import { Dialog, Toast, Tabs } from 'antd-mobile';
-import { BankOutlined, BookOutlined, EditOutlined, IdcardOutlined, LogoutOutlined, CalendarOutlined, StarOutlined } from '@ant-design/icons';
+import { BankOutlined, BookOutlined, EditOutlined, IdcardOutlined, LogoutOutlined, CalendarOutlined, StarOutlined, QuestionCircleOutlined, RightOutlined } from '@ant-design/icons';
 
 // 添加全局样式来禁用浏览器左滑返回
 const globalStyles = `
@@ -40,6 +40,7 @@ import { CheckInTab, ActivityHistoryTab } from '../../User/Profile/components';
 import { useCheckInData, useActivityHistory } from '../../User/Profile/hooks';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { API } from '../../../services/api';
+import { FEEDBACK_QQ_GROUP } from '../../../config/feedback';
 import type {  StarListData } from '../../../types/types';
 
 import type { UserProfile, StarItem  } from '../../../types/types';
@@ -69,6 +70,7 @@ const ProfilePage: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
+  const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState<boolean>(false);
 
   // If navigated here for completing missing fields, open the edit modal automatically.
   useEffect(() => {
@@ -89,6 +91,17 @@ const ProfilePage: React.FC = () => {
   // 使用用户端个人中心的hooks
   const { checkInData: userCheckInData, loading: checkInLoading, error: checkInError, deleteCheckIn, refreshData } = useCheckInData();
   const { activityHistoryData, activityHistoryLoading } = useActivityHistory();
+
+  const handleCopyQQGroup = async () => {
+    if (!FEEDBACK_QQ_GROUP) return;
+    try {
+      await navigator.clipboard.writeText(FEEDBACK_QQ_GROUP);
+      Toast.show({ content: '已复制QQ群号', position: 'bottom' });
+    } catch (e) {
+      console.error('复制失败:', e);
+      Toast.show({ content: '复制失败，请手动复制', position: 'bottom' });
+    }
+  };
 
   /**
    * 格式化日期显示
@@ -517,6 +530,25 @@ const ProfilePage: React.FC = () => {
               </div>
             </div>
           </Card>
+
+          {/* 问题反馈 */}
+          <Card className="rounded-2xl border-0 bg-white shadow-sm" style={{ marginTop: 16 }}>
+            <div
+              role="button"
+              tabIndex={0}
+              className="flex items-center justify-between cursor-pointer select-none"
+              onClick={() => setIsFeedbackModalVisible(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setIsFeedbackModalVisible(true);
+              }}
+            >
+              <div className="flex items-center gap-2 text-gray-800">
+                <QuestionCircleOutlined className="text-gray-500" />
+                <span className="font-medium">问题反馈</span>
+              </div>
+              <RightOutlined className="text-gray-400" />
+            </div>
+          </Card>
           
           {/* 打卡与活动历史 */}
           <Card 
@@ -806,6 +838,31 @@ const ProfilePage: React.FC = () => {
 
 
 
+
+      <Modal
+        title="问题反馈"
+        open={isFeedbackModalVisible}
+        onCancel={() => setIsFeedbackModalVisible(false)}
+        footer={null}
+        centered
+      >
+        <div className="text-gray-700">
+          <div className="mb-2">加入QQ群反馈问题：</div>
+          <div className="flex items-center justify-between gap-3 bg-gray-50 rounded-lg px-3 py-2">
+            <span className="font-mono text-gray-900">
+              {FEEDBACK_QQ_GROUP ? `QQ群：${FEEDBACK_QQ_GROUP}` : 'QQ群：稍后设置'}
+            </span>
+            <Button size="small" onClick={handleCopyQQGroup} disabled={!FEEDBACK_QQ_GROUP}>
+              复制
+            </Button>
+          </div>
+          {!FEEDBACK_QQ_GROUP && (
+            <div className="mt-2 text-xs text-gray-500">
+              群号配置后这里会自动显示。
+            </div>
+          )}
+        </div>
+      </Modal>
 
       {/* 打卡详情模态框 */}
       <CheckInDetailModal
