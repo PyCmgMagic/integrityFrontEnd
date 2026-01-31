@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./animations.css";
 
 /* 基础样式重置 */
 * {

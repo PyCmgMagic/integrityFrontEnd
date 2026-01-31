@@ -252,13 +252,13 @@ const UserHomePage = () => {
                 <Card
                   key={`${activity.id}-${index}`}
                   hoverable
-                  className={`${styles.activityCard} modern-card ${gradientClass}`}
+                  className={`${styles.activityCard} modern-card ${gradientClass} card-shine card-press list-item-animate`}
                   cover={
                     <div className="relative h-42 overflow-hidden"> 
                       <img
                         alt={activity.name}
                         src={activity.cover}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                       <div className="absolute bottom-3 left-4 text-white">

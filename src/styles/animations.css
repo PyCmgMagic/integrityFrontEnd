@@ -1,0 +1,434 @@
+/**
+ * 动画与过渡效果样式
+ * 包含页面切换、列表项进入、按钮涟漪、卡片反馈等动画
+ */
+
+/* ========================================
+   1. 页面切换动画 (Page Transition)
+   ======================================== */
+
+/* 淡入淡出 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* 从右滑入 */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 从左滑入 */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 从下向上滑入 */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 从上向下滑入 */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 缩放进入 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 页面切换动画类 */
+.page-fade-enter {
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.page-slide-right-enter {
+  animation: slideInRight 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.page-slide-left-enter {
+  animation: slideInLeft 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.page-slide-up-enter {
+  animation: slideInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.page-scale-enter {
+  animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ========================================
+   2. 列表项进入动画 (Stagger Effect)
+   ======================================== */
+
+@keyframes listItemEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 基础列表项动画 */
+.list-item-animate {
+  opacity: 0;
+  animation: listItemEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* 交错动画延迟 - 支持最多20个项目 */
+.list-item-animate:nth-child(1) { animation-delay: 0.05s; }
+.list-item-animate:nth-child(2) { animation-delay: 0.1s; }
+.list-item-animate:nth-child(3) { animation-delay: 0.15s; }
+.list-item-animate:nth-child(4) { animation-delay: 0.2s; }
+.list-item-animate:nth-child(5) { animation-delay: 0.25s; }
+.list-item-animate:nth-child(6) { animation-delay: 0.3s; }
+.list-item-animate:nth-child(7) { animation-delay: 0.35s; }
+.list-item-animate:nth-child(8) { animation-delay: 0.4s; }
+.list-item-animate:nth-child(9) { animation-delay: 0.45s; }
+.list-item-animate:nth-child(10) { animation-delay: 0.5s; }
+.list-item-animate:nth-child(11) { animation-delay: 0.55s; }
+.list-item-animate:nth-child(12) { animation-delay: 0.6s; }
+.list-item-animate:nth-child(13) { animation-delay: 0.65s; }
+.list-item-animate:nth-child(14) { animation-delay: 0.7s; }
+.list-item-animate:nth-child(15) { animation-delay: 0.75s; }
+.list-item-animate:nth-child(16) { animation-delay: 0.8s; }
+.list-item-animate:nth-child(17) { animation-delay: 0.85s; }
+.list-item-animate:nth-child(18) { animation-delay: 0.9s; }
+.list-item-animate:nth-child(19) { animation-delay: 0.95s; }
+.list-item-animate:nth-child(20) { animation-delay: 1s; }
+
+/* 快速交错动画 */
+.list-item-animate-fast {
+  opacity: 0;
+  animation: listItemEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.list-item-animate-fast:nth-child(1) { animation-delay: 0.03s; }
+.list-item-animate-fast:nth-child(2) { animation-delay: 0.06s; }
+.list-item-animate-fast:nth-child(3) { animation-delay: 0.09s; }
+.list-item-animate-fast:nth-child(4) { animation-delay: 0.12s; }
+.list-item-animate-fast:nth-child(5) { animation-delay: 0.15s; }
+.list-item-animate-fast:nth-child(6) { animation-delay: 0.18s; }
+.list-item-animate-fast:nth-child(7) { animation-delay: 0.21s; }
+.list-item-animate-fast:nth-child(8) { animation-delay: 0.24s; }
+.list-item-animate-fast:nth-child(9) { animation-delay: 0.27s; }
+.list-item-animate-fast:nth-child(10) { animation-delay: 0.3s; }
+
+/* ========================================
+   3. 按钮点击涟漪效果 (Ripple Effect)
+   ======================================== */
+
+/* 涟漪动画 */
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* 涟漪容器 */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+  transform: translate3d(0, 0, 0);
+}
+
+/* 涟漪元素 */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple 0.6s ease-out;
+  pointer-events: none;
+}
+
+/* 暗色主题涟漪 */
+.ripple-dark {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+/* 按钮点击动画 */
+@keyframes buttonPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.btn-press:active {
+  animation: buttonPress 0.2s ease-out;
+}
+
+/* ========================================
+   4. 卡片悬停/点击反馈 (Card Feedback)
+   ======================================== */
+
+/* 卡片点击反馈 */
+@keyframes cardPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 卡片点击效果 */
+.card-press:active {
+  animation: cardPress 0.2s ease-out;
+}
+
+/* 卡片悬停光效 */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.card-shine:hover::after {
+  left: 100%;
+}
+
+/* 卡片边框发光效果 */
+.card-glow {
+  transition: all 0.3s ease;
+}
+
+.card-glow:hover {
+  box-shadow: 
+    0 0 20px rgba(102, 126, 234, 0.4),
+    0 0 40px rgba(102, 126, 234, 0.2);
+}
+
+/* ========================================
+   5. 特殊动画效果
+   ======================================== */
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 弹跳动画 */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+/* 抖动动画（用于错误提示） */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* 旋转动画 */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* 渐变边框动画 */
+@keyframes gradientBorder {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-border {
+  background: linear-gradient(90deg, #667eea, #764ba2, #f6d365, #fda085, #667eea);
+  background-size: 300% 300%;
+  animation: gradientBorder 3s ease infinite;
+}
+
+/* ========================================
+   6. 骨架屏微光动画增强
+   ======================================== */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ========================================
+   7. 过渡类（用于JS控制）
+   ======================================== */
+
+/* 平滑过渡 */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 快速过渡 */
+.transition-fast {
+  transition: all 0.15s ease-out;
+}
+
+/* 慢速过渡 */
+.transition-slow {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 透明度过渡 */
+.transition-opacity {
+  transition: opacity 0.3s ease;
+}
+
+/* 变换过渡 */
+.transition-transform {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+   8. 无障碍支持
+   ======================================== */
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .list-item-animate,
+  .list-item-animate-fast {
+    opacity: 1;
+    animation: none;
+  }
+}
