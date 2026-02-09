@@ -7,6 +7,8 @@ import { FIELD_LIMITS } from '../utils/fieldLimits';
 // 定义传递给组件的 props 类型
 interface CheckInPageProps {
   columnId: number; // 添加column_id参数
+  minWordLimit?: number | null;
+  maxWordLimit?: number | null;
   onSuccess?: (data: { content: string; images: ImageUploadItem[] }) => void;
   setGotoCheckIn: (gotoCheckIn: boolean) => void;
 }
@@ -44,13 +46,20 @@ async function realUpload(file: File): Promise<ImageUploadItem> {
 /**
  * 打卡页面组件
  */
-const CheckIn: React.FC<CheckInPageProps> = ({ columnId, onSuccess, setGotoCheckIn }) => {
+const CheckIn: React.FC<CheckInPageProps> = ({ columnId, minWordLimit, maxWordLimit, onSuccess, setGotoCheckIn }) => {
   // 图片文件列表状态
   const [fileList, setFileList] = useState<ImageUploadItem[]>([]);
   // 提交按钮的加载状态
   const [loading, setLoading] = useState(false);
   // 文本域内容状态
   const [content, setContent] = useState('');
+  const resolvedMinWordLimit =
+    typeof minWordLimit === 'number' && Number.isFinite(minWordLimit) ? minWordLimit : 0;
+  const resolvedMaxWordLimit =
+    typeof maxWordLimit === 'number' && Number.isFinite(maxWordLimit) ? maxWordLimit : FIELD_LIMITS.checkInContent;
+  const safeMinWordLimit = Math.max(0, resolvedMinWordLimit);
+  const safeMaxWordLimit = Math.max(safeMinWordLimit, resolvedMaxWordLimit);
+  const placeholder = `请输入打卡内容（不少于${safeMinWordLimit}字，不超过${safeMaxWordLimit}字）`;
   /**
    * 处理提交打卡逻辑
    */
@@ -59,14 +68,21 @@ const CheckIn: React.FC<CheckInPageProps> = ({ columnId, onSuccess, setGotoCheck
     const trimmedContent = content.trim();
     if (!trimmedContent) {
       Toast.show({
-        content: '请输入打卡内容(不超过500字)',
+        content: placeholder,
         position: 'bottom',
       });
       return;
     }
-    if (trimmedContent.length > FIELD_LIMITS.checkInContent) {
+    if (trimmedContent.length < safeMinWordLimit) {
       Toast.show({
-        content: `打卡内容不能超过 ${FIELD_LIMITS.checkInContent} 个字符`,
+        content: `打卡内容不少于 ${safeMinWordLimit} 个字符`,
+        position: 'bottom',
+      });
+      return;
+    }
+    if (trimmedContent.length > safeMaxWordLimit) {
+      Toast.show({
+        content: `打卡内容不能超过 ${safeMaxWordLimit} 个字符`,
         position: 'bottom',
       });
       return;
@@ -122,8 +138,8 @@ const CheckIn: React.FC<CheckInPageProps> = ({ columnId, onSuccess, setGotoCheck
           <TextArea
             value={content}
             onChange={setContent}
-            placeholder="请输入打卡内容（不超过500字）"
-            maxLength={FIELD_LIMITS.checkInContent}
+            placeholder={placeholder}
+            maxLength={safeMaxWordLimit}
             showCount
             autoSize={{ minRows: 4, maxRows: 6 }}
             className="text-base"

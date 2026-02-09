@@ -113,7 +113,7 @@ const ProjectDetailPage = () => {
       const success = await updateProject(updateData);
       
       if (success) {
-        message.success('项目信息已成功更改?');
+        message.success('项目信息已成功更改');
         setEditProjectVisible(false);
       } else {
         message.error('更新项目信息失败');
@@ -124,7 +124,7 @@ const ProjectDetailPage = () => {
     }
   };
   const handleEditColumnFinish = (values: any) => {
-    console.log('表单数据已成功提交到父组件?', values);
+    console.log('表单数据已成功提交到父组件', values);
     setEditColumnVisible(false);
     refetch();
   };

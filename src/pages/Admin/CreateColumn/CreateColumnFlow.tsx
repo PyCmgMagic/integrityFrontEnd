@@ -69,6 +69,8 @@ const CreateColumnFlow: React.FC = () => {
           avatar: '',
           daily_punch_limit: columnData.dailyCheckinLimit,
           point_earned: columnData.pointsPerCheckin,
+          min_word_limit: columnData.minWordLimit,
+          max_word_limit: columnData.maxWordLimit,
           start_time: columnData.start_time,
           end_time: columnData.end_time,
           optional: columnData.optional,

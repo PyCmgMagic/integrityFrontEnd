@@ -25,13 +25,20 @@ export interface ColumnData {
   coverImage?: string;
   dailyCheckinLimit: number;
   pointsPerCheckin: number;
+  minWordLimit: number;
+  maxWordLimit: number;
   optional: boolean;
 }
 
-type ColumnFormData = Omit<ColumnData, 'dailyCheckinLimit' | 'pointsPerCheckin'> & {
+type ColumnFormData = Omit<
+  ColumnData,
+  'dailyCheckinLimit' | 'pointsPerCheckin' | 'minWordLimit' | 'maxWordLimit'
+> & {
   // Keep numeric inputs as strings so users can clear/edit without being forced to 0.
   dailyCheckinLimit: string;
   pointsPerCheckin: string;
+  minWordLimit: string;
+  maxWordLimit: string;
 };
 
 const CreateColumn: React.FC<CreateColumnProps> = ({
@@ -57,6 +64,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
     end_time: '23:59',
     dailyCheckinLimit: '1',
     pointsPerCheckin: '1',
+    minWordLimit: '0',
+    maxWordLimit: '500',
     optional: false
   });
 
@@ -68,6 +77,8 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
         ...savedData,
         dailyCheckinLimit: String(savedData.dailyCheckinLimit ?? ''),
         pointsPerCheckin: String(savedData.pointsPerCheckin ?? ''),
+        minWordLimit: String(savedData.minWordLimit ?? 0),
+        maxWordLimit: String(savedData.maxWordLimit ?? 500),
       });
     }
   }, [currentStep, getColumnData]);
@@ -104,6 +115,23 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
       return;
     }
 
+    const minWordLimitNum = parseInt(columnData.minWordLimit, 10);
+    if (!Number.isFinite(minWordLimitNum) || minWordLimitNum < 0) {
+      message.error('打卡内容最小字数必须是非负整数');
+      return;
+    }
+
+    const maxWordLimitNum = parseInt(columnData.maxWordLimit, 10);
+    if (!Number.isFinite(maxWordLimitNum) || maxWordLimitNum < 0) {
+      message.error('打卡内容最大字数必须是非负整数');
+      return;
+    }
+
+    if (maxWordLimitNum < minWordLimitNum) {
+      message.error('打卡内容最大字数不能小于最小字数');
+      return;
+    }
+
     if (columnData.name.length > FIELD_LIMITS.name) {
       message.error(`栏目名称不能超过 ${FIELD_LIMITS.name} 个字符`);
       return;
@@ -132,12 +160,16 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
         ...columnData,
         dailyCheckinLimit: dailyCheckinLimitNum,
         pointsPerCheckin: pointsPerCheckinNum,
+        minWordLimit: minWordLimitNum,
+        maxWordLimit: maxWordLimitNum,
       });
     }
   };
 
   const dailyCheckinLimitForValid = parseInt(columnData.dailyCheckinLimit, 10);
   const pointsPerCheckinForValid = parseInt(columnData.pointsPerCheckin, 10);
+  const minWordLimitForValid = parseInt(columnData.minWordLimit, 10);
+  const maxWordLimitForValid = parseInt(columnData.maxWordLimit, 10);
   const isFormValid = columnData.name.trim() !== '' && 
                      columnData.description.trim() !== '' &&
                      columnData.name.length <= FIELD_LIMITS.name &&
@@ -148,7 +180,11 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
                      dailyCheckinLimitForValid >= 0 &&
                      dailyCheckinLimitForValid <= 10 &&
                      Number.isFinite(pointsPerCheckinForValid) &&
-                     pointsPerCheckinForValid >= 0;
+                     pointsPerCheckinForValid >= 0 &&
+                     Number.isFinite(minWordLimitForValid) &&
+                     minWordLimitForValid >= 0 &&
+                     Number.isFinite(maxWordLimitForValid) &&
+                     maxWordLimitForValid >= minWordLimitForValid;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -296,6 +332,44 @@ const CreateColumn: React.FC<CreateColumnProps> = ({
                 className="w-16 px-2 py-1 text-center text-lg font-medium text-blue-500 bg-gray-50 border border-gray-200 rounded focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
               />
               <span className="text-sm text-gray-600">分</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 打卡内容最小字数 */}
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-700 font-medium">打卡内容最小字数</span>
+            <div className="flex items-center space-x-2">
+              <input
+                type="number"
+                min="0"
+                value={columnData.minWordLimit}
+                onChange={(e) =>
+                  handleInputChange('minWordLimit', e.target.value.replace(/\D/g, ''))
+                }
+                className="w-20 px-2 py-1 text-center text-lg font-medium text-blue-500 bg-gray-50 border border-gray-200 rounded focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+              />
+              <span className="text-sm text-gray-600">字</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 打卡内容最大字数 */}
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-700 font-medium">打卡内容最大字数</span>
+            <div className="flex items-center space-x-2">
+              <input
+                type="number"
+                min="0"
+                value={columnData.maxWordLimit}
+                onChange={(e) =>
+                  handleInputChange('maxWordLimit', e.target.value.replace(/\D/g, ''))
+                }
+                className="w-20 px-2 py-1 text-center text-lg font-medium text-blue-500 bg-gray-50 border border-gray-200 rounded focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+              />
+              <span className="text-sm text-gray-600">字</span>
             </div>
           </div>
         </div>

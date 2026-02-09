@@ -146,6 +146,8 @@ const formattedPunchRecords:CheckInData[] = (punchRecords.reverse() || []).map((
         {gotoCheckIn ? (
           <CheckIn 
             columnId={currentColumnId}
+            minWordLimit={columnInfo.min_word_limit}
+            maxWordLimit={columnInfo.max_word_limit}
             setGotoCheckIn={setGotoCheckIn}
             onSuccess={handleCheckInSuccess}
           /> 

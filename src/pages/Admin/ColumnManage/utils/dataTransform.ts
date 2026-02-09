@@ -25,6 +25,8 @@ export interface ColumnInfo {
     avatar: string,
     daily_punch_limit: number,
     point_earned: number,
+    min_word_limit: number,
+    max_word_limit: number,
     end_time: string,
     end_date:number,
     start_time: string,

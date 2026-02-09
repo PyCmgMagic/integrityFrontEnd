@@ -145,7 +145,11 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
     if (visible) {
       if (initialData) {
         // 设置表单所有字段的值
-        form.setFieldsValue({ ...initialData });
+        form.setFieldsValue({
+          ...initialData,
+          min_word_limit: initialData.min_word_limit ?? 0,
+          max_word_limit: initialData.max_word_limit ?? 500,
+        });
         // 设置日期状态（从start_date和end_date数字格式转换）
         if (initialData.start_date) {
           const startDateStr = initialData.start_date.toString();
@@ -168,6 +172,10 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
       } else {
         // 如果是新建栏目，则清空所有状态
         form.resetFields();
+        form.setFieldsValue({
+          min_word_limit: 0,
+          max_word_limit: 500,
+        });
         setStartDate(null);
         setEndDate(null);
         
@@ -243,6 +251,8 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
         avatar: '', // 不再需要上传封面
         daily_punch_limit: parseInt(values.daily_punch_limit), // 每日可打卡次数
         point_earned: parseInt(values.point_earned), // 每次打卡获得积分
+        min_word_limit: parseInt(values.min_word_limit, 10), // 打卡内容最小字数
+        max_word_limit: parseInt(values.max_word_limit, 10), // 打卡内容最大字数
         optional: values.optional ?? false,
       };
 
@@ -414,6 +424,51 @@ const EditColumnModal: React.FC<EditColumnModalProps> = ({ visible, onClose, onF
           initialValue={1}
         >
           <Input type="number" placeholder="请输入每次打卡获得积分" min={1} max={1000} />
+        </Form.Item>
+
+        <Form.Item
+          name="min_word_limit"
+          label={<span className="font-semibold text-gray-700">打卡内容最小字数</span>}
+          rules={[
+            { required: true, message: '请输入打卡内容最小字数' },
+            {
+              validator: (_, value) => {
+                const num = Number(value);
+                if (!Number.isFinite(num) || !Number.isInteger(num) || num < 0) {
+                  return Promise.reject(new Error('请输入不小于0的整数'));
+                }
+                return Promise.resolve();
+              }
+            }
+          ]}
+          initialValue={0}
+        >
+          <Input type="number" placeholder="请输入打卡内容最小字数" min={0} />
+        </Form.Item>
+
+        <Form.Item
+          name="max_word_limit"
+          label={<span className="font-semibold text-gray-700">打卡内容最大字数</span>}
+          dependencies={['min_word_limit']}
+          rules={[
+            { required: true, message: '请输入打卡内容最大字数' },
+            ({ getFieldValue }) => ({
+              validator: (_, value) => {
+                const max = Number(value);
+                const min = Number(getFieldValue('min_word_limit'));
+                if (!Number.isFinite(max) || !Number.isInteger(max) || max < 0) {
+                  return Promise.reject(new Error('请输入不小于0的整数'));
+                }
+                if (Number.isFinite(min) && max < min) {
+                  return Promise.reject(new Error('最大字数不能小于最小字数'));
+                }
+                return Promise.resolve();
+              }
+            })
+          ]}
+          initialValue={500}
+        >
+          <Input type="number" placeholder="请输入打卡内容最大字数" min={0} />
         </Form.Item>
 
         <Form.Item style={{ marginTop: '20px' }}>

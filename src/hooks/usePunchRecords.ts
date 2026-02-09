@@ -25,6 +25,8 @@ export const usePunchRecords = (columnId: number) => {
       avatar: string;
       daily_punch_limit: number;
       point_earned: number;
+      min_word_limit: number;
+      max_word_limit: number;
       end_time: string;
       start_time: string;
       start_date: number;
@@ -40,6 +42,8 @@ export const usePunchRecords = (columnId: number) => {
     avatar: '',
     daily_punch_limit: 0,
     point_earned: 0,
+    min_word_limit: 0,
+    max_word_limit: 500,
     end_time: '',
     start_time: '',
     start_date: 0,
@@ -77,7 +81,11 @@ export const usePunchRecords = (columnId: number) => {
       const data = await API.Column.getPunchRecords(columnId);
       // const today_punch_count = await API.Column.getTodayTotalPunchRecords(columnId);
       const columnInfo = await API.Column.getColumnInfo(columnId)
-      setColumnInfo(columnInfo.data)
+      setColumnInfo({
+        ...columnInfo.data,
+        min_word_limit: columnInfo.data.min_word_limit ?? 0,
+        max_word_limit: columnInfo.data.max_word_limit ?? 500,
+      })
       // 转换数据格式
       const transformedRecords = transformPunchRecordsToCheckInData(data.records);
       setPunchRecords(transformedRecords);

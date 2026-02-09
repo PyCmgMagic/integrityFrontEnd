@@ -589,6 +589,8 @@ export class ColumnAPI {
     avatar: string;
     daily_punch_limit: number; // 每日可打卡次数
     point_earned: number; // 每次打卡获得积分
+    min_word_limit: number; // 打卡内容最小字数
+    max_word_limit: number; // 打卡内容最大字数
     optional?: boolean; // 是否为特殊栏目
   }): Promise<{ column_id: number }> {
     return request.post<{ column_id: number }>('/column/create', data, {
@@ -610,6 +612,8 @@ export class ColumnAPI {
       avatar?: string;
       daily_punch_limit?: number; // 每日可打卡次数
       point_earned?: number; // 每次打卡获得积分
+      min_word_limit?: number; // 打卡内容最小字数
+      max_word_limit?: number; // 打卡内容最大字数
       optional?: boolean; // 是否为特殊栏目
     }
   ): Promise<void> {
@@ -638,6 +642,8 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
   avatar: string; // 栏目封面
   daily_punch_limit: number; // 每日可打卡次数
   point_earned: number; // 每次打卡获得积分
+  min_word_limit: number; // 打卡内容最小字数
+  max_word_limit: number; // 打卡内容最大字数
   optional?: boolean; // 是否为特殊栏目
   end_time: string; // 结束时间
   start_time: string; // 开始时间
@@ -655,6 +661,8 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
   avatar: string; // 栏目封面
   daily_punch_limit: number; // 每日可打卡次数
   point_earned: number; // 每次打卡获得积分
+  min_word_limit: number; // 打卡内容最小字数
+  max_word_limit: number; // 打卡内容最大字数
   end_time: string; // 结束时间
   start_time: string; // 开始时间
   start_date: number; // 开始日期

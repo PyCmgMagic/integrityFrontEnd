@@ -35,6 +35,8 @@ const ColumnManage: React.FC = () => {
     avatar: '',
     daily_punch_limit: 0,
     point_earned: 0,
+    min_word_limit: 0,
+    max_word_limit: 0,
     end_time: '',
     end_date:0,
     start_time: '',

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { message } from 'antd';
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
@@ -105,7 +105,7 @@ const LoginPage = () => {
           </div>
           <div className={styles.pageTitle}>
             <span className={styles.pageTitleQuote}>“驹光踏浪，笃行不倦”</span>
-            <span className={styles.pageTitleSub}>寒假成长打卡活动</span>
+            <span className={styles.pageTitleSub}>2026寒假成长档案</span>
           </div>
         </div>
 

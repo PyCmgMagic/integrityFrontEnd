@@ -167,6 +167,8 @@ export interface ProjectColumn {
   end_time?: string;
   daily_punch_limit: number; // 每日可打卡次数
   point_earned: number; // 每次打卡获得积分
+  min_word_limit?: number; // 打卡内容最小字数
+  max_word_limit?: number; // 打卡内容最大字数
   optional?: boolean; // 是否为特殊栏目
 }
 
@@ -198,6 +200,8 @@ export interface CreateColumnRequest {
   avatar: string;
   daily_punch_limit: number; // 每日可打卡次数
   point_earned: number; // 每次打卡获得积分
+  min_word_limit: number; // 打卡内容最小字数
+  max_word_limit: number; // 打卡内容最大字数
   optional?: boolean; // 是否为特殊栏目
 }
 
@@ -213,6 +217,8 @@ export interface UpdateColumnRequest {
   avatar?: string;
   daily_punch_limit?: number; // 每日可打卡次数
   point_earned?: number; // 每次打卡获得积分
+  min_word_limit?: number; // 打卡内容最小字数
+  max_word_limit?: number; // 打卡内容最大字数
   optional?: boolean; // 是否为特殊栏目
 }
 

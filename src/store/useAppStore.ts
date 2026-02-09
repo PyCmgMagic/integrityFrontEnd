@@ -62,6 +62,8 @@ export interface ColumnCreationData {
   coverImage?: string;
   dailyCheckinLimit: number;
   pointsPerCheckin: number;
+  minWordLimit: number;
+  maxWordLimit: number;
   optional: boolean;
 }
 
