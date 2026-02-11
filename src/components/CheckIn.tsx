@@ -67,17 +67,17 @@ const CheckIn: React.FC<CheckInPageProps> = ({ columnId, minWordLimit, maxWordLi
     // 可以增加文本内容的校验
     const trimmedContent = content.trim();
     
-    // 只有当最小字数大于0时，才检查空值
-    if (!trimmedContent && safeMinWordLimit > 0) {
+    // 打卡内容不能为空
+    if (!trimmedContent) {
       Toast.show({
-        content: `打卡内容不少于 ${safeMinWordLimit} 个字符`,
+        content: '打卡内容不能为空',
         position: 'bottom',
       });
       return;
     }
-    
+
     // 检查字数是否满足最小要求
-    if (trimmedContent.length < safeMinWordLimit) {
+    if (safeMinWordLimit > 0 && trimmedContent.length < safeMinWordLimit) {
       Toast.show({
         content: `打卡内容不少于 ${safeMinWordLimit} 个字符`,
         position: 'bottom',
