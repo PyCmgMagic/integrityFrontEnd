@@ -25,6 +25,33 @@ interface LocationState {
   currentPunchId?: number; // 当前查看的打卡记录ID
 }
 
+interface SwipeableContainerProps {
+  className?: string;
+  onSwipeNext: () => void;
+  onSwipePrevious: () => void;
+  children: React.ReactNode;
+}
+
+const SwipeableContainer: React.FC<SwipeableContainerProps> = ({
+  className,
+  onSwipeNext,
+  onSwipePrevious,
+  children
+}) => {
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: onSwipeNext,
+    onSwipedRight: onSwipePrevious,
+    preventScrollOnSwipe: true,
+    trackMouse: true
+  });
+
+  return (
+    <div className={className} {...swipeHandlers}>
+      {children}
+    </div>
+  );
+};
+
 /**
  * 打卡审批详情页面
  */
@@ -51,9 +78,10 @@ const CheckInDetail: React.FC = () => {
   const [transitionDir, setTransitionDir] = useState<1 | -1>(1);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const animationRafRef = useRef<number | null>(null);
+  const requestSeqRef = useRef(0);
 
   // 使用自定义 hooks（非 punchIds 模式用 currentIndex/currentItem）
-  const { currentIndex, currentItem, goToPrevious, goToNext } = useCheckInNavigation(items, currentPunchIndex);
+  const { currentIndex, currentItem, goToPrevious, goToNext, goToIndex } = useCheckInNavigation(items, currentPunchIndex);
   // punchIds 模式下以 currentPunchIndex 为准，保证滑动与页码正确
   const displayIndex = punchIds.length > 1 ? currentPunchIndex : currentIndex;
   const totalCount = punchIds.length > 1 ? punchIds.length : items.length;
@@ -80,20 +108,6 @@ const CheckInDetail: React.FC = () => {
   }, [effectivePunchId]);
 
   /**
-   * 从列表中移除当前项并处理导航
-   */
-  const removeCurrentItem = (): void => {
-    const idx = items.length > 0 ? Math.min(displayIndex, items.length - 1) : 0;
-    const newItems = items.filter((_, i) => i !== idx);
-    setItems(newItems);
-    
-    if (newItems.length === 0) {
-      navigate(-1);
-      return;
-    }
-  };
-  
-  /**
    * 处理收藏状态变化
    */
   const handleStarChange = useCallback((punchId: number, isStarred: boolean): void => {
@@ -104,12 +118,6 @@ const CheckInDetail: React.FC = () => {
       )
     );
   }, []);
-
-  const { handleApprove, handleReject, toggleStar,  isStarLoading } = useCheckInReview({
-    currentItem: effectiveCurrentItem,
-    onItemRemoved: removeCurrentItem,
-    onStarChange: handleStarChange
-  });
 
   /**
    * 获取单个打卡详情数据
@@ -130,6 +138,7 @@ const CheckInDetail: React.FC = () => {
         : keepPunchIndexOrOptions;
     const keepPunchIndex = options.keepPunchIndex ?? false;
     const useSwipeLoading = options.useSwipeLoading ?? keepPunchIndex;
+    const requestSeq = ++requestSeqRef.current;
     try {
       if (useSwipeLoading) {
         setIsSwipeLoading(true);
@@ -137,20 +146,36 @@ const CheckInDetail: React.FC = () => {
         setLoading(true);
       }
       const response = await API.Column.getPunchDetail(targetPunchId);
-      
+
+      // 忽略过期响应
+      if (requestSeq !== requestSeqRef.current) {
+        return;
+      }
+
       if (response && response.data) {
         const transformedItem = transformPunchDetail(response);
         setItems([transformedItem]);
         if (!keepPunchIndex) setCurrentPunchIndex(0);
       } else {
-        setItems([]);
+        if (items.length === 0) {
+          setItems([]);
+        }
         Toast.show({ content: '获取打卡详情失败', icon: 'fail' });
       }
     } catch (error) {
+      // 忽略过期请求的错误
+      if (requestSeq !== requestSeqRef.current) {
+        return;
+      }
       console.error('获取打卡详情失败:', error);
       Toast.show({ content: '获取数据失败', icon: 'fail' });
-      setItems([]);
+      if (items.length === 0) {
+        setItems([]);
+      }
     } finally {
+      if (requestSeq !== requestSeqRef.current) {
+        return;
+      }
       if (useSwipeLoading) {
         setIsSwipeLoading(false);
       } else {
@@ -158,6 +183,54 @@ const CheckInDetail: React.FC = () => {
       }
     }
   }, []);
+
+  /**
+   * 从列表中移除当前项并处理导航
+   */
+  const removeCurrentItem = useCallback((): void => {
+    if (punchIds.length > 1) {
+      const nextIndex = currentPunchIndex + 1;
+      if (nextIndex < punchIds.length) {
+        setTransitionDir(1);
+        setCurrentPunchIndex(nextIndex);
+        fetchPunchDetail(punchIds[nextIndex], { keepPunchIndex: true, useSwipeLoading: true });
+        return;
+      }
+
+      const prevIndex = currentPunchIndex - 1;
+      if (prevIndex >= 0) {
+        setTransitionDir(-1);
+        setCurrentPunchIndex(prevIndex);
+        fetchPunchDetail(punchIds[prevIndex], { keepPunchIndex: true, useSwipeLoading: true });
+        return;
+      }
+
+      navigate(-1);
+      return;
+    }
+
+    const idx = items.length > 0 ? Math.min(displayIndex, items.length - 1) : 0;
+    const newItems = items.filter((_, i) => i !== idx);
+    setItems(newItems);
+    
+    if (newItems.length === 0) {
+      navigate(-1);
+    }
+  }, [
+    punchIds,
+    currentPunchIndex,
+    fetchPunchDetail,
+    items,
+    displayIndex,
+    navigate,
+    setTransitionDir
+  ]);
+
+  const { handleApprove, handleReject, toggleStar,  isStarLoading } = useCheckInReview({
+    currentItem: effectiveCurrentItem,
+    onItemRemoved: removeCurrentItem,
+    onStarChange: handleStarChange
+  });
 
   /**
    * 获取待审核列表数据（兼容旧版本）
@@ -222,13 +295,6 @@ const CheckInDetail: React.FC = () => {
     }
   }, [isSwipeLoading, currentPunchIndex, currentIndex, punchIds, goToPrevious, fetchPunchDetail]);
 
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: handleSwipeNext,
-    onSwipedRight: handleSwipePrevious,
-    preventScrollOnSwipe: true,
-    trackMouse: true
-  });
-
   /**
    * 组件挂载时获取数据
    */
@@ -288,7 +354,11 @@ const CheckInDetail: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-blue-500 flex flex-col relative overflow-hidden" {...swipeHandlers}>
+    <SwipeableContainer
+      className="min-h-screen bg-blue-500 flex flex-col relative overflow-hidden"
+      onSwipeNext={handleSwipeNext}
+      onSwipePrevious={handleSwipePrevious}
+    >
       {/* 头部 */}
       <CheckInDetailHeader
         currentItem={effectiveCurrentItem}
@@ -365,23 +435,15 @@ const CheckInDetail: React.FC = () => {
                         setTransitionDir(i > displayIndex ? 1 : -1);
                         setCurrentPunchIndex(i);
                         fetchPunchDetail(targetPunchId, true);
-                      } else {
-                        // 兼容旧版本：使用原有的切换逻辑
-                        const diff = i - currentIndex;
-                        if (diff !== 0) {
-                          setTransitionDir(diff > 0 ? 1 : -1);
-                        }
-                        if (diff > 0) {
-                          for (let j = 0; j < diff; j++) {
-                            setTimeout(() => goToNext(), j * 100);
-                          }
-                        } else if (diff < 0) {
-                          for (let j = 0; j < Math.abs(diff); j++) {
-                            setTimeout(() => goToPrevious(), j * 100);
-                          }
-                        }
+                    } else {
+                      // 兼容旧版本：直接跳转到目标索引，避免多次 setTimeout
+                      const diff = i - currentIndex;
+                      if (diff !== 0) {
+                        setTransitionDir(diff > 0 ? 1 : -1);
+                        goToIndex(i);
                       }
-                    }}
+                    }
+                  }}
                     className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 touch-manipulation ${
                       i === displayIndex 
                         ? 'bg-white shadow-lg scale-125 ring-2 ring-white/50' 
@@ -398,7 +460,7 @@ const CheckInDetail: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </SwipeableContainer>
   );
 };
 

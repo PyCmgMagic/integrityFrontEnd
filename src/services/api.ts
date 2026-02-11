@@ -895,26 +895,6 @@ export class StarAPI {
   }
 
   /**
-   * 查询是否已收藏/精华
-   * @param punchId 打卡记录ID
-   * @returns 收藏状态
-   */
-  static async checkStarStatus(punchId: number): Promise<{ code: number; data: boolean; msg: string; timestamp: number }> {
-    const response = await request.getFull<boolean>('/star/ask', {
-      punch_id: punchId
-    }, {
-      showLoading: false,
-      showError: false,
-    });
-    return {
-      code: response.code,
-      data: response.data,
-      msg: response.msg,
-      timestamp: response.timestamp || Date.now()
-    };
-  }
-
-  /**
    * 批量查询收藏状态
    * @param punchIds 打卡记录ID数组
    * @returns 收藏状态映射

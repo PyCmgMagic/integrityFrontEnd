@@ -55,23 +55,22 @@ const CheckInContent: React.FC<CheckInContentProps> = ({ currentItem, onApprove,
         {/* 图片网格区域 */}
         {currentItem.images.length > 0 && (
           <div className="mt-6 sm:mt-10 mb-4 sm:mb-5">
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
-              {currentItem.images.slice(0, 9).map((imageUrl, i) => (
-                <div
-                  key={i}
-                  className="aspect-square bg-gray-200 rounded-lg overflow-hidden shadow-sm w-full max-w-[120px] sm:max-w-[130px]"
-                >
-                  <Image
-                    src={imageUrl}
-                    alt={`图片 ${i + 1}`}
-                    className="w-full h-full object-cover"
-                    preview={{
-                      src: imageUrl
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
+            <Image.PreviewGroup>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
+                {currentItem.images.slice(0, 9).map((imageUrl, i) => (
+                  <div
+                    key={i}
+                    className="aspect-square bg-gray-200 rounded-lg overflow-hidden shadow-sm w-full max-w-[120px] sm:max-w-[130px]"
+                  >
+                    <Image
+                      src={imageUrl}
+                      alt={`图片 ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </Image.PreviewGroup>
           </div>
         )}
         

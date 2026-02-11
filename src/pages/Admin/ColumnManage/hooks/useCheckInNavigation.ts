@@ -7,6 +7,7 @@ interface UseCheckInNavigationReturn {
   currentItem: CheckInItem | undefined;
   goToPrevious: () => void;
   goToNext: () => void;
+  goToIndex: (index: number) => void;
   removeCurrentItem: () => void;
 }
 
@@ -56,6 +57,16 @@ export const useCheckInNavigation = (
   };
 
   /**
+   * 切换到指定索引
+   */
+  const goToIndex = (index: number): void => {
+    if (index < 0 || index >= items.length) {
+      return;
+    }
+    setCurrentIndex(index);
+  };
+
+  /**
    * 从列表中移除当前项的回调函数
    * 注意：实际的移除逻辑应该在父组件中处理
    */
@@ -69,6 +80,7 @@ export const useCheckInNavigation = (
     currentItem,
     goToPrevious,
     goToNext,
+    goToIndex,
     removeCurrentItem
   };
 };

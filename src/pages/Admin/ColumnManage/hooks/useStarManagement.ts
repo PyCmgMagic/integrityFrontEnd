@@ -23,8 +23,6 @@ export interface UseStarManagementReturn {
   toggleStar: () => Promise<void>;
   /** 设置收藏状态 */
   setStarred: (starred: boolean) => Promise<void>;
-  /** 检查收藏状态 */
-  checkStarStatus: () => Promise<void>;
 }
 
 /**
@@ -50,33 +48,6 @@ export const useStarManagement = ({
   useEffect(() => {
     setIsStarredState(initialStarred);
   }, [punchId, initialStarred]);
-
-  /**
-   * 检查收藏状态
-   */
-  const checkStarStatus = useCallback(async (): Promise<void> => {
-    if (!punchId) return;
-
-    try {
-      setIsLoading(true);
-      const response = await API.Star.checkStarStatus(punchId);
-      console.log(response);
-      
-      if (response.code === 200 && response.data) {
-        const starred = response.data;
-        console.log(starred);
-        setIsStarredState(starred);
-        onStarChangeRef.current?.(punchId, starred);
-      } else {
-        console.error('检查收藏状态失败:', response.msg);
-      }
-    } catch (error) {
-      console.error('检查收藏状态失败:', error);
-      // 静默失败，不显示错误提示
-    } finally {
-      setIsLoading(false);
-    }
-  }, [punchId]);
 
   /**
    * 设置收藏状态
@@ -136,7 +107,6 @@ export const useStarManagement = ({
     isStarred,
     isLoading,
     toggleStar,
-    setStarred,
-    checkStarStatus
+    setStarred
   };
 };

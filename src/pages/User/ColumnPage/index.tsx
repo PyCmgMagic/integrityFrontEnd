@@ -111,7 +111,7 @@ const ColumnPage = () => {
   };
 
 // 将API获取的打卡记录转换为组件需要的格式
-const formattedPunchRecords:CheckInData[] = (punchRecords.reverse() || []).map((record, index) => ({
+const formattedPunchRecords:CheckInData[] = (punchRecords.slice().reverse() || []).map((record, index) => ({
   id: record.id,
   title: `第${(punchRecords?.length || 0) - index}次打卡`,
   gradient: 'from-blue-400 to-blue-600',

@@ -43,6 +43,26 @@ export const CheckInList: React.FC<CheckInListProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  const getStatusMeta = (status?: 'approved' | 'rejected' | 'pending') => {
+    switch (status) {
+      case 'approved':
+        return {
+          text: '已通过',
+          className: 'bg-green-100 text-green-700 border border-green-200'
+        };
+      case 'rejected':
+        return {
+          text: '已拒绝',
+          className: 'bg-red-100 text-red-700 border border-red-200'
+        };
+      default:
+        return {
+          text: '待审核',
+          className: 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+        };
+    }
+  };
+
   /**
    * 获取未审核项目的滑动操作
    * @param item - 打卡项
@@ -171,19 +191,23 @@ export const CheckInList: React.FC<CheckInListProps> = ({
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                {type === 'reviewed' && item.status === 'rejected' ? (
-                  <span className="text-gray-500 font-semibold">未通过</span>
-                ) : (
-                  <>
-                    {/* 收藏/精华按钮 */}
-                    <StarButton
+                {(() => {
+                  const statusKey = item.status ?? (type === 'unreviewed' ? 'pending' : 'approved');
+                  const statusMeta = getStatusMeta(statusKey);
+                  return (
+                    <span className={`px-2 py-0.5 text-xs rounded-full whitespace-nowrap ${statusMeta.className}`}>
+                      {statusMeta.text}
+                    </span>
+                  );
+                })()}
+                {!(type === 'reviewed' && item.status === 'rejected') && (
+                  <StarButton
                     className={` ${item.starred ? 'text-yellow-500' : 'text-gray-400'}`}
-                      punchId={item.id}
-                      initialStarred={item.starred}
-                      onStarChange={onStarChange}
-                      size="small"
-                    />
-                  </>
+                    punchId={item.id}
+                    initialStarred={item.starred}
+                    onStarChange={onStarChange}
+                    size="small"
+                  />
                 )}
               </div>
             </div>

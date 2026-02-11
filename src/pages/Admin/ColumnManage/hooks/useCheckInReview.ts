@@ -51,7 +51,6 @@ export const useCheckInReview = ({
     }
     
     try {
-      console.log('开始审核通过，punchId:', currentItem.punchId);
       const response = await API.Column.reviewPunchRecord(currentItem.punchId, 1);
       console.log('审核通过API响应:', response);
       Toast.show({ icon: 'success', content: '审核通过' });

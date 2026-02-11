@@ -16,8 +16,8 @@ export const usePunchRecords = (columnId: number) => {
   const [userCount, setUserCount] = useState(0);
   const [initialized, setInitialized] = useState(false);
   const [punchedToday, setPunchedToday] = useState(false);
-  const fetchInFlightRef = useRef(false);
   const initialFetchRef = useRef<number | null>(null);
+  const requestSeqRef = useRef(0);
   const [columnInfo, setColumnInfo] = useState<{
       id: number;
       name: string;
@@ -59,17 +59,16 @@ export const usePunchRecords = (columnId: number) => {
    * 获取打卡记录列表
    */
   const fetchPunchRecords = useCallback(async () => {
-    if (fetchInFlightRef.current) {
-      return;
-    }
-    fetchInFlightRef.current = true;
+    const requestId = ++requestSeqRef.current;
 
     // 验证columnId是否有效
     if (!columnId || columnId <= 0) {
+      if (requestId !== requestSeqRef.current) {
+        return;
+      }
       setError('无效的栏目ID');
       setLoading(false);
       setInitialized(true);
-      fetchInFlightRef.current = false;
       return;
     }
 
@@ -81,6 +80,9 @@ export const usePunchRecords = (columnId: number) => {
       const data = await API.Column.getPunchRecords(columnId);
       // const today_punch_count = await API.Column.getTodayTotalPunchRecords(columnId);
       const columnInfo = await API.Column.getColumnInfo(columnId)
+      if (requestId !== requestSeqRef.current) {
+        return;
+      }
       setColumnInfo({
         ...columnInfo.data,
         min_word_limit: columnInfo.data.min_word_limit ?? 0,
@@ -93,6 +95,9 @@ export const usePunchRecords = (columnId: number) => {
       setUserCount(data.user_count || 0);
       setPunchedToday(data.punched_today)
     } catch (err: any) {
+      if (requestId !== requestSeqRef.current) {
+        return;
+      }
       const errorMessage = err?.message || '获取打卡记录失败';
       // 忽略静默错误（如请求取消）
       if (!err.silent) {
@@ -100,8 +105,10 @@ export const usePunchRecords = (columnId: number) => {
         message.error(errorMessage);
       }
     } finally {
+      if (requestId !== requestSeqRef.current) {
+        return;
+      }
       setLoading(false);
-      fetchInFlightRef.current = false;
     }
   }, [columnId]);
 
@@ -124,6 +131,8 @@ export const usePunchRecords = (columnId: number) => {
       setPunchRecords(prev => prev.filter(record => record.id !== recordId));
       
       message.success('删除成功');
+      // 同步刷新统计与打卡状态，避免本地状态不一致
+      fetchPunchRecords();
     } catch (err: any) {
       const errorMessage = err?.message || '删除失败';
       // 忽略静默错误（如请求取消）

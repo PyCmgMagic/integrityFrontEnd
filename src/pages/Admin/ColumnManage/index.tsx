@@ -125,7 +125,6 @@ const ColumnManage: React.FC = () => {
         const punches = response.data.punches;
         if (punches.length > 0) {
           const transformedData = transformReviewedDataList(punches);
-          console.log('已审核数据:', transformedData);
           setReviewedData(transformedData);
         } else {
           setReviewedData([]);
