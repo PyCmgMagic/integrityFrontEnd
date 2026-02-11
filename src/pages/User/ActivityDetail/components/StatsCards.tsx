@@ -99,13 +99,13 @@ const StatsCards: React.FC<StatsCardsProps> = ({
           <p className="text-gray-400 text-[10px] mt-0.5">最长连签</p>
         </div>
 
-        {/* 总打卡天数 */}
+        {/* 总打卡次数 */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
           <div className="bg-emerald-50 p-1.5 rounded-lg mb-2">
             <Award className="text-emerald-500 w-4 h-4" />
           </div>
-          <p className="text-gray-900 text-sm font-bold leading-tight">{userStats.total}d</p>
-          <p className="text-gray-400 text-[10px] mt-0.5">总打卡天数</p>
+          <p className="text-gray-900 text-sm font-bold leading-tight">{userStats.total}c</p>
+          <p className="text-gray-400 text-[10px] mt-0.5">总打卡次数</p>
         </div>
       </div>
     </div>

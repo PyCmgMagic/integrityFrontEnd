@@ -1,9 +1,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, Form, Input, Button, Row, Col, Select } from 'antd';
+import { Modal, Form, Input, Button, Row, Col, Select, message } from 'antd';
 import AvatarUpload from './Upload/AvatarUpload';
 import type { UserProfile, UserProfileForm } from '../types/types'; 
-import { COLLEGE_MAJOR_PRESETS } from '../constants/profilePresets';
+import { fetchCollegeMajorPresets, type CollegeMajorPresets } from '../constants/profilePresets';
 
 const GRADE_YEARS = [2019,2020, 2021, 2022, 2023, 2024, 2025] as const;
 
@@ -37,16 +37,58 @@ interface EditProfileModalProps {
 const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onCancel, onSave, currentUser }) => {
   const [form] = Form.useForm<UserProfileForm>();
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(currentUser?.avatar);
+  const [collegeMajorPresets, setCollegeMajorPresets] = useState<CollegeMajorPresets>({});
+  const [presetsLoading, setPresetsLoading] = useState(false);
+  const [presetsLoaded, setPresetsLoaded] = useState(false);
   const selectedCollege = Form.useWatch('college', form);
   const selectedMajor = Form.useWatch('major', form);
   const selectedGrade = Form.useWatch('grade', form);
 
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+    if (presetsLoaded) return;
+
+    const controller = new AbortController();
+    let active = true;
+    setPresetsLoading(true);
+
+    fetchCollegeMajorPresets(controller.signal)
+      .then((data) => {
+        if (!active) return;
+        setCollegeMajorPresets(data);
+        setPresetsLoaded(true);
+      })
+      .catch((error) => {
+        if (!active) return;
+        if (
+          error &&
+          typeof error === 'object' &&
+          'name' in error &&
+          (error as { name?: string }).name === 'AbortError'
+        ) {
+          return;
+        }
+        message.error('专业列表加载失败，请稍后重试');
+      })
+      .finally(() => {
+        if (!active) return;
+        setPresetsLoading(false);
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [visible, presetsLoaded]);
+
   const collegeOptions = useMemo(() => {
-    const options = Object.keys(COLLEGE_MAJOR_PRESETS).map((college) => ({ label: college, value: college }));
+    const options = Object.keys(collegeMajorPresets).map((college) => ({ label: college, value: college }));
     const current = normalizeUnsetToUndefined(currentUser?.college);
     if (current && !options.some((o) => o.value === current)) return [{ label: current, value: current }, ...options];
     return options;
-  }, [currentUser?.college]);
+  }, [collegeMajorPresets, currentUser?.college]);
 
   const gradeOptions = useMemo(() => {
     const options = GRADE_YEARS.map((year) => ({ label: String(year), value: String(year) }));
@@ -57,12 +99,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onCancel, 
 
   const majorOptions = useMemo(() => {
     const college = normalizeUnsetToUndefined(selectedCollege);
-    const majors = (college && COLLEGE_MAJOR_PRESETS[college]) || [];
+    const majors = (college && collegeMajorPresets[college]) || [];
     const options = majors.map((m) => ({ label: m, value: m }));
     const current = normalizeUnsetToUndefined(selectedMajor);
     if (current && !options.some((o) => o.value === current)) return [{ label: current, value: current }, ...options];
     return options;
-  }, [selectedCollege, selectedMajor]);
+  }, [collegeMajorPresets, selectedCollege, selectedMajor]);
 
   useEffect(() => {
     if (currentUser && visible) {
@@ -138,6 +180,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onCancel, 
                     <Select
                       placeholder="请选择学院"
                       options={collegeOptions}
+                      loading={presetsLoading}
                       allowClear
                       showSearch
                       filterOption={(input, option) =>
@@ -146,7 +189,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onCancel, 
                           .includes(input.toLowerCase())
                       }
                       onChange={(nextCollege) => {
-                        const majors = (nextCollege && COLLEGE_MAJOR_PRESETS[String(nextCollege)]) || [];
+                        const majors = (nextCollege && collegeMajorPresets[String(nextCollege)]) || [];
                         const currentMajor = selectedMajor;
                         if (currentMajor && !majors.includes(String(currentMajor))) {
                           form.setFieldValue('major', undefined);
@@ -162,6 +205,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onCancel, 
                       options={majorOptions}
                       allowClear
                       disabled={!selectedCollege}
+                      loading={presetsLoading}
                       showSearch
                       filterOption={(input, option) =>
                         String(option?.label ?? '')
