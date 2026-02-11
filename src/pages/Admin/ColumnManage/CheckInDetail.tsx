@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button, Spin } from 'antd';
 import { 
@@ -46,16 +46,38 @@ const CheckInDetail: React.FC = () => {
   
   const [items, setItems] = useState<CheckInItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isSwipeLoading, setIsSwipeLoading] = useState<boolean>(false);
   const [currentPunchIndex, setCurrentPunchIndex] = useState<number>(0);
+  const [transitionDir, setTransitionDir] = useState<1 | -1>(1);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const animationRafRef = useRef<number | null>(null);
 
   // 使用自定义 hooks（非 punchIds 模式用 currentIndex/currentItem）
   const { currentIndex, currentItem, goToPrevious, goToNext } = useCheckInNavigation(items, currentPunchIndex);
   // punchIds 模式下以 currentPunchIndex 为准，保证滑动与页码正确
   const displayIndex = punchIds.length > 1 ? currentPunchIndex : currentIndex;
+  const totalCount = punchIds.length > 1 ? punchIds.length : items.length;
   const effectiveCurrentItem =
     punchIds.length > 1
       ? (items[Math.min(currentPunchIndex, items.length - 1)] ?? items[0])
       : currentItem;
+  const effectivePunchId = effectiveCurrentItem?.punchId;
+
+  useEffect(() => {
+    if (!effectivePunchId) return;
+    setIsAnimating(true);
+    if (animationRafRef.current) {
+      cancelAnimationFrame(animationRafRef.current);
+    }
+    animationRafRef.current = requestAnimationFrame(() => {
+      setIsAnimating(false);
+    });
+    return () => {
+      if (animationRafRef.current) {
+        cancelAnimationFrame(animationRafRef.current);
+      }
+    };
+  }, [effectivePunchId]);
 
   /**
    * 从列表中移除当前项并处理导航
@@ -93,11 +115,28 @@ const CheckInDetail: React.FC = () => {
    * 获取单个打卡详情数据
    * @param keepPunchIndex - 为 true 时不重置 currentPunchIndex，用于 punchIds 模式下滑动时保持页码
    */
-  const fetchPunchDetail = useCallback(async (targetPunchId: number, keepPunchIndex = false) => {
+  type FetchPunchDetailOptions = {
+    keepPunchIndex?: boolean;
+    useSwipeLoading?: boolean;
+  };
+
+  const fetchPunchDetail = useCallback(async (
+    targetPunchId: number,
+    keepPunchIndexOrOptions: boolean | FetchPunchDetailOptions = false
+  ) => {
+    const options =
+      typeof keepPunchIndexOrOptions === 'boolean'
+        ? { keepPunchIndex: keepPunchIndexOrOptions }
+        : keepPunchIndexOrOptions;
+    const keepPunchIndex = options.keepPunchIndex ?? false;
+    const useSwipeLoading = options.useSwipeLoading ?? keepPunchIndex;
     try {
-      setLoading(true);
+      if (useSwipeLoading) {
+        setIsSwipeLoading(true);
+      } else {
+        setLoading(true);
+      }
       const response = await API.Column.getPunchDetail(targetPunchId);
-      console.log('获取打卡详情:', response);
       
       if (response && response.data) {
         const transformedItem = transformPunchDetail(response);
@@ -112,44 +151,13 @@ const CheckInDetail: React.FC = () => {
       Toast.show({ content: '获取数据失败', icon: 'fail' });
       setItems([]);
     } finally {
-      setLoading(false);
+      if (useSwipeLoading) {
+        setIsSwipeLoading(false);
+      } else {
+        setLoading(false);
+      }
     }
   }, []);
-
-  /**
-   * 获取多个打卡详情数据（支持滑动切换）
-   */
-  const fetchMultiplePunchDetails = useCallback(async (targetPunchIds: number[], currentId: number) => {
-    try {
-      setLoading(true);
-      const promises = targetPunchIds.map(id => API.Column.getPunchDetail(id));
-      const responses = await Promise.all(promises);
-      
-      const transformedItems: CheckInItem[] = [];
-      let currentIndex = 0;
-      
-      responses.forEach((response, index) => {
-        if (response && response.data) {
-          const transformedItem = transformPunchDetail(response);
-          transformedItems.push(transformedItem);
-          
-          // 找到当前打卡记录的索引
-          if (targetPunchIds[index] === currentId) {
-            currentIndex = transformedItems.length - 1;
-          }
-        }
-      });
-      
-      setItems(transformedItems);
-      setCurrentPunchIndex(currentIndex);
-    } catch (error) {
-      console.error('获取打卡详情列表失败:', error);
-      Toast.show({ content: '获取数据失败', icon: 'fail' });
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []); // fetchMultiplePunchDetails不依赖任何外部变量
 
   /**
    * 获取待审核列表数据（兼容旧版本）
@@ -186,6 +194,8 @@ const CheckInDetail: React.FC = () => {
    * 处理滑动到下一个打卡记录
    */
   const handleSwipeNext = useCallback(() => {
+    if (isSwipeLoading) return;
+    setTransitionDir(1);
     if (punchIds.length > 1 && currentPunchIndex < punchIds.length - 1) {
       const nextIndex = currentPunchIndex + 1;
       const nextPunchId = punchIds[nextIndex];
@@ -194,12 +204,14 @@ const CheckInDetail: React.FC = () => {
     } else if (currentIndex < items.length - 1) {
       goToNext();
     }
-  }, [currentPunchIndex, currentIndex, punchIds, items.length, goToNext, fetchPunchDetail]);
+  }, [isSwipeLoading, currentPunchIndex, currentIndex, punchIds, items.length, goToNext, fetchPunchDetail]);
 
   /**
    * 处理滑动到上一个打卡记录
    */
   const handleSwipePrevious = useCallback(() => {
+    if (isSwipeLoading) return;
+    setTransitionDir(-1);
     if (punchIds.length > 1 && currentPunchIndex > 0) {
       const prevIndex = currentPunchIndex - 1;
       const prevPunchId = punchIds[prevIndex];
@@ -208,7 +220,7 @@ const CheckInDetail: React.FC = () => {
     } else if (currentIndex > 0) {
       goToPrevious();
     }
-  }, [currentPunchIndex, currentIndex, punchIds, goToPrevious, fetchPunchDetail]);
+  }, [isSwipeLoading, currentPunchIndex, currentIndex, punchIds, goToPrevious, fetchPunchDetail]);
 
   const swipeHandlers = useSwipeable({
     onSwipedLeft: handleSwipeNext,
@@ -224,8 +236,12 @@ const CheckInDetail: React.FC = () => {
     // 如果有具体的打卡记录ID，使用新的API获取详情
     if (punchId) {
       if (punchIds.length > 1) {
-        // 如果有多个打卡记录ID，支持滑动切换
-        fetchMultiplePunchDetails(punchIds, punchId);
+        const targetIndex = punchIds.indexOf(punchId);
+        if (targetIndex >= 0) {
+          setCurrentPunchIndex(targetIndex);
+        }
+        // 仅请求当前详情，避免一次性拉取全部
+        fetchPunchDetail(punchId, { keepPunchIndex: true, useSwipeLoading: false });
       } else {
         // 只有单个打卡记录ID
         fetchPunchDetail(punchId);
@@ -234,7 +250,7 @@ const CheckInDetail: React.FC = () => {
       // 兼容旧版本，获取整个待审核列表
       fetchPendingList();
     }
-  }, [punchId, punchIds, fetchPunchDetail, fetchMultiplePunchDetails, fetchPendingList]); // 使用稳定的函数引用
+  }, [punchId, punchIds, fetchPunchDetail, fetchPendingList]); // 使用稳定的函数引用
 
   // 加载状态
   if (loading) {
@@ -284,19 +300,37 @@ const CheckInDetail: React.FC = () => {
       
       {/* 内容区域 */}
       <div className="flex-1 flex flex-col relative">
-        <CheckInContent 
-          currentItem={effectiveCurrentItem}
-          onApprove={handleApprove}
-          onReject={handleReject}
-        />
+        <div
+          className={`flex-1 flex flex-col transition-all duration-300 ease-out transform ${
+            isAnimating
+              ? transitionDir === 1
+                ? 'translate-x-4 opacity-0'
+                : '-translate-x-4 opacity-0'
+              : 'translate-x-0 opacity-100'
+          }`}
+          style={{ willChange: 'transform, opacity' }}
+        >
+          <CheckInContent 
+            currentItem={effectiveCurrentItem}
+            onApprove={handleApprove}
+            onReject={handleReject}
+          />
+        </div>
       </div>
+
+      {isSwipeLoading && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/10 pointer-events-none">
+          <Spin size="small" />
+        </div>
+      )}
       
       {/* 导航箭头 - 响应式定位 */}
       {((punchIds.length > 1 && displayIndex > 0) || (punchIds.length <= 1 && currentIndex > 0)) && (
         <div className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-10">
           <button 
             onClick={handleSwipePrevious}
-            className="w-10 h-10 sm:w-12 sm:h-12 bg-white/60 rounded-full flex items-center justify-center border border-gray-300 text-black hover:bg-white/80 transition-all duration-200 shadow-lg active:scale-95 touch-manipulation"
+            disabled={isSwipeLoading}
+            className="w-10 h-10 sm:w-12 sm:h-12 bg-white/60 rounded-full flex items-center justify-center border border-gray-300 text-black hover:bg-white/80 transition-all duration-200 shadow-lg active:scale-95 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LeftOutlined className="text-sm sm:text-base" />
           </button>
@@ -307,7 +341,8 @@ const CheckInDetail: React.FC = () => {
         <div className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-10">
           <button 
             onClick={handleSwipeNext}
-            className="w-10 h-10 sm:w-12 sm:h-12 bg-white/60 rounded-full flex items-center justify-center border border-gray-300 text-black hover:bg-white/80 transition-all duration-200 shadow-lg active:scale-95 touch-manipulation"
+            disabled={isSwipeLoading}
+            className="w-10 h-10 sm:w-12 sm:h-12 bg-white/60 rounded-full flex items-center justify-center border border-gray-300 text-black hover:bg-white/80 transition-all duration-200 shadow-lg active:scale-95 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RightOutlined className="text-sm sm:text-base" />
           </button>
@@ -315,40 +350,51 @@ const CheckInDetail: React.FC = () => {
       )}
       
       {/* 页码指示器 - 响应式定位 */}
-      {((punchIds.length > 1) || (punchIds.length <= 1 && items.length > 1)) && (
+      {totalCount > 1 && (
         <div className="absolute bottom-32 sm:bottom-40 md:bottom-48 left-1/2 transform -translate-x-1/2 z-10">
           <div className="bg-black/30 backdrop-blur-sm rounded-full px-3 py-2 sm:px-4 sm:py-3">
-            <div className="flex space-x-1.5 sm:space-x-2">
-              {Array.from({ length: punchIds.length > 1 ? punchIds.length : items.length }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    if (punchIds.length > 1) {
-                      const targetPunchId = punchIds[i];
-                      setCurrentPunchIndex(i);
-                      fetchPunchDetail(targetPunchId, true);
-                    } else {
-                      // 兼容旧版本：使用原有的切换逻辑
-                      const diff = i - currentIndex;
-                      if (diff > 0) {
-                        for (let j = 0; j < diff; j++) {
-                          setTimeout(() => goToNext(), j * 100);
+            {totalCount <= 7 ? (
+              <div className="flex space-x-1.5 sm:space-x-2">
+                {Array.from({ length: totalCount }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      if (isSwipeLoading) return;
+                      if (punchIds.length > 1) {
+                        const targetPunchId = punchIds[i];
+                        setTransitionDir(i > displayIndex ? 1 : -1);
+                        setCurrentPunchIndex(i);
+                        fetchPunchDetail(targetPunchId, true);
+                      } else {
+                        // 兼容旧版本：使用原有的切换逻辑
+                        const diff = i - currentIndex;
+                        if (diff !== 0) {
+                          setTransitionDir(diff > 0 ? 1 : -1);
                         }
-                      } else if (diff < 0) {
-                        for (let j = 0; j < Math.abs(diff); j++) {
-                          setTimeout(() => goToPrevious(), j * 100);
+                        if (diff > 0) {
+                          for (let j = 0; j < diff; j++) {
+                            setTimeout(() => goToNext(), j * 100);
+                          }
+                        } else if (diff < 0) {
+                          for (let j = 0; j < Math.abs(diff); j++) {
+                            setTimeout(() => goToPrevious(), j * 100);
+                          }
                         }
                       }
-                    }
-                  }}
-                  className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 touch-manipulation ${
-                    i === displayIndex 
-                      ? 'bg-white shadow-lg scale-125 ring-2 ring-white/50' 
-                      : 'bg-white/60 hover:bg-white/80 active:scale-110'
-                  }`}
-                />
-              ))}
-            </div>
+                    }}
+                    className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 touch-manipulation ${
+                      i === displayIndex 
+                        ? 'bg-white shadow-lg scale-125 ring-2 ring-white/50' 
+                        : 'bg-white/60 hover:bg-white/80 active:scale-110'
+                    }`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-white text-xs sm:text-sm font-medium px-1">
+                {displayIndex + 1} / {totalCount}
+              </div>
+            )}
           </div>
         </div>
       )}

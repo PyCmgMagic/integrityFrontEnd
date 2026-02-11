@@ -169,6 +169,7 @@ const formattedPunchRecords:CheckInData[] = (punchRecords.reverse() || []).map((
                   onDeleteRecord={handleDeleteRecord}
                   totalRecords={userCount}
                   currentUserCheckInCount={myCount}
+                  onRefresh={refreshPunchRecords}
                 />
             )}
           </Spin>

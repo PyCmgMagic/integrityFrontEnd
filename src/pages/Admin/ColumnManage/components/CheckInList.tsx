@@ -107,7 +107,7 @@ export const CheckInList: React.FC<CheckInListProps> = ({
 
   /**
    * 处理列表项点击事件 - 待审核与已审核均支持点击查看打卡详情
-   * 已审核列表会传入 punchIds，以便详情页支持左右滑动切换
+   * 列表在有多条时会传入 punchIds，以便详情页支持左右滑动切换
    * @param item - 点击的打卡项
    * @param index - 项目索引
    */
@@ -117,8 +117,8 @@ export const CheckInList: React.FC<CheckInListProps> = ({
       currentIndex: index,
       reviewType: type
     };
-    // 已审核且有多条时传入 punchIds，详情页可左右滑动查看
-    if (type === 'reviewed' && data.length > 1) {
+    // 有多条时传入 punchIds，详情页可左右滑动查看
+    if (data.length > 1) {
       state.punchIds = data.map((i) => i.id);
       state.currentPunchId = item.id;
     }

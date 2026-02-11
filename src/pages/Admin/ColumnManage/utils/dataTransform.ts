@@ -68,7 +68,7 @@ export const transformPendingData = (item: PendingPunchItem, starredStatus?: boo
     time: time,
     content: item.punch.content,
     images: cleanImages,
-    starred: starredStatus ?? false, // 使用传入的收藏状态，如果未提供则默认为false
+    starred: starredStatus ?? item.stared ?? false, // 优先使用传入状态，否则使用接口返回的stared
     status: 'pending'
   };
 };

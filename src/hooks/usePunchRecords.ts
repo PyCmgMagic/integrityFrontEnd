@@ -90,7 +90,7 @@ export const usePunchRecords = (columnId: number) => {
       const transformedRecords = transformPunchRecordsToCheckInData(data.records);
       setPunchRecords(transformedRecords);
       setMyCount(data.my_count);
-      setUserCount(columnInfo.data.today_punch_count);
+      setUserCount(data.user_count || 0);
       setPunchedToday(data.punched_today)
     } catch (err: any) {
       const errorMessage = err?.message || '获取打卡记录失败';

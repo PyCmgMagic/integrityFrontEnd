@@ -104,6 +104,7 @@ const ChenkInData = ({
   const handleCloseModal = () => {
     setModalVisible(false);
     setSelectedCheckIn(null);
+    onRefresh?.();
   };
 
   /**

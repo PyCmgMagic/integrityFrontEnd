@@ -6,9 +6,8 @@ import EditColumnModal from '../ProjectManage/EditColumnModal';
 import { API } from '../../../services/api';
 
 // 导入重构后的模块
-import {  transformPendingDataWithStarStatus, transformReviewedDataList } from './utils/dataTransform';
+import {  transformPendingData, transformReviewedDataList } from './utils/dataTransform';
 import { useReviewActions } from './hooks/useReviewActions';
-import { useStarStatusLoader } from './hooks/useStarStatusLoader';
 import { CheckInList } from './components/CheckInList';
 import { ReviewTabs, type ReviewTabType } from './components/ReviewTabs';
 import type { CheckInItem, ColumnInfo } from './utils/dataTransform';
@@ -52,8 +51,6 @@ const ColumnManage: React.FC = () => {
   // 使用ref来跟踪当前请求
   const currentRequestRef = useRef<number>(0);
 
-  // 使用收藏状态加载器
-  const { loadStarStatusMap } = useStarStatusLoader();
   
   /**
    * 获取待审核列表数据 - 使用useCallback避免重复创建
@@ -81,13 +78,8 @@ const ColumnManage: React.FC = () => {
       
       const punches = response.punches || [];
       if (punches.length > 0) {
-        // 提取所有打卡记录ID
-        const punchIds = punches.map(item => item.punch.ID);
-        // 批量获取收藏状态
-        const starStatusMap = await loadStarStatusMap(punchIds);
-        // 使用优化的转换方法，一次性应用收藏状态
-        
-        const transformedData = transformPendingDataWithStarStatus(punches, starStatusMap);
+        // API 已返回 stared 字段，直接使用即可
+        const transformedData = punches.map((item) => transformPendingData(item));
         setUnreviewedData(transformedData);
       } else {
         setUnreviewedData([]);
@@ -105,7 +97,7 @@ const ColumnManage: React.FC = () => {
         setLoading(false);
       }
     }
-  }, [columnId, loadStarStatusMap]);
+  }, [columnId]);
 
   /**
    * 获取已审核列表数据
