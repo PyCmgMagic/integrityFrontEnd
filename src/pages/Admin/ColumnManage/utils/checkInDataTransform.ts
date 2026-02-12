@@ -1,4 +1,5 @@
 import type { PendingPunchItem } from '../../../../types/api';
+import { formatInBeijing } from '../../../../utils/beijingTime';
 
 // 审核状态：未审核、已通过、已拒绝
 export type ReviewStatus = 'pending' | 'approved' | 'rejected';
@@ -51,11 +52,12 @@ export const transformPendingData = (data: PendingPunchItem[]): CheckInItem[] =>
     id: idx,
     punchId: item.punch.ID,
     userId: item.punch.user_id,
-    date: new Date(item.punch.created_at).toLocaleDateString('zh-CN'),
-    time: new Date(item.punch.created_at).toLocaleTimeString('zh-CN', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    }),
+    date:
+      formatInBeijing(item.punch.created_at, { year: 'numeric', month: '2-digit', day: '2-digit' }) ||
+      item.punch.created_at,
+    time:
+      formatInBeijing(item.punch.created_at, { hour: '2-digit', minute: '2-digit' }) ||
+      item.punch.created_at,
     title: '打卡记录',
     text: item.punch.content,
     images: item.imgs.map(img => {
@@ -87,11 +89,12 @@ export const transformPunchDetail = (response: PunchDetailResponse, username: st
     id: 0, // 单个详情页面不需要索引
     punchId: data.punch.ID,
     userId: (Number)(data.punch.user_id),
-    date: new Date(data.punch.created_at).toLocaleDateString('zh-CN'),
-    time: new Date(data.punch.created_at).toLocaleTimeString('zh-CN', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    }),
+    date:
+      formatInBeijing(data.punch.created_at, { year: 'numeric', month: '2-digit', day: '2-digit' }) ||
+      data.punch.created_at,
+    time:
+      formatInBeijing(data.punch.created_at, { hour: '2-digit', minute: '2-digit' }) ||
+      data.punch.created_at,
     title: '打卡记录',
     text: data.punch.content,
     images: data.imgs.map(img => {

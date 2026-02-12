@@ -3,6 +3,7 @@ import { Alert, Button, Collapse, Space, Typography } from 'antd';
 import type { ResultStatusType } from 'antd/es/result';
 import { AlertTriangle, Bug, CloudOff, SearchX } from 'lucide-react';
 import './errorPage.css';
+import { formatInBeijing } from '../../utils/beijingTime';
 
 type FriendlyErrorPageProps = {
   status?: ResultStatusType;
@@ -156,8 +157,17 @@ export default function FriendlyErrorPage({
   const details = useMemo(() => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    const timeText =
+      formatInBeijing(Date.now(), {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }) || '';
     const pieces = [
-      `time: ${new Date().toISOString()}`,
+      timeText ? `time: ${timeText} (Asia/Shanghai)` : '',
       url ? `url: ${url}` : '',
       errorMessage ? `message: ${errorMessage}` : '',
       ua ? `ua: ${ua}` : '',

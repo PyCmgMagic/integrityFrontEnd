@@ -17,7 +17,7 @@ function parseYyyyMmDdToNumber(dateString: string): number | null {
 /**
  * Activity status semantics:
  * - startDate/endDate define an inclusive date range (YYYY-MM-DD)
- * - time-of-day is treated as full day: 00:00:00.000 ~ 23:59:59.999 (local)
+ * - time-of-day is treated as full day: 00:00:00.000 ~ 23:59:59.999 (Beijing)
  */
 export function getActivityTimeStatus(
   nowMs: number,
@@ -31,4 +31,3 @@ export function getActivityTimeStatus(
 
   return getColumnTimeStatus(nowMs, { startDate, endDate });
 }
-

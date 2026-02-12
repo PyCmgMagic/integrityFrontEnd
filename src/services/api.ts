@@ -4,6 +4,7 @@
  */
 
 import request from '../utils/request';
+import { formatBeijingDateYmd } from '../utils/beijingTime';
 import type {
   LoginRequest,
   LoginResponse,
@@ -214,7 +215,7 @@ export class ActivityAPI {
    * 导出活动排行榜
    */
   static async exportActivityRanking(id: number, filename?: string): Promise<void> {
-    const defaultFilename = filename || `活动排行榜_${id}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const defaultFilename = filename || `活动排行榜_${id}_${formatBeijingDateYmd(Date.now())}.xlsx`;
     return request.download(`/stats/activity/${id}/rank/export`, defaultFilename, {
       showLoading: true,
       showError: true,
@@ -224,7 +225,7 @@ export class ActivityAPI {
    * 导出活动数据（admin）
    */
   static async exportActivity(id: number, filename?: string): Promise<void> {
-    const defaultFilename = filename || `活动数据_${id}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const defaultFilename = filename || `活动数据_${id}_${formatBeijingDateYmd(Date.now())}.xlsx`;
     return request.download(`/stats/activity/${id}/export`, defaultFilename, {
       showLoading: true,
       showError: true,
@@ -837,7 +838,8 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
   static async updatePunchRecord(id: number, data: {
     column_id: number;
     content: string;
-    images: string[];
+    images?: string[];
+    imgs?: string[];
   }): Promise<{
       ID: number;
       created_at: string;

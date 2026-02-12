@@ -3,6 +3,7 @@ import { Card, List, Button, Typography, Tag } from 'antd';
 import { StarFilled, ReloadOutlined } from '@ant-design/icons';
 import { useStarList } from '../hooks/useStarList';
 import type { StarItem } from '../types/types';
+import { formatInBeijing, getBeijingStartOfDayMs } from '../utils/beijingTime';
 
 const { Title, Text } = Typography;
 
@@ -36,24 +37,22 @@ const StarListExample: React.FC = () => {
    * 格式化日期为简短格式
    */
   const formatShortDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffTime = now.getTime() - date.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 0) {
-        return '今天';
-      } else if (diffDays === 1) {
-        return '昨天';
-      } else if (diffDays < 7) {
-        return `${diffDays}天前`;
-      } else {
-        return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
-      }
-    } catch {
-      return dateString;
+    const todayStart = getBeijingStartOfDayMs(Date.now());
+    const targetStart = getBeijingStartOfDayMs(dateString);
+    if (todayStart === null || targetStart === null) return dateString;
+
+    const diffDays = Math.floor((todayStart - targetStart) / (24 * 60 * 60 * 1000));
+    if (diffDays === 0) {
+      return '今天';
     }
+    if (diffDays === 1) {
+      return '昨天';
+    }
+    if (diffDays < 7) {
+      return `${diffDays}天前`;
+    }
+    const formatted = formatInBeijing(dateString, { month: '2-digit', day: '2-digit' });
+    return formatted || dateString;
   };
 
   /**

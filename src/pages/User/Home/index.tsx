@@ -6,6 +6,7 @@ import { useAuthStore } from '../../../store';
 import { ActivityAPI } from '../../../services/api';
 import { transformActivityFromAPI } from '../../../utils/dataTransform';
 import { getActivityTimeStatus } from '../../../utils/activityTimeStatus';
+import { formatInBeijing, getBeijingDateParts } from '../../../utils/beijingTime';
 import useInfiniteScroll from '../../../hooks/useInfiniteScroll';
 import styles from './Home.module.css';
 import useViewportHeight from '../../../hooks/useViewportHeight';
@@ -165,6 +166,13 @@ const UserHomePage = () => {
       onClick: handleLogout,
     },
   ];
+
+  const beijingNowParts = getBeijingDateParts(nowMs);
+  const nowTimeText =
+    formatInBeijing(nowMs, { hour: '2-digit', minute: '2-digit' }) || '00:00';
+  const progressPercent = beijingNowParts
+    ? ((beijingNowParts.hour * 60 + beijingNowParts.minute) / 1440) * 100
+    : 0;
   return (
     <div className="page-container">
       {/* 用户欢迎区域 */}
@@ -193,7 +201,7 @@ const UserHomePage = () => {
                  <span className="text-lg">🌅</span>
                  <span className="text-white/70">00:00</span>
                </div>
-               <span className="text-white/70">{new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>
+               <span className="text-white/70">{nowTimeText}</span>
                <div className="flex items-center gap-1">
                  <span className="text-white/70">24:00</span>
                  <span className="text-lg">🌙</span>
@@ -202,7 +210,7 @@ const UserHomePage = () => {
             <div className="mt-2 bg-white/20 rounded-full h-2 overflow-hidden relative">
                <div 
                   className="bg-white h-full rounded-full transition-all duration-1000 ease-in-out" 
-                  style={{ width: `${(new Date().getHours() * 60 + new Date().getMinutes()) / 1440 * 100}%` }}
+                  style={{ width: `${progressPercent}%` }}
                 ></div>
              
                <div className="absolute top-0 right-0 w-1 h-full bg-white/60 rounded-full transform translate-x-0.5"></div>

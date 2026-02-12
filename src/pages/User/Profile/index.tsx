@@ -9,6 +9,7 @@ import EditProfileModal from '../../../components/EditProfileModal';
 import { UserInfoCard, CheckInTab, ActivityHistoryTab } from './components';
 import { useUserProfile, useActivityHistory, useCheckInData } from './hooks';
 import { FEEDBACK_QQ_GROUP } from '../../../config/feedback';
+import { formatBeijingDateMd } from '../../../utils/beijingTime';
 
 const { Text } = Typography;
 
@@ -35,15 +36,10 @@ const ProfilePage: React.FC = () => {
    * @returns 格式化后的日期字符串 (MM-DD)
    */
   const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-      return `${month}-${day}`;
-    } catch (error) {
-      console.error('日期格式化失败:', error);
-      return '未知';
-    }
+    const formatted = formatBeijingDateMd(dateString);
+    if (formatted) return formatted;
+    console.error('日期格式化失败');
+    return '未知';
   };
 
   /**

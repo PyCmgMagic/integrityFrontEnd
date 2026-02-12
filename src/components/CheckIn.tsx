@@ -158,6 +158,7 @@ const CheckIn: React.FC<CheckInPageProps> = ({ columnId, minWordLimit, maxWordLi
               onChange={setFileList}
               upload={realUpload}
               style={{ '--cell-size': '90px' }}
+              showFailed={false}
               beforeUpload={(file) => {
                 const isImage = file.type.startsWith('image/');
                 if (!isImage) {

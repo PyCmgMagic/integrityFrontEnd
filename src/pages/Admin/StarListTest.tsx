@@ -3,6 +3,7 @@ import { Card, Button, Typography, Space, Input, message, Spin, List, Tag } from
 import { StarFilled,  SearchOutlined } from '@ant-design/icons';
 import { API } from '../../services/api';
 import type { StarItem, StarListResponse } from '../../types/types';
+import { formatInBeijing } from '../../utils/beijingTime';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -48,12 +49,15 @@ const StarListTest: React.FC = () => {
    * 格式化日期
    */
   const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString('zh-CN');
-    } catch {
-      return dateString;
-    }
+    const formatted = formatInBeijing(dateString, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+    return formatted || dateString;
   };
 
   /**

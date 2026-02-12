@@ -87,8 +87,9 @@ const ChenkInData = ({
       id: checkInRecord.id || 0,
       title: checkInRecord.title || '打卡记录',
       content: checkInRecord.content || '',
-      date: checkInRecord.date || new Date().toISOString(),
-      time: checkInRecord.time || '',
+      // 如果没有传入日期，不使用本地时间作为默认值，改为空字符串
+      date: checkInRecord.date ?? '',
+      time: checkInRecord.time ?? '',
       imgs: checkInRecord.imgs || [],
       column_id: checkInRecord.column_id || 0,
       status: checkInRecord.status,

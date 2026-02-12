@@ -6,6 +6,7 @@ import { API } from '../../../../services/api';
 import ImageUpload from '../../../../components/Upload/ImageUpload';
 import '../../../../styles/SimpleCheckInModal.css';
 import { FIELD_LIMITS } from '../../../../utils/fieldLimits';
+import { formatInBeijing, isBeijingToday } from '../../../../utils/beijingTime';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -67,6 +68,7 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
   const [editContent, setEditContent] = useState('');
   const [editImages, setEditImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   // 当弹窗打开或数据变化时，重置编辑状态
   useEffect(() => {
@@ -83,17 +85,21 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
    * @returns 格式化后的日期
    */
   const formatDisplayDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long'
-      });
-    } catch {
-      return dateString;
-    }
+    const formatted = formatInBeijing(dateString, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+    });
+    return formatted || dateString;
+  };
+
+  /**
+   * 判断传入日期是否为“北京时间的今天”
+   */
+  const isTodayCheckIn = (dateString: string) => {
+    if (!dateString) return false;
+    return isBeijingToday(dateString);
   };
 
   /**
@@ -102,6 +108,10 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
   const handleSave = async () => {
     if (!checkInData.id) {
       message.error('缺少必要的更新参数');
+      return;
+    }
+    if (imageUploading) {
+      message.warning('图片上传中，请稍后保存');
       return;
     }
     if (editContent.trim().length > FIELD_LIMITS.checkInContent) {
@@ -114,36 +124,31 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
       const updateData = {
         column_id: checkInData.column_id ?? 0,
         content: editContent,
-        images: editImages
+        images: editImages,
+        imgs: editImages
       };
 
       const response = await API.Column.updatePunchRecord(checkInData.id, updateData);
       
-      // 添加调试日志
-      console.log('更新响应:', response);
       
-      // 检查响应是否包含更新后的数据（表示成功）
-      if (response && response.ID) {
-        message.success('更新成功');
-        
-        // 更新本地数据
-        const updatedCheckInData: CheckInData = {
-          ...checkInData,
-          content: editContent,
-          imgs: editImages
-        };
-        
-        // 通知父组件数据已更新
-        onUpdate?.(updatedCheckInData);
-        
-        // 触发父组件重新获取数据
-        onRefresh?.();
-        
-        setIsEditing(false);
-      } else {
-        console.log('更新失败，响应:', response);
-        message.error('更新失败');
-      }
+      // 兼容不同接口返回格式
+
+      const responseAny = response as Partial<CheckInData> & { ID?: number; id?: number; imgs?: string[] };
+      const nextImages = Array.isArray(responseAny?.imgs) ? responseAny.imgs : editImages;
+      const nextContent = responseAny?.content ?? editContent;
+
+      message.success('更新成功');
+
+      const updatedCheckInData: CheckInData = {
+        ...checkInData,
+        content: nextContent,
+        imgs: nextImages
+      };
+
+      onUpdate?.(updatedCheckInData);
+      onRefresh?.();
+
+      setIsEditing(false);
     } catch (error) {
       console.error('更新打卡记录失败:', error);
       message.error('更新失败，请稍后重试');
@@ -188,7 +193,7 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
           <Space>
             {!isEditing ? (
               // 只有待审核状态 (status === 0) 允许编辑
-              checkInData.status === 0 && (
+              checkInData.status === 0 && isTodayCheckIn(checkInData.date) && (
                 <Button 
                   type="primary" 
                   icon={<EditOutlined />} 
@@ -204,6 +209,7 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
                   icon={<SaveOutlined />} 
                   onClick={handleSave}
                   loading={loading}
+                  disabled={imageUploading}
                   type="primary"
                   size="small"
                 >
@@ -233,7 +239,7 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
             <div className="flex justify-center items-center gap-4 text-gray-500 mb-3">
               <div className="flex items-center gap-1">
                 <ClockCircleOutlined />
-                <Text type="secondary">{checkInData.time}</Text>
+                <Text type="secondary">{checkInData.time ?? ''}</Text>
               </div>
               <div className="flex items-center gap-1">
                 <CalendarOutlined />
@@ -298,6 +304,7 @@ const SimpleCheckInModal: React.FC<SimpleCheckInModalProps> = ({
               <ImageUpload
                 value={editImages}
                 onChange={handleImageChange}
+                onUploadingChange={setImageUploading}
                 maxCount={9}
                 className="w-full"
               />

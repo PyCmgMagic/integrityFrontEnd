@@ -41,6 +41,7 @@ import { useCheckInData, useActivityHistory } from '../../User/Profile/hooks';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { API } from '../../../services/api';
 import { FEEDBACK_QQ_GROUP } from '../../../config/feedback';
+import { formatBeijingDateMd, formatInBeijing } from '../../../utils/beijingTime';
 import type {  StarListData } from '../../../types/types';
 
 import type { UserProfile, StarItem  } from '../../../types/types';
@@ -109,15 +110,10 @@ const ProfilePage: React.FC = () => {
    * @returns 格式化后的日期字符串 (MM-DD)
    */
   const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-      return `${month}-${day}`;
-    } catch (error) {
-      console.error('日期格式化失败:', error);
-      return '未知';
-    }
+    const formatted = formatBeijingDateMd(dateString);
+    if (formatted) return formatted;
+    console.error('日期格式化失败');
+    return '未知';
   };
 
   // /**
@@ -236,7 +232,9 @@ const ProfilePage: React.FC = () => {
           id: item.punch.ID,
           title: `打卡记录 #${item.punch.ID}`,
           description: item.punch.content || '暂无内容',
-          date: new Date(item.created_at).toLocaleDateString('zh-CN'),
+          date:
+            formatInBeijing(item.created_at, { year: 'numeric', month: 'numeric', day: 'numeric' }) ||
+            item.created_at,
         }));
         
         setFavoriteData(transformedData);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Upload, message, Modal, Image, Progress } from 'antd';
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
@@ -10,6 +10,7 @@ interface ImageUploadProps {
   maxCount?: number;
   disabled?: boolean;
   className?: string;
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
 const ImageUpload = ({ 
@@ -18,72 +19,65 @@ const ImageUpload = ({
   maxCount = 9, 
   disabled = false,
   className = '',
+  onUploadingChange,
 }: ImageUploadProps) => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [fileList, setFileList] = useState<UploadFile[]>(
-    value.map((url, index) => ({
-      uid: `-${index}`,
+  const buildFileList = (urls: string[]) =>
+    urls.map((url, index) => ({
+      uid: `${url}-${index}`,
       name: `image-${index}`,
-      status: 'done',
-      url: url,
-    }))
-  );
+      status: 'done' as const,
+      url,
+    }));
+
+  const [fileList, setFileList] = useState<UploadFile[]>(buildFileList(value));
+
+  useEffect(() => {
+    if (uploading) return;
+    setFileList(buildFileList(value));
+  }, [value, uploading]);
+
+  useEffect(() => {
+    onUploadingChange?.(uploading);
+  }, [uploading, onUploadingChange]);
 
   const handlePreview = async (file: UploadFile) => {
     setPreviewImage(file.url || file.response?.url || '');
     setPreviewOpen(true);
   };
 
-  const handleChange: UploadProps['onChange'] = ({ fileList: newFileList }) => {
-    const updatedFileList = newFileList.map(file => {
-      if (file.response && !file.url) {
-        file.url = file.response.url;
-      }
-      return file;
-    });
-    
-    setFileList(updatedFileList);
-    
-    // 提取所有成功上传的图片URL
-    const urls = updatedFileList
-      .filter(file => file.status === 'done' && file.url)
-      .map(file => file.url!);
-    
-    onChange?.(urls);
-  };
-
   const handleRemove = (file: UploadFile) => {
-    const newFileList = fileList.filter(item => item.uid !== file.uid);
-    setFileList(newFileList);
-    
-    const urls = newFileList
-      .filter(item => item.status === 'done' && item.url)
-      .map(item => item.url!);
-    
-    onChange?.(urls);
+    setFileList(prev => {
+      const newFileList = prev.filter(item => item.uid !== file.uid);
+      const urls = newFileList
+        .filter(item => item.status === 'done' && item.url)
+        .map(item => item.url!);
+      onChange?.(urls);
+      return newFileList;
+    });
   };
 
   /**
    * 处理图片上传
    * @param file 上传的文件
-   * @returns false 阻止默认上传行为
+   * @returns Upload.LIST_IGNORE 阻止默认上传行为并不加入列表
    */
-  const handleUpload = async (file: RcFile): Promise<boolean> => {
+  const handleUpload: UploadProps['beforeUpload'] = async (file: RcFile) => {
     // 验证文件类型
     const isImage = file.type.startsWith('image/');
     if (!isImage) {
       message.error('只能上传图片文件！');
-      return false;
+      return Upload.LIST_IGNORE;
     }
 
     // 验证文件大小
     const isLt10M = file.size / 1024 / 1024 < 10;
     if (!isLt10M) {
       message.error('图片大小不能超过 10MB！');
-      return false;
+      return Upload.LIST_IGNORE;
     }
 
     try {
@@ -110,12 +104,13 @@ const ImageUpload = ({
         url: imageUrl,
       };
       
-      const newFileList = [...fileList, newFile];
-      setFileList(newFileList);
-      
-      // 通知父组件
-      const newUrls = newFileList.map(f => f.url!).filter(Boolean);
-      onChange?.(newUrls);
+      setFileList(prev => {
+        const newFileList = [...prev, newFile];
+        // 通知父组件
+        const newUrls = newFileList.map(f => f.url!).filter(Boolean);
+        onChange?.(newUrls);
+        return newFileList;
+      });
       
       message.success('图片上传成功！');
     } catch (error) {
@@ -126,7 +121,7 @@ const ImageUpload = ({
       setUploadProgress(0);
     }
     
-    return false; // 阻止默认上传行为
+    return Upload.LIST_IGNORE; // 阻止默认上传行为并不加入列表
   };
 
 
@@ -158,7 +153,6 @@ const ImageUpload = ({
         listType="picture-card"
         fileList={fileList}
         onPreview={handlePreview}
-        onChange={handleChange}
         onRemove={handleRemove}
         beforeUpload={handleUpload}
         disabled={disabled || uploading}

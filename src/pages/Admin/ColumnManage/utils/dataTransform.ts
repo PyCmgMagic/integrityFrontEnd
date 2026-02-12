@@ -1,4 +1,5 @@
 import type { PendingPunchItem } from '../../../../types/api';
+import { formatInBeijing } from '../../../../utils/beijingTime';
 
 /**
  * 打卡项目接口定义
@@ -51,9 +52,12 @@ export interface AuditStats {
  * @returns 转换后的打卡项
  */
 export const transformPendingData = (item: PendingPunchItem, starredStatus?: boolean): CheckInItem => {
-  const createdAt = new Date(item.punch.created_at);
-  const date = createdAt.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
-  const time = createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  const date =
+    formatInBeijing(item.punch.created_at, { month: 'numeric', day: 'numeric' }) ||
+    item.punch.created_at;
+  const time =
+    formatInBeijing(item.punch.created_at, { hour: '2-digit', minute: '2-digit' }) ||
+    item.punch.created_at;
   
   // 清理图片URL中的空格和反引号
   const cleanImages = (item.imgs || []).map(url => 
@@ -113,9 +117,12 @@ export interface ReviewedPunchItem {
  * @returns 转换后的打卡项
  */
 export const transformReviewedData = (item: ReviewedPunchItem): CheckInItem => {
-  const createdAt = new Date(item.punch.created_at);
-  const date = createdAt.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
-  const time = createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  const date =
+    formatInBeijing(item.punch.created_at, { month: 'numeric', day: 'numeric' }) ||
+    item.punch.created_at;
+  const time =
+    formatInBeijing(item.punch.created_at, { hour: '2-digit', minute: '2-digit' }) ||
+    item.punch.created_at;
   
   // 清理图片URL中的空格和反引号
   const cleanImages = (item.imgs || []).map(url => 

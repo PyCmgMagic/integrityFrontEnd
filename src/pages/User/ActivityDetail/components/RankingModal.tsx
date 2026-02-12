@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, List, Avatar, Spin, Empty, Pagination, Button, message, Tooltip } from 'antd';
 import { TrophyOutlined, DownloadOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import { getBeijingDateNumber } from '../../../../utils/beijingTime';
 import { API } from '../../../../services/api';
 import type { RankingItem } from '../types';
 
@@ -71,8 +71,8 @@ const RankingModal: React.FC<RankingModalProps> = ({
 
   const canExport = useMemo(() => {
     if (!activityEndDate) return false;
-    const today = Number(dayjs().format('YYYYMMDD'));
-    return today >= activityEndDate;
+    const today = getBeijingDateNumber(Date.now());
+    return today !== null && today >= activityEndDate;
   }, [activityEndDate]);
   const exportDisabled = !activityId || !canExport;
 

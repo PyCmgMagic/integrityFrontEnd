@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { API } from '../../../../services/api';
 import type { CheckInData, PunchItem } from '../../../../types/types';
+import { formatBeijingDateYmd, formatBeijingTimeHm } from '../../../../utils/beijingTime';
 
 /**
  * 将 API 返回的打卡数据转换为前端组件需要的格式
@@ -18,9 +19,8 @@ const transformPunchData = (punchItems: PunchItem[] | [] | undefined): CheckInDa
     const title = `${item.activity_name} - ${item.project_name} - ${item.column_name}`;
     
     // 格式化日期时间
-    const dateObj = new Date(item.punch.created_at);
-    const formattedDate = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
-    const formattedTime = dateObj.toTimeString().split(' ')[0].substring(0, 5); // HH:mm
+    const formattedDate = formatBeijingDateYmd(item.punch.created_at); // YYYY-MM-DD (Beijing)
+    const formattedTime = formatBeijingTimeHm(item.punch.created_at); // HH:mm (Beijing)
     
     return {
       id: item.punch.ID,

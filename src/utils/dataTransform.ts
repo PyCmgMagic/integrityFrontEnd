@@ -6,7 +6,12 @@
 import type { ActivityItem } from '../types/api';
 import type { Activity } from '../store/useAppStore';
 import type { PunchRecord, CheckInData } from '../types/types';
-import dayjs from 'dayjs';
+import {
+  formatBeijingDateYmd,
+  formatBeijingTimeHm,
+  getBeijingDateNumber,
+  parseYmdToDateNumber,
+} from './beijingTime';
 
 /**
  * 将日期数字转换为字符串格式
@@ -27,11 +32,10 @@ export function formatDateFromNumber(dateNumber: number): string {
  * @returns 日期数字，格式如 20250607
  */
 export function formatDateToNumber(dateString: string): number {
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return parseInt(`${year}${month}${day}`);
+  const parsed = parseYmdToDateNumber(dateString);
+  if (parsed !== null) return parsed;
+  const fallback = getBeijingDateNumber(dateString);
+  return fallback ?? Number.NaN;
 }
 
 /**
@@ -135,12 +139,11 @@ export function transformActivityToUpdateRequest(activity: {
  * @returns 前端组件使用的打卡记录格式
  */
 export function transformPunchRecordToCheckInData(punchRecord: PunchRecord): CheckInData {
-  const updatedAt  = dayjs(punchRecord.updated_at);
   return {
     id: punchRecord.ID,
     title: punchRecord.content || '打卡记录',
-    time: updatedAt.format('HH:mm'),
-    date: updatedAt.format('YYYY-MM-DD'),
+    time: formatBeijingTimeHm(punchRecord.created_at),
+    date: formatBeijingDateYmd(punchRecord.created_at),
     content: punchRecord.content || '',
     imgs: punchRecord.imgs || [],
     status:punchRecord.status,

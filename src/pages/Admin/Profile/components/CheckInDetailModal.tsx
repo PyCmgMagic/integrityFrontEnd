@@ -4,6 +4,7 @@ import { ClockCircleOutlined, CalendarOutlined } from '@ant-design/icons';
 import { API } from '../../../../services/api';
 import StarButton from '../../ColumnManage/components/StarButton';
 import '../../../../styles/SimpleCheckInModal.css';
+import { formatInBeijing } from '../../../../utils/beijingTime';
 
 const { Title, Text } = Typography;
 
@@ -94,17 +95,13 @@ const CheckInDetailModal: React.FC<CheckInDetailModalProps> = ({
    * @returns 格式化后的日期
    */
   const formatDisplayDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long'
-      });
-    } catch {
-      return dateString;
-    }
+    const formatted = formatInBeijing(dateString, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+    });
+    return formatted || dateString;
   };
 
   /**
@@ -113,15 +110,11 @@ const CheckInDetailModal: React.FC<CheckInDetailModalProps> = ({
    * @returns 格式化后的时间
    */
   const formatDisplayTime = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return dateString;
-    }
+    const formatted = formatInBeijing(dateString, {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return formatted || dateString;
   };
 
   // 如果没有数据且正在加载，显示加载状态

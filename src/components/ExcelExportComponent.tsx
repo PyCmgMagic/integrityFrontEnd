@@ -3,6 +3,7 @@ import { Button, Modal, Progress, message, Typography, Spin } from 'antd';
 import { DownloadOutlined, FileExcelOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { formatBeijingDateYmd } from '../utils/beijingTime';
 
 const { Text, Title } = Typography;
 
@@ -170,7 +171,7 @@ const ExcelExportComponent: React.FC<ExcelExportComponentProps> = ({
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       });
 
-      const fileName = `${activityData.title}_打卡记录_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `${activityData.title}_打卡记录_${formatBeijingDateYmd(Date.now())}.xlsx`;
       saveAs(blob, fileName);
 
       setExportProgress(100);

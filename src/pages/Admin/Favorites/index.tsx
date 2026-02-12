@@ -3,6 +3,7 @@ import { Card, Typography, List, Pagination, Spin, Empty, Tag, Button, message }
 import { StarFilled, CalendarOutlined, UserOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useStarList } from '../../../hooks/useStarList';
 import type { StarItem } from '../../../types/types';
+import { formatInBeijing } from '../../../utils/beijingTime';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -33,18 +34,14 @@ const FavoritesPage: React.FC = () => {
    * 格式化日期
    */
   const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateString;
-    }
+    const formatted = formatInBeijing(dateString, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return formatted || dateString;
   };
 
   /**
