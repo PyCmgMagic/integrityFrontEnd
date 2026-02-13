@@ -10,8 +10,10 @@ import request from './request';
  */
 interface PresignedUploadData {
   upload_url: string;
+  backup_upload_url: string;
   file_key: string;
   file_url: string;
+  backup_file_url: string;
   expires_at: string;
   method: string;
   headers: Record<string, string>;
@@ -44,48 +46,65 @@ export const uploadImageToCloud = async (
     { showError: false }
   );
 
-  const { upload_url, method, headers: presignedHeaders, file_url } = presigned;
+  const { upload_url, backup_upload_url, method, headers: presignedHeaders, file_url, backup_file_url } = presigned;
   const uploadMethod = (method || 'PUT').toUpperCase();
 
-  // 2. 使用 XHR 将文件 PUT 到 OSS（便于监听进度）
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
+  /**
+   * 通过 XHR 将文件上传到指定 URL
+   * @param targetUrl 上传目标地址
+   * @param resultUrl 上传成功后返回的文件访问地址
+   */
+  const doUpload = (targetUrl: string, resultUrl: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
 
-    if (onProgress) {
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          onProgress(Math.round((event.loaded / event.total) * 100));
+      if (onProgress) {
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            onProgress(Math.round((event.loaded / event.total) * 100));
+          }
+        });
+      }
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(resultUrl);
+        } else {
+          reject(new Error(`上传失败，状态码: ${xhr.status}`));
         }
       });
-    }
 
-    xhr.addEventListener('load', () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(file_url);
-      } else {
-        reject(new Error(`上传失败，状态码: ${xhr.status}`));
-      }
-    });
+      xhr.addEventListener('error', () => reject(new Error('网络错误，上传失败')));
+      xhr.addEventListener('timeout', () => reject(new Error('上传超时，请重试')));
+      xhr.timeout = 60000;
 
-    xhr.addEventListener('error', () => reject(new Error('网络错误，上传失败')));
-    xhr.addEventListener('timeout', () => reject(new Error('上传超时，请重试')));
-    xhr.timeout = 60000;
+      xhr.open(uploadMethod, targetUrl);
 
-    xhr.open(uploadMethod, upload_url);
-
-    if (presignedHeaders && typeof presignedHeaders === 'object') {
-      for (const [key, value] of Object.entries(presignedHeaders)) {
-        if (key.toLowerCase() !== 'host' && value) {
-          xhr.setRequestHeader(key, value);
+      if (presignedHeaders && typeof presignedHeaders === 'object') {
+        for (const [key, value] of Object.entries(presignedHeaders)) {
+          if (key.toLowerCase() !== 'host' && value) {
+            xhr.setRequestHeader(key, value);
+          }
         }
       }
-    }
-    if (!presignedHeaders?.['Content-Type']) {
-      xhr.setRequestHeader('Content-Type', file.type || 'image/png');
-    }
+      if (!presignedHeaders?.['Content-Type']) {
+        xhr.setRequestHeader('Content-Type', file.type || 'image/png');
+      }
 
-    xhr.send(file);
-  });
+      xhr.send(file);
+    });
+  };
+
+  // 2. 先尝试主地址上传，失败后自动回退到备用地址
+  try {
+    return await doUpload(upload_url, file_url);
+  } catch (primaryError) {
+    console.warn('主地址上传失败，尝试备用地址:', primaryError);
+    if (backup_upload_url) {
+      return await doUpload(backup_upload_url, backup_file_url || file_url);
+    }
+    throw primaryError;
+  }
 };
 
 /**
