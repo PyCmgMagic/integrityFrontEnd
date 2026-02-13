@@ -72,13 +72,13 @@ const StatsCards: React.FC<StatsCardsProps> = ({
 
       {/* 第二行：今日参与 & 签到详情 (网格展示区) */}
       <div className="grid grid-cols-4 gap-3">
-        {/* 今日参与人数 */}
+        {/* 总参与人数 */}
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
           <div className="bg-blue-50 p-1.5 rounded-lg mb-2">
             <Users className="text-blue-500 w-4 h-4" />
           </div>
           <p className="text-gray-900 text-sm font-bold leading-tight">{userStats.today_punched_user_count}</p>
-          <p className="text-gray-400 text-[10px] mt-0.5">今日参与人数</p>
+          <p className="text-gray-400 text-[10px] mt-0.5">总参与人数</p>
         </div>
 
         {/* 当前连签 */}
