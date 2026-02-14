@@ -751,10 +751,23 @@ static async getColumnInfo(id: number): Promise<ApiResponse<{
   /**
    * 获取已审核列表
    */
-  static async getReviewedList(columnId: number): Promise<ApiResponse<PunchListData>> {
-    return request.getFull<PunchListData>('/punch/reviewed', {
-      column_id: columnId
-    }, {
+  static async getReviewedList(
+    columnId: number,
+    filters?: {
+      status?: 1 | 2;
+      date?: string;
+    }
+  ): Promise<ApiResponse<PunchListData>> {
+    const params: { column_id: number; status?: 1 | 2; date?: string } = {
+      column_id: columnId,
+    };
+    if (typeof filters?.status === 'number') {
+      params.status = filters.status;
+    }
+    if (filters?.date) {
+      params.date = filters.date;
+    }
+    return request.getFull<PunchListData>('/punch/reviewed', params, {
       showLoading: true,
       showError: true,
     });

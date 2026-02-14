@@ -4,6 +4,7 @@ import { Button, Spin } from 'antd';
 import { LeftOutlined, EditOutlined } from '@ant-design/icons';
 import EditColumnModal from '../ProjectManage/EditColumnModal';
 import { API } from '../../../services/api';
+import { formatBeijingDateYmd } from '../../../utils/beijingTime';
 
 // 导入重构后的模块
 import {  transformPendingData, transformReviewedDataList } from './utils/dataTransform';
@@ -26,6 +27,8 @@ const ColumnManage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ReviewTabType>('unreviewed');
   const [unreviewedData, setUnreviewedData] = useState<CheckInItem[]>([]);
   const [reviewedData, setReviewedData] = useState<CheckInItem[]>([]);
+  const [reviewedStatus, setReviewedStatus] = useState<string>('');
+  const [reviewedDate, setReviewedDate] = useState<string>(() => formatBeijingDateYmd(Date.now()));
   const [loading, setLoading] = useState<boolean>(false);
   const [columnInfo, setColumnInfo] = useState<ColumnInfo>({
     id: 0,
@@ -113,7 +116,12 @@ const ColumnManage: React.FC = () => {
     
     setLoading(true);
     try {
-      const response = await API.Column.getReviewedList(parseInt(columnId));
+      const statusValue = reviewedStatus ? (Number(reviewedStatus) as 1 | 2) : undefined;
+      const dateValue = reviewedDate ? reviewedDate.trim() : '';
+      const response = await API.Column.getReviewedList(parseInt(columnId), {
+        status: statusValue,
+        date: dateValue || undefined
+      });
       
       // 检查是否是最新的请求
       if (requestId !== currentRequestRef.current) {
@@ -145,7 +153,7 @@ const ColumnManage: React.FC = () => {
         setLoading(false);
       }
     }
-  }, [columnId]);
+  }, [columnId, reviewedStatus, reviewedDate]);
   
   
 
@@ -153,16 +161,25 @@ const ColumnManage: React.FC = () => {
    * 标签页切换时获取对应数据
    */
   useEffect(() => {
-    if (activeTab === 'reviewed') {
-      fetchReviewedListStable();
-    } else {
+    if (activeTab === 'unreviewed') {
       fetchPendingListStable();
     }
-  }, [activeTab, fetchPendingListStable, fetchReviewedListStable]);
+  }, [activeTab, fetchPendingListStable]);
+
+  useEffect(() => {
+    if (activeTab === 'reviewed') {
+      fetchReviewedListStable();
+    }
+  }, [activeTab, fetchReviewedListStable]);
   
   const handleEditColumnFinish = (values: ColumnInfo): void => {
     console.log('Received values from edit form: ', values);
     setEditColumnVisible(false);
+  };
+
+  const handleReviewedFiltersReset = (): void => {
+    setReviewedStatus('');
+    setReviewedDate(formatBeijingDateYmd(Date.now()));
   };
 
 
@@ -226,6 +243,37 @@ const ColumnManage: React.FC = () => {
           unreviewedCount={unreviewedData.length}
           reviewedCount={reviewedData.length}
         />
+
+        {activeTab === 'reviewed' && (
+          <div className="bg-white p-3 rounded-lg shadow-sm mb-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs text-gray-500">日期</span>
+                <input
+                  type="date"
+                  value={reviewedDate}
+                  onChange={(e) => setReviewedDate(e.target.value)}
+                  className="border border-gray-200 rounded px-2 py-1 text-sm bg-white"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs text-gray-500">状态</span>
+                <select
+                  value={reviewedStatus}
+                  onChange={(e) => setReviewedStatus(e.target.value)}
+                  className="border border-gray-200 rounded px-2 py-1 text-sm bg-white"
+                >
+                  <option value="">全部</option>
+                  <option value="1">通过</option>
+                  <option value="2">拒绝</option>
+                </select>
+              </div>
+              <Button size="small" onClick={handleReviewedFiltersReset}>
+                重置
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* 打卡列表 */}
         <div>
